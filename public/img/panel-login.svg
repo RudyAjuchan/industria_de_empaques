@@ -1,0 +1,13 @@
+<!-- panel-login.svg -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 400 800"
+     preserveAspectRatio="none">
+  <!-- Panel verde con curva doble a la derecha -->
+  <path fill="#167160" d="
+    M0 0
+    H260
+    C340 160 340 240 260 400
+    C180 560 180 640 260 800
+    H0
+    Z" />
+</svg>

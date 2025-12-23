@@ -2,6 +2,8 @@ import './bootstrap';
 
 import { createApp } from 'vue';
 import RouterWeb from './router/index';
+import App from './components/App.vue'
+import './sidebar';
 
 /* CONFIGURACIÓN AXIOS */
 import axios from 'axios';
@@ -18,6 +20,8 @@ if (token) {
 /* FIN CONFIGURACIÓN AXIOS */
 
 // Vuetify
+import '@mdi/font/css/materialdesignicons.css'
+import '@fortawesome/fontawesome-free/css/all.css'
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -29,8 +33,7 @@ const vuetify = createVuetify({
 })
 
 
-const app = createApp();
-
-app.use(RouterWeb);
-app.use(vuetify);
-app.mount('#app');
+createApp(App)
+    .use(RouterWeb)
+    .use(vuetify)
+    .mount('#app')

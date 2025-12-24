@@ -17,7 +17,7 @@ class Users extends Seeder
     public function run(): void
     {
         $userId = DB::table('users')->insertGetId([
-            'name' => 'Admin',
+            'name' => 'Administrador',
             'email' => 'industrias@jeple.com',
             'password' => Hash::make('admin123'),
             'created_at' => now(),
@@ -37,6 +37,6 @@ class Users extends Seeder
         ]);
 
         $user2 = User::find($userId2);
-        $user2->assignRole('Empleado');
+        $user2->assignRole('Asesor');
     }
 }

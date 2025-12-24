@@ -14,10 +14,20 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permisos = [
-            'users.view',
-            'users.create',
-            'users.edit',
-            'users.delete',
+            'usuario.ver',
+            'usuario.crear',
+            'usuario.editar',
+            'usuario.borrar',
+
+            'rol.ver',
+            'rol.crear',
+            'rol.editar',
+            'rol.eliminar',
+            'rol.permisos',
+            /* PERMISOS PARA SIDEBAR */
+            'menu.inicio',
+            'menu.usuarios',
+            'menu.permisos',
         ];
 
         foreach ($permisos as $p) {
@@ -29,15 +39,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        $employeeRole = Role::firstOrCreate([
-            'name' => 'Empleado',
+        $asesorRole = Role::firstOrCreate([
+            'name' => 'Asesor',
             'guard_name' => 'web',
         ]);
 
 
         $adminRole->givePermissionTo(Permission::all());
-        $employeeRole->givePermissionTo([
-            'users.view',
+        $asesorRole->givePermissionTo([
+            'usuario.ver',
+            'menu.inicio',
         ]);
     }
 }

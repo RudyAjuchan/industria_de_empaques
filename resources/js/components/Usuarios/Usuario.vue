@@ -4,12 +4,12 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona usuarios, roles y estado</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona usuarios</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate" variant="tonal" :loading="loading">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate" variant="tonal" :loading="loading" v-if="can('usuario.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
@@ -19,7 +19,7 @@
         <!-- Table -->
         <v-card rounded="xl" variant="flat" class="pa-2">
             <v-data-table :headers="headers" :items="filteredUsers" :loading="loading" item-key="id"
-                density="comfortable">
+                fixed-header height="400px" :header-props="{ class: 'bg-green-darken-2'}" density="compact" v-if="can('usuario.ver')">
                 <template v-slot:[`item.status`]="{item}">
                     <v-chip size="small" :color="item.status === 'active' ? 'success' : 'red'" variant="tonal" label>
                         {{ item.status === 'active' ? 'Activo' : 'Inactivo' }}
@@ -30,16 +30,16 @@
                     <div class="d-flex flex-wrap ga-1">
                         <v-chip v-for="r in (item.roles || [])" :key="r" size="x-small" color="primary" variant="tonal"
                             label>
-                            {{ r }}
+                            {{ r.name }}
                         </v-chip>
                     </div>
                 </template>
 
                 <template v-slot:[`item.actions`]="{ item }">
-                    <v-btn icon variant="text" @click="openEdit(item)">
+                    <v-btn icon variant="text" @click="openEdit(item)" density="compact" v-if="can('usuario.editar')">
                         <v-icon>mdi-pencil-outline</v-icon>
                     </v-btn>
-                    <v-btn icon variant="text" @click="openDelete(item)">
+                    <v-btn icon variant="text" @click="openDelete(item)" density="compact" v-if="can('usuario.borrar')">
                         <v-icon color="error">mdi-delete-outline</v-icon>
                     </v-btn>
                 </template>
@@ -84,7 +84,7 @@
                     @click:append-inner="showPassword = !showPassword" :error-messages="errors.password"
                     :required="!form.id" />
 
-                <v-select v-model="form.role" :items="roles" label="Rol" variant="outlined"
+                <v-select v-model="form.role" :items="roles" item-title="name" item-value="id" label="Rol" variant="outlined"
                     :error-messages="errors.role" clearable />
 
                 <v-switch v-model="form.active" inset color="success" label="Activo" class="mt-2" />
@@ -236,7 +236,8 @@ export default {
             this.form.id = item.id
             this.form.name = item.name
             this.form.email = item.email
-            this.form.role = (item.roles && item.roles[0]) ? item.roles[0] : null
+            console.log(item);
+            this.form.role = item.roles[0].id ? item.roles[0].id : null
             this.form.active = item.status === 'active'
             this.drawer = true
         },
@@ -260,7 +261,7 @@ export default {
         },
 
         async fetchRoles(){
-            const { data } = await axios.get('/roles');
+            const { data } = await axios.get('/usuario/roles');
             this.roles = data;
         },
 

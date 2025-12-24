@@ -34,40 +34,32 @@
             <div class="divider"></div>
 
             <nav class="nav" id="nav">
-                <a href="#" data-route="/" data-title="Dashboard">
-                    <div class="ico" aria-hidden="true">
-                        <i class="mdi mdi-view-dashboard"></i>
-                    </div>
-                    <div class="label">Dashboard</div>
-                </a>
+                @can('menu.inicio')
+                    <a href="#" data-route="/" data-title="Dashboard">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-view-dashboard"></i>
+                        </div>
+                        <div class="label">Dashboard</div>
+                    </a>
+                @endcan
 
-                <a href="#" data-route="/usuarios" data-title="Usuarios">
-                    <div class="ico" aria-hidden="true">
-                        <i class="mdi mdi-account-outline"></i>
-                    </div>
-                    <div class="label">Usuarios</div>
-                </a>
+                @can('menu.usuarios')
+                    <a href="#" data-route="/usuarios" data-title="Usuarios">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-account-outline"></i>
+                        </div>
+                        <div class="label">Usuarios</div>
+                    </a>
+                @endcan
 
-                <a href="#" data-title="Permisos">
-                    <div class="ico" aria-hidden="true">
-                        <i class="mdi mdi-star-outline"></i>
-                    </div>
-                    <div class="label">Roles &amp; Permisos</div>
-                </a>
-
-                <a href="#" data-title="Reportes">
-                    <div class="ico" aria-hidden="true">
-                        <i class="mdi mdi-file-document-outline"></i>
-                    </div>
-                    <div class="label">Reportes</div>
-                </a>
-
-                <a href="#" data-title="Configuración">
-                    <div class="ico" aria-hidden="true">
-                        <i class="mdi mdi-cog-outline"></i>
-                    </div>
-                    <div class="label">Configuración</div>
-                </a>
+                @can('menu.permisos')
+                    <a href="#" data-route="/roles" data-title="Roles">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-star-outline"></i>
+                        </div>
+                        <div class="label">Roles &amp; Permisos</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">
@@ -107,7 +99,7 @@
 
     <script>
         window.LOGIN_SUCCESS = @json(session('login_success', false));
-        console.log(window.LOGIN_SUCCESS);
+        window.USER_PERMISSIONS = @json(auth()->user()->getAllPermissions()->pluck('name'));
     </script>
 
 </body>

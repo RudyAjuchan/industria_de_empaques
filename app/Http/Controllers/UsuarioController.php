@@ -8,13 +8,14 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
 
 class UsuarioController extends Controller
 {
     public function index(Request $request)
     {
         $users = User::query()
-            ->with('roles:name')
+            ->with('roles')
             ->where('estado', 1)
             ->orderBy('name')
             ->get()
@@ -24,7 +25,7 @@ class UsuarioController extends Controller
                     'name' => $u->name,
                     'email' => $u->email,
                     'status' => $u->active ? 'active' : 'inactive',
-                    'roles' => $u->roles->pluck('name')->values(),
+                    'roles' => $u->roles,
                 ];
             });
 
@@ -34,7 +35,7 @@ class UsuarioController extends Controller
     public function roles()
     {
         return response()->json(
-            Role::query()->orderBy('name')->pluck('name')->values()
+            Role::select('id', 'name')->get()
         );
     }
 
@@ -44,7 +45,7 @@ class UsuarioController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'role' => ['nullable', 'exists:roles,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -75,7 +76,7 @@ class UsuarioController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:8'],
-            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'role' => ['nullable', 'exists:roles,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -110,7 +111,7 @@ class UsuarioController extends Controller
     public function destroy(User $user)
     {
         // Evitar borrar tu propio usuario (opcional)
-        if (auth()->id() === $user->id) {
+        if (Auth::id() === $user->id) {
             return response()->json(['message' => 'No puedes eliminar tu propio usuario'], 422);
         }
 

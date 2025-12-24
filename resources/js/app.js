@@ -1,23 +1,12 @@
-import './bootstrap';
-
-import { createApp } from 'vue';
-import RouterWeb from './router/index';
+import './bootstrap'
+import { createApp } from 'vue'
+import RouterWeb from './router/index'
 import App from './components/App.vue'
-import './sidebar';
+import './sidebar'
 
-/* CONFIGURACIÓN AXIOS */
-import axios from 'axios';
-window.axios = axios;
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-
-let token = document.head.querySelector('meta[name="csrf-token"]');
-
-if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-} else {
-    console.error('ERROR AL OBTENER TOKEN!');
-}
-/* FIN CONFIGURACIÓN AXIOS */
+import axios from 'axios'
+window.axios = axios
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 // Vuetify
 import '@mdi/font/css/materialdesignicons.css'
@@ -32,8 +21,13 @@ const vuetify = createVuetify({
     directives
 })
 
+const app = createApp(App)
 
-createApp(App)
+app.config.globalProperties.can = (permission) => {
+    return window.USER_PERMISSIONS?.includes(permission)
+}
+
+app
     .use(RouterWeb)
     .use(vuetify)
     .mount('#app')

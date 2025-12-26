@@ -32,6 +32,10 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::put('/usuarios/{user}', [UsuarioController::class, 'update'])->middleware('permission:usuario.editar');
     Route::delete('/usuarios/{user}', [UsuarioController::class, 'destroy'])->middleware('permission:usuario.eliminar');
     Route::get('/usuario/roles', [UsuarioController::class, 'roles'])->middleware('permission:usuario.ver');
+    Route::get('/usuarios/export/pdf', [UsuarioController::class, 'exportPdf'])
+    ->middleware(['auth', 'permission:usuario.reporte']);
+    Route::get('/usuarios/export/excel', [UsuarioController::class, 'exportExcel'])
+    ->middleware(['auth', 'permission:usuario.reporte']);
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -60,6 +64,10 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/roles/{role}/permissions', [RolePermissionController::class, 'show'])->middleware('permission:rol.permisos');
     Route::post('/roles/{role}/permissions', [RolePermissionController::class, 'sync'])->middleware('permission:rol.permisos');
     Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:rol.permisos');
+    Route::get('/roles/export/pdf', [RoleController::class, 'exportPdf'])
+    ->middleware(['auth', 'permission:rol.reporte']);
+    Route::get('/roles/export/excel', [RoleController::class, 'exportExcel'])
+    ->middleware(['auth', 'permission:rol.reporte']);
 });
 
 require __DIR__.'/auth.php';

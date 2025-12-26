@@ -18,12 +18,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'usuario.crear',
             'usuario.editar',
             'usuario.borrar',
+            'usuario.reporte',
 
             'rol.ver',
             'rol.crear',
             'rol.editar',
             'rol.eliminar',
             'rol.permisos',
+            'rol.reporte',
             /* PERMISOS PARA SIDEBAR */
             'menu.inicio',
             'menu.usuarios',

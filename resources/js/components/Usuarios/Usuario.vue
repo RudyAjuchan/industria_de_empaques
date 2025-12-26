@@ -9,7 +9,28 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate" variant="tonal" :loading="loading" v-if="can('usuario.crear')">
+                    <v-menu>
+                        <template #activator="{ props }">
+                            <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
+                                Exportar
+                            </v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                            <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
+                                v-if="can('usuario.reporte')">
+                                <v-list-item-title>Excel</v-list-item-title>
+                            </v-list-item>
+
+                            <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
+                                v-if="can('usuario.reporte')">
+                                <v-list-item-title>PDF</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate" variant="tonal"
+                        :loading="loading" v-if="can('usuario.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
@@ -18,15 +39,16 @@
 
         <!-- Table -->
         <v-card rounded="xl" variant="flat" class="pa-2">
-            <v-data-table :headers="headers" :items="filteredUsers" :loading="loading" item-key="id"
-                fixed-header height="400px" :header-props="{ class: 'bg-green-darken-2'}" density="compact" v-if="can('usuario.ver')">
-                <template v-slot:[`item.status`]="{item}">
+            <v-data-table :headers="headers" :items="filteredUsers" :loading="loading" item-key="id" fixed-header
+                height="400px" :header-props="{ class: 'bg-green-darken-2' }" density="compact"
+                v-if="can('usuario.ver')">
+                <template v-slot:[`item.status`]="{ item }">
                     <v-chip size="small" :color="item.status === 'active' ? 'success' : 'red'" variant="tonal" label>
                         {{ item.status === 'active' ? 'Activo' : 'Inactivo' }}
                     </v-chip>
                 </template>
 
-                <template v-slot:[`item.roles`]="{item}">
+                <template v-slot:[`item.roles`]="{ item }">
                     <div class="d-flex flex-wrap ga-1">
                         <v-chip v-for="r in (item.roles || [])" :key="r" size="x-small" color="primary" variant="tonal"
                             label>
@@ -84,8 +106,8 @@
                     @click:append-inner="showPassword = !showPassword" :error-messages="errors.password"
                     :required="!form.id" />
 
-                <v-select v-model="form.role" :items="roles" item-title="name" item-value="id" label="Rol" variant="outlined"
-                    :error-messages="errors.role" clearable />
+                <v-select v-model="form.role" :items="roles" item-title="name" item-value="id" label="Rol"
+                    variant="outlined" :error-messages="errors.role" clearable />
 
                 <v-switch v-model="form.active" inset color="success" label="Activo" class="mt-2" />
                 <v-row>
@@ -260,7 +282,7 @@ export default {
             }
         },
 
-        async fetchRoles(){
+        async fetchRoles() {
             const { data } = await axios.get('/usuario/roles');
             this.roles = data;
         },
@@ -319,6 +341,21 @@ export default {
             } finally {
                 this.deleting = false
             }
+        },
+
+        exportExcel() {
+            const params = new URLSearchParams({
+                search: this.search
+            })
+
+            window.location.href = `/usuarios/export/excel?${params.toString()}`
+        },
+
+        exportPdf() {
+            const params = new URLSearchParams({
+                search: this.search
+            })
+            window.open(`/usuarios/export/pdf?${params.toString()}`, '_blank')
         },
     },
 }

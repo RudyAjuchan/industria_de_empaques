@@ -9,6 +9,9 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UsuarioController extends Controller
 {
@@ -120,5 +123,32 @@ class UsuarioController extends Controller
         $user->save();
 
         return response()->json(['message' => 'Usuario eliminado']);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $search = $request->query('search');
+
+        $users = User::with('roles')
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->get();
+
+        return Pdf::loadView('pdf.usuarios', compact('users', 'search'))
+            ->setPaper('letter', 'portrait')
+            ->stream('usuarios.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $search = $request->query('search');
+
+        return Excel::download(
+            new UsersExport($search),
+            'usuarios.xlsx'
+        );
     }
 }

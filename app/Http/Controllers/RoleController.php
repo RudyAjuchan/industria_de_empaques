@@ -72,7 +72,7 @@ class RoleController extends Controller
             'search' => $search,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('roles.pdf'); // 👈 preview
+        return $pdf->stream('roles.pdf');
     }
 
     public function exportExcel(Request $request)

@@ -14,22 +14,65 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permisos = [
+            /* PERMISOS PARA CREACIÓN DE USUARIOS */
             'usuario.ver',
             'usuario.crear',
             'usuario.editar',
             'usuario.borrar',
             'usuario.reporte',
-
+            /* PERMISOS PARA ASIGNACIÓN DE PERMISOS Y CREACIÓN DE ROLES  */
             'rol.ver',
             'rol.crear',
             'rol.editar',
             'rol.eliminar',
             'rol.permisos',
             'rol.reporte',
+            /* PERMISOS PARA TIPO DE PAPELES */
+            'tipo_papel.ver',
+            'tipo_papel.crear',
+            'tipo_papel.editar',
+            'tipo_papel.borrar',
+            'tipo_papel.reporte',
+            /* PERMISOS PARA TIPO DE AGARRADOR */
+            'agarrador.ver',
+            'agarrador.crear',
+            'agarrador.editar',
+            'agarrador.borrar',
+            'agarrador.reporte',
+            /* PERMISOS PARA PÁGINAS */
+            'pagina.ver',
+            'pagina.crear',
+            'pagina.editar',
+            'pagina.borrar',
+            'pagina.reporte',
+            /* PERMISOS PARA BANCOS */
+            'banco.ver',
+            'banco.crear',
+            'banco.editar',
+            'banco.borrar',
+            'banco.reporte',
+            /* PERMISOS PARA PRODUCTOS */
+            'producto.ver',
+            'producto.crear',
+            'producto.editar',
+            'producto.borrar',
+            'producto.reporte',
+            /* PERMISOS PARA CLIENTES */
+            'cliente.ver',
+            'cliente.crear',
+            'cliente.editar',
+            'cliente.borrar',
+            'cliente.reporte',
             /* PERMISOS PARA SIDEBAR */
             'menu.inicio',
             'menu.usuarios',
             'menu.permisos',
+            'menu.tipo_papel',
+            'menu.agarrador',
+            'menu.pagina',
+            'menu.banco',
+            'menu.producto',
+            'menu.cliente',
         ];
 
         foreach ($permisos as $p) {

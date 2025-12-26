@@ -6,9 +6,11 @@ const UsuarioComponent = () => import('../components/Usuarios/Usuario.vue');
 const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
 const RolesCreateComponent = () => import('../components/Roles/RolesCreate.vue');
 const RolesEditComponent = () => import('../components/Roles/RolesEdit.vue');
+const TipoPapelComponent = () => import('../components/TipoPapel/TipoPapelIndex.vue');
 
 
 const routes = [
+    /* RUTAS DEL MENÚ */
     {
         path: '/',
         name: 'InicioVue',
@@ -33,6 +35,16 @@ const routes = [
             permission: 'menu.permisos'
         }
     },
+    {
+        path: '/tipo_papel',
+        name: 'tipopapel.index',
+        component: TipoPapelComponent,
+        meta: {
+            permission: 'menu.tipo_papel'
+        }
+    },
+    
+    /* RUTAS PARA ROLES */
     {
         path: '/roles/create',
         name: 'roles.create',

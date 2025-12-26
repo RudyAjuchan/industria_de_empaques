@@ -25,6 +25,7 @@
         "@mdi/font": "^7.4.47",
         "vue": "^3.5.24",
         "vue-router": "^4.6.3",
+        "vue3-toastify": "^0.2.8",
         "vuetify": "^3.10.11"
     }
 }

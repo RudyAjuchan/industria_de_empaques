@@ -519,13 +519,13 @@ body {
     padding: 0 24px;
     display: flex;
     align-items: center;
-    background: #0f1a17;
+    background: #dfdfdf;
     border-bottom: 1px solid #e5e7eb;
     border-radius: 15px;
     position: sticky;
     top: 0;
     z-index: 5;
-    color: white;
+    color: rgb(68, 68, 68);
     -webkit-border-radius: 15px;
     -moz-border-radius: 15px;
     -ms-border-radius: 15px;

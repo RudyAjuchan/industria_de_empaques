@@ -60,6 +60,15 @@
                         <div class="label">Roles &amp; Permisos</div>
                     </a>
                 @endcan
+
+                @can('menu.tipo_papel')
+                    <a href="#" data-route="/tipo_papel" data-title="Tipos de Papeles">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-note-outline"></i>
+                        </div>
+                        <div class="label">Tipos de papel</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

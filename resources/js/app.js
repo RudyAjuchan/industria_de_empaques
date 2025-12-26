@@ -16,6 +16,9 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
+import Toast from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
+
 const vuetify = createVuetify({
     components,
     directives
@@ -30,4 +33,11 @@ app.config.globalProperties.can = (permission) => {
 app
     .use(RouterWeb)
     .use(vuetify)
+    .use(Toast, {
+        autoClose: 3000,
+        position: 'top-right',
+        theme: 'auto',
+        hideProgressBar: false,
+        closeOnClick: true,
+    })
     .mount('#app')

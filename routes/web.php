@@ -5,6 +5,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\TipoPapelController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,5 +70,18 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/roles/export/excel', [RoleController::class, 'exportExcel'])
     ->middleware(['auth', 'permission:rol.reporte']);
 });
+
+/* RUTAS PARA TIPO PAPEL */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/tipo-papel', [TipoPapelController::class, 'index'])->middleware('permission:tipo_papel.ver');
+    Route::post('/tipo-papel', [TipoPapelController::class, 'store'])->middleware('permission:tipo_papel.crear');
+    Route::put('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'update'])->middleware('permission:tipo_papel.editar');
+    Route::delete('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'destroy'])->middleware('permission:tipo_papel.borrar');
+    Route::get('/tipo-papel/export/pdf', [TipoPapelController::class, 'exportPdf'])
+    ->middleware(['auth', 'permission:rol.reporte'])->middleware('permission:tipo_papel.reporte');
+    Route::get('/tipo-papel/export/excel', [TipoPapelController::class, 'exportExcel'])
+    ->middleware(['auth', 'permission:rol.reporte'])->middleware('permission:tipo_papel.reporte');
+});
+
 
 require __DIR__.'/auth.php';

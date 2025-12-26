@@ -17,12 +17,12 @@
 
                         <v-list density="compact">
                             <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
-                                v-if="can('usuario.reporte')">
+                                v-if="can('rol.reporte')">
                                 <v-list-item-title>Excel</v-list-item-title>
                             </v-list-item>
 
                             <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
-                                v-if="can('usuario.reporte')">
+                                v-if="can('rol.reporte')">
                                 <v-list-item-title>PDF</v-list-item-title>
                             </v-list-item>
                         </v-list>

@@ -5,6 +5,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\TipoAgarradorController;
 use App\Http\Controllers\TipoPapelController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
@@ -78,9 +79,21 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::put('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'update'])->middleware('permission:tipo_papel.editar');
     Route::delete('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'destroy'])->middleware('permission:tipo_papel.borrar');
     Route::get('/tipo-papel/export/pdf', [TipoPapelController::class, 'exportPdf'])
-    ->middleware(['auth', 'permission:rol.reporte'])->middleware('permission:tipo_papel.reporte');
+    ->middleware('permission:tipo_papel.reporte');
     Route::get('/tipo-papel/export/excel', [TipoPapelController::class, 'exportExcel'])
-    ->middleware(['auth', 'permission:rol.reporte'])->middleware('permission:tipo_papel.reporte');
+    ->middleware('permission:tipo_papel.reporte');
+});
+
+/* RUTAS PARA TIPO AGARRADOR */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/agarrador', [TipoAgarradorController::class, 'index'])->middleware('permission:agarrador.ver');
+    Route::post('/agarrador', [TipoAgarradorController::class, 'store'])->middleware('permission:agarrador.crear');
+    Route::put('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'update'])->middleware('permission:agarrador.editar');
+    Route::delete('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'destroy'])->middleware('permission:agarrador.borrar');
+    Route::get('/agarrador/export/pdf', [TipoAgarradorController::class, 'exportPdf'])
+    ->middleware('permission:agarrador.reporte');
+    Route::get('/agarrador/export/excel', [TipoAgarradorController::class, 'exportExcel'])
+    ->middleware('permission:agarrador.reporte');
 });
 
 

@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\TipoPapelExport;
-use App\Models\TipoPapel;
+use App\Exports\TipoAgarradorExport;
+use App\Models\TipoAgarrador;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
-class TipoPapelController extends Controller
+class TipoAgarradorController extends Controller
 {
     public function index()
     {
-        return TipoPapel::where('estado', 1)
+        return TipoAgarrador::where('estado', 1)
             ->orderBy('nombre')
             ->get();
     }
@@ -23,27 +23,27 @@ class TipoPapelController extends Controller
             'nombre' => 'required|string|max:255',
         ]);
 
-        return TipoPapel::create([
+        return TipoAgarrador::create([
             'nombre' => $request->nombre,
         ]);
     }
 
-    public function update(Request $request, TipoPapel $tipoPapel)
+    public function update(Request $request, TipoAgarrador $tipoAgarrador)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255' . $tipoPapel->id,
+            'nombre' => 'required|string|max:255',
         ]);
 
-        $tipoPapel->update([
+        $tipoAgarrador->update([
             'nombre' => $request->nombre,
         ]);
 
         return response()->json(['message' => 'Actualizado']);
     }
 
-    public function destroy(TipoPapel $tipoPapel)
+    public function destroy(TipoAgarrador $tipoAgarrador)
     {
-        $tipoPapel->update(['estado' => 0]);
+        $tipoAgarrador->update(['estado' => 0]);
 
         return response()->json(['message' => 'Eliminado']);
     }
@@ -51,14 +51,14 @@ class TipoPapelController extends Controller
     public function exportPdf(Request $request)
     {
         $search = ($request->input('search') === "null") ? null : $request->input('search');
-        $tipo_papel = TipoPapel::
+        $tipo_agarrador = TipoAgarrador::
             where('nombre', 'LIKE', '%'.$search.'%')
             ->where('estado', 1)
             ->orderBy('nombre')
             ->get();
-        return Pdf::loadView('pdf.tipo_papel', compact('tipo_papel', 'search'))
+        return Pdf::loadView('pdf.tipo_agarrador', compact('tipo_agarrador', 'search'))
             ->setPaper('letter', 'portrait')
-            ->stream('tipo_papel.pdf');
+            ->stream('tipo_agarrador.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -66,8 +66,8 @@ class TipoPapelController extends Controller
         $search = $request->query('search');
 
         return Excel::download(
-            new TipoPapelExport($search),
-            'tipo_papel.xlsx'
+            new TipoAgarradorExport($search),
+            'tipo_agarrador.xlsx'
         );
     }
 }

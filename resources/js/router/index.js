@@ -7,6 +7,7 @@ const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
 const RolesCreateComponent = () => import('../components/Roles/RolesCreate.vue');
 const RolesEditComponent = () => import('../components/Roles/RolesEdit.vue');
 const TipoPapelComponent = () => import('../components/TipoPapel/TipoPapelIndex.vue');
+const TipoAgarradorComponent = () => import('../components/Agarradores/AgarradoresIndex.vue');
 
 
 const routes = [
@@ -41,6 +42,14 @@ const routes = [
         component: TipoPapelComponent,
         meta: {
             permission: 'menu.tipo_papel'
+        }
+    },
+    {
+        path: '/agarrador',
+        name: 'agarradores.index',
+        component: TipoAgarradorComponent,
+        meta: {
+            permission: 'menu.agarrador'
         }
     },
     

@@ -69,6 +69,15 @@
                         <div class="label">Tipos de papel</div>
                     </a>
                 @endcan
+
+                @can('menu.agarrador')
+                    <a href="#" data-route="/agarrador" data-title="Tipos de agarradores">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-shopping-outline"></i>
+                        </div>
+                        <div class="label">Tipos de agarrador</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

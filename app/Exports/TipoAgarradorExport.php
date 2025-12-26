@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\TipoPapel;
+use App\Models\TipoAgarrador;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\{
     FromCollection,
@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Concerns\{
 };
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class TipoPapelExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class TipoAgarradorExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     protected string|null $search;
 
@@ -24,7 +24,7 @@ class TipoPapelExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function collection(): Collection
     {
-        return TipoPapel::when($this->search, function ($q) {
+        return TipoAgarrador::when($this->search, function ($q) {
                 $q->where('nombre', 'like', "%{$this->search}%");
             })
             ->where('estado', 1)
@@ -41,12 +41,12 @@ class TipoPapelExport implements FromCollection, WithHeadings, WithMapping, With
         ];
     }
 
-    public function map($tipo_papel): array
+    public function map($tipo_agarrador): array
     {
         return [
-            $tipo_papel->nombre,
-            $tipo_papel->created_at,
-            $tipo_papel->updated_at,
+            $tipo_agarrador->nombre,
+            $tipo_agarrador->created_at,
+            $tipo_agarrador->updated_at,
         ];
     }
 

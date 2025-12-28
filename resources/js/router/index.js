@@ -8,6 +8,8 @@ const RolesCreateComponent = () => import('../components/Roles/RolesCreate.vue')
 const RolesEditComponent = () => import('../components/Roles/RolesEdit.vue');
 const TipoPapelComponent = () => import('../components/TipoPapel/TipoPapelIndex.vue');
 const TipoAgarradorComponent = () => import('../components/Agarradores/AgarradoresIndex.vue');
+const PaginaComponent = () => import('../components/Paginas/PaginaIndex.vue');
+const BancoComponent = () => import('../components/Bancos/BancoIndex.vue');
 
 
 const routes = [
@@ -50,6 +52,22 @@ const routes = [
         component: TipoAgarradorComponent,
         meta: {
             permission: 'menu.agarrador'
+        }
+    },
+    {
+        path: '/paginas',
+        name: 'pagina.index',
+        component: PaginaComponent,
+        meta: {
+            permission: 'menu.pagina'
+        }
+    },
+    {
+        path: '/bancos',
+        name: 'banco.index',
+        component: BancoComponent,
+        meta: {
+            permission: 'menu.banco'
         }
     },
     

@@ -542,6 +542,31 @@ body {
     max-height: 93vh;
 }
 
+/* Chrome, Edge, Safari */
+.sidebar .nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar .nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar .nav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+}
+
+.sidebar .nav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox */
+.sidebar .nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+
 
 @media (max-width: 820px) {
     body {

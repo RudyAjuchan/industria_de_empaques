@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('genero');
             $table->string('telefono')->nullable();
             $table->string('dpi')->nullable();
+            $table->string('email')->unique()->nullable();
             $table->string('departamento')->nullable();
             $table->string('municipio')->nullable();
             $table->text('direccion')->nullable();

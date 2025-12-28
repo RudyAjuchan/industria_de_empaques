@@ -78,6 +78,24 @@
                         <div class="label">Tipos de agarrador</div>
                     </a>
                 @endcan
+
+                @can('menu.pagina')
+                    <a href="#" data-route="/paginas" data-title="Páginas">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-file-outline"></i>
+                        </div>
+                        <div class="label">Páginas</div>
+                    </a>
+                @endcan
+
+                @can('menu.banco')
+                    <a href="#" data-route="/bancos" data-title="Bancos">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-bank-outline"></i>
+                        </div>
+                        <div class="label">Bancos</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

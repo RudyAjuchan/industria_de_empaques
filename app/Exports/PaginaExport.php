@@ -2,20 +2,20 @@
 
 namespace App\Exports;
 
-use Spatie\Permission\Models\Role;
+use App\Models\Pagina;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\{
     FromCollection,
     WithHeadings,
-    WithMapping,
     WithStyles,
+    WithMapping,
     ShouldAutoSize
 };
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class RoleExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class PaginaExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
-    protected ?string $search;
+    protected string|null $search;
 
     public function __construct($search = null)
     {
@@ -24,36 +24,36 @@ class RoleExport implements FromCollection, WithHeadings, WithMapping, WithStyle
 
     public function collection(): Collection
     {
-        return Role::with('permissions')
-            ->when($this->search !== '', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%');
+        return Pagina::when($this->search, function ($q) {
+                $q->where('nombre', 'like', "%{$this->search}%");
             })
-            ->orderBy('name')
+            ->where('estado', 1)
+            ->orderBy('nombre')
             ->get();
     }
 
     public function headings(): array
     {
         return [
-            'Rol',
-            'Cantidad de permisos',
-            'Permisos'
+            'Nombre',
+            'Creado',
+            'Actualizado',
         ];
     }
 
-    public function map($role): array
+    public function map($pagina): array
     {
         return [
-            $role->name,
-            $role->permissions->count(),
-            $role->permissions->pluck('name')->join(', ')
+            $pagina->nombre,
+            $pagina->created_at,
+            $pagina->updated_at,
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => [
+            1 => [ // encabezado
                 'font' => ['bold' => true],
                 'fill' => [
                     'fillType' => 'solid',

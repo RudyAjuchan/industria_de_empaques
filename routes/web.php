@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ForcePasswordController;
+use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -94,6 +96,30 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     ->middleware('permission:agarrador.reporte');
     Route::get('/agarrador/export/excel', [TipoAgarradorController::class, 'exportExcel'])
     ->middleware('permission:agarrador.reporte');
+});
+
+/* RUTAS PARA PÁGINAS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/pagina', [PaginaController::class, 'index'])->middleware('permission:pagina.ver');
+    Route::post('/pagina', [PaginaController::class, 'store'])->middleware('permission:pagina.crear');
+    Route::put('/pagina/{pagina}', [PaginaController::class, 'update'])->middleware('permission:pagina.editar');
+    Route::delete('/pagina/{pagina}', [PaginaController::class, 'destroy'])->middleware('permission:pagina.borrar');
+    Route::get('/pagina/export/pdf', [PaginaController::class, 'exportPdf'])
+    ->middleware('permission:pagina.reporte');
+    Route::get('/pagina/export/excel', [PaginaController::class, 'exportExcel'])
+    ->middleware('permission:pagina.reporte');
+});
+
+/* RUTAS PARA BANCOS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver');
+    Route::post('/banco', [BancoController::class, 'store'])->middleware('permission:banco.crear');
+    Route::put('/banco/{banco}', [BancoController::class, 'update'])->middleware('permission:banco.editar');
+    Route::delete('/banco/{banco}', [BancoController::class, 'destroy'])->middleware('permission:banco.borrar');
+    Route::get('/banco/export/pdf', [BancoController::class, 'exportPdf'])
+    ->middleware('permission:banco.reporte');
+    Route::get('/banco/export/excel', [BancoController::class, 'exportExcel'])
+    ->middleware('permission:banco.reporte');
 });
 
 

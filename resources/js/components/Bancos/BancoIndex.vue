@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona los tipos de agarradores</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona los bancos</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -17,18 +17,18 @@
 
                         <v-list density="compact">
                             <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
-                                v-if="can('agarrador.reporte')">
+                                v-if="can('banco.reporte')">
                                 <v-list-item-title>Excel</v-list-item-title>
                             </v-list-item>
 
                             <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
-                                v-if="can('agarrador.reporte')">
+                                v-if="can('banco.reporte')">
                                 <v-list-item-title>PDF</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
                     <v-btn color="primary" prepend-icon="mdi-plus" @click="create" variant="tonal" :loading="loading"
-                        v-if="can('agarrador.crear')">
+                        v-if="can('banco.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
@@ -37,16 +37,16 @@
 
         <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
             :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
-            v-if="can('agarrador.ver')">
+            v-if="can('banco.ver')">
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
                     <v-btn icon @click="edit(item)" color="primary" variant="tonal" density="compact"
-                        v-if="can('agarrador.editar')">
+                        v-if="can('banco.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
                     <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
-                        v-if="can('agarrador.borrar')">
+                        v-if="can('banco.borrar')">
                         <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
                 </v-row>
@@ -62,13 +62,13 @@
         </v-data-table>
 
         <!-- DIALOG PARA GUARDAR -->
-        <TipoAgarrador v-model="dialog" :tipo="selected" @saved="onSaved" />
+        <BancoDialog v-model="dialog" :tipo="selected" @saved="onSaved" />
 
         <!-- DIALOG PARA ELIMINAR -->
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar el tipo de agarrador
+                    Eliminar la página
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">
@@ -105,14 +105,14 @@
 
 <script>
 import axios from 'axios'
-import TipoAgarrador from './AgarradorDialog.vue';
+import BancoDialog from './BancoDialog.vue'
 import { toast } from 'vue3-toastify'
 
 
 export default {
-    name: 'agarradores.index',
+    name: 'banco.index',
     components: {
-        TipoAgarrador,
+        BancoDialog,
     },
     data() {
         return {
@@ -139,13 +139,13 @@ export default {
     },
 
     mounted() {
-        this.fetchAgarrador()
+        this.fetchBanco()
     },
 
     methods: {
-        async fetchAgarrador() {
+        async fetchBanco() {
             this.loading = true
-            await axios.get('/agarrador')
+            await axios.get('/banco')
                 .then(res => this.roles = res.data)
                 .finally(() => this.loading = false)
         },
@@ -165,14 +165,14 @@ export default {
                 search: this.search
             })
 
-            window.location.href = `/agarrador/export/excel?${params.toString()}`
+            window.location.href = `/banco/export/excel?${params.toString()}`
         },
 
         exportPdf() {
             const params = new URLSearchParams({
                 search: this.search
             })
-            window.open(`/agarrador/export/pdf?${params.toString()}`, '_blank')
+            window.open(`/banco/export/pdf?${params.toString()}`, '_blank')
         },
 
         create() {
@@ -181,8 +181,8 @@ export default {
         },
 
         onSaved(tipo) {
-            this.fetchAgarrador();
-            toast.success('Tipo de agarrador guardado')
+            this.fetchBanco();
+            toast.success('Banco guardado')
         },
 
         async confirmDelete() {
@@ -190,11 +190,11 @@ export default {
             this.deleting = true
 
             try {
-                await axios.delete(`/agarrador/${this.toDelete.id}`)
+                await axios.delete(`/banco/${this.toDelete.id}`)
                 this.deleteDialog = false
                 this.toDelete = null
-                await this.fetchAgarrador()
-                toast.success('Tipo de agarrador eliminado')
+                await this.fetchBanco()
+                toast.success('Banco eliminado')
             } catch (err) {
                 this.deleteDialog = false;
                 this.informationDialog = true;

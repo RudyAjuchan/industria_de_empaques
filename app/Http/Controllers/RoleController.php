@@ -58,7 +58,7 @@ class RoleController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $search = trim((string) $request->query('search'));
+        $search = ($request->input('search') === "null") ? null : $request->input('search');
 
         $roles = Role::with('permissions')
             ->when($search !== '', function ($q) use ($search) {

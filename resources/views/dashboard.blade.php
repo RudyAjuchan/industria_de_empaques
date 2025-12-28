@@ -96,6 +96,14 @@
                         <div class="label">Bancos</div>
                     </a>
                 @endcan
+                @can('menu.cliente')
+                    <a href="#" data-route="/clientes" data-title="Clientes">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-account"></i>
+                        </div>
+                        <div class="label">Clientes</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

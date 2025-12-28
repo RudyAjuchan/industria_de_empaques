@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('municipio')->nullable();
             $table->text('direccion')->nullable();
             $table->string('nit')->nullable();
+            $table->integer('estado')->default(1);
             $table->timestamps();
         });
     }

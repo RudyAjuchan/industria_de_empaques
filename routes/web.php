@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BancoController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PermissionController;
@@ -122,5 +123,17 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     ->middleware('permission:banco.reporte');
 });
 
+/* RUTAS PARA CLIENTES */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/cliente', [ClienteController::class, 'index'])->middleware('permission:cliente.ver');
+    Route::post('/cliente', [ClienteController::class, 'store'])->middleware('permission:cliente.crear');
+    Route::get('/cliente/{cliente}', [ClienteController::class, 'show'])->middleware('permission:cliente.ver');
+    Route::put('/cliente/{cliente}', [ClienteController::class, 'update'])->middleware('permission:cliente.editar');
+    Route::delete('/cliente/{cliente}', [ClienteController::class, 'destroy'])->middleware('permission:cliente.borrar');
+    Route::get('/cliente/export/pdf', [ClienteController::class, 'exportPdf'])
+    ->middleware('permission:cliente.reporte');
+    Route::get('/cliente/export/excel', [ClienteController::class, 'exportExcel'])
+    ->middleware('permission:cliente.reporte');
+});
 
 require __DIR__.'/auth.php';

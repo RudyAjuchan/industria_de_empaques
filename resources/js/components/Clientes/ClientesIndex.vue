@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona los bancos</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona los clientes</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -17,18 +17,18 @@
 
                         <v-list density="compact">
                             <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
-                                v-if="can('banco.reporte')">
+                                v-if="can('cliente.reporte')">
                                 <v-list-item-title>Excel</v-list-item-title>
                             </v-list-item>
 
                             <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
-                                v-if="can('banco.reporte')">
+                                v-if="can('cliente.reporte')">
                                 <v-list-item-title>PDF</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="create" variant="tonal" :loading="loading"
-                        v-if="can('banco.crear')">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/cliente/create')" variant="tonal" :loading="loading"
+                        v-if="can('cliente.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
@@ -37,16 +37,16 @@
 
         <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
             :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
-            v-if="can('banco.ver')">
+            v-if="can('cliente.ver')">
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
-                    <v-btn icon @click="edit(item)" color="primary" variant="tonal" density="compact"
-                        v-if="can('banco.editar')">
+                    <v-btn icon @click="$router.push(`/cliente/${item.id}/edit`)" color="primary" variant="tonal" density="compact"
+                        v-if="can('cliente.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
                     <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
-                        v-if="can('banco.borrar')">
+                        v-if="can('cliente.borrar')">
                         <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
                 </v-row>
@@ -61,8 +61,7 @@
             </template>
         </v-data-table>
 
-        <!-- DIALOG PARA GUARDAR -->
-        <BancoDialog v-model="dialog" :tipo="selected" @saved="onSaved" />
+        
 
         <!-- DIALOG PARA ELIMINAR -->
         <v-dialog v-model="deleteDialog" max-width="420">
@@ -105,14 +104,12 @@
 
 <script>
 import axios from 'axios'
-import BancoDialog from './ClientesIndex.vue'
 import { toast } from 'vue3-toastify'
 
 
 export default {
-    name: 'banco.index',
+    name: 'cliente.index',
     components: {
-        BancoDialog,
     },
     data() {
         return {
@@ -124,13 +121,18 @@ export default {
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
+                { title: 'Teléfono', key: 'telefono' },
+                { title: 'DPI', key: 'dpi' },
+                { title: 'Correo', key: 'email' },
+                { title: 'Departamento', key: 'departamento' },
+                { title: 'Municipio', key: 'municipio' },
+                { title: 'Dirección', key: 'direccion' },
+                { title: 'Nit', key: 'nit' },
                 { title: 'Creado', key: 'created_at' },
                 { title: 'Actualizado', key: 'updated_at' },
                 { title: 'Acciones', key: 'actions', sortable: false }
             ],
             search: null,
-            dialog: false,
-            selected: null,
             toDelete: null,
             deleteDialog: false,
             informationDialog: false,
@@ -139,20 +141,15 @@ export default {
     },
 
     mounted() {
-        this.fetchBanco()
+        this.fetchCliente()
     },
 
     methods: {
-        async fetchBanco() {
+        async fetchCliente() {
             this.loading = true
-            await axios.get('/banco')
+            await axios.get('/cliente')
                 .then(res => this.roles = res.data)
                 .finally(() => this.loading = false)
-        },
-
-        edit(item) {
-            this.selected = item
-            this.dialog = true
         },
 
         openDelete(item) {
@@ -165,24 +162,20 @@ export default {
                 search: this.search
             })
 
-            window.location.href = `/banco/export/excel?${params.toString()}`
+            window.location.href = `/cliente/export/excel?${params.toString()}`
         },
 
         exportPdf() {
             const params = new URLSearchParams({
                 search: this.search
             })
-            window.open(`/banco/export/pdf?${params.toString()}`, '_blank')
+            window.open(`/cliente/export/pdf?${params.toString()}`, '_blank')
         },
 
-        create() {
-            this.selected = null
-            this.dialog = true
-        },
 
         onSaved(tipo) {
-            this.fetchBanco();
-            toast.success('Banco guardado')
+            this.fetchCliente();
+            toast.success('Cliente guardado')
         },
 
         async confirmDelete() {
@@ -190,11 +183,11 @@ export default {
             this.deleting = true
 
             try {
-                await axios.delete(`/banco/${this.toDelete.id}`)
+                await axios.delete(`/cliente/${this.toDelete.id}`)
                 this.deleteDialog = false
                 this.toDelete = null
-                await this.fetchBanco()
-                toast.success('Banco eliminado')
+                await this.fetchCliente()
+                toast.success('Cliente eliminado')
             } catch (err) {
                 this.deleteDialog = false;
                 this.informationDialog = true;

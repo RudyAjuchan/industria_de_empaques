@@ -134,6 +134,7 @@ class UsuarioController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             })
+            ->where('estado', 1)
             ->orderBy('name')
             ->get();
 

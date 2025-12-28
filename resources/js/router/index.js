@@ -6,10 +6,16 @@ const UsuarioComponent = () => import('../components/Usuarios/Usuario.vue');
 const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
 const RolesCreateComponent = () => import('../components/Roles/RolesCreate.vue');
 const RolesEditComponent = () => import('../components/Roles/RolesEdit.vue');
+
 const TipoPapelComponent = () => import('../components/TipoPapel/TipoPapelIndex.vue');
 const TipoAgarradorComponent = () => import('../components/Agarradores/AgarradoresIndex.vue');
 const PaginaComponent = () => import('../components/Paginas/PaginaIndex.vue');
 const BancoComponent = () => import('../components/Bancos/BancoIndex.vue');
+
+/* COMPONENTES PARA CLIENTES */
+const ClienteComponent = () => import('../components/Clientes/ClientesIndex.vue');
+const ClienteCreateComponent = () => import('../components/Clientes/ClientesCreate.vue');
+const ClienteEditComponent = () => import('../components/Clientes/ClientesEdit.vue');
 
 
 const routes = [
@@ -70,6 +76,14 @@ const routes = [
             permission: 'menu.banco'
         }
     },
+    {
+        path: '/clientes',
+        name: 'cliente.index',
+        component: ClienteComponent,
+        meta: {
+            permission: 'menu.cliente'
+        }
+    },
     
     /* RUTAS PARA ROLES */
     {
@@ -86,6 +100,23 @@ const routes = [
         component: RolesEditComponent,
         meta: {
             permission: 'usuario.editar'
+        }
+    },
+    /* RUTAS PARA CLIENTES */
+    {
+        path: '/cliente/create',
+        name: 'cliente.create',
+        component: ClienteCreateComponent,
+        meta: {
+            permission: 'cliente.crear'
+        }
+    },
+    {
+        path: '/cliente/:id/edit',
+        name: 'cliente.edit',
+        component: ClienteEditComponent,
+        meta: {
+            permission: 'cliente.editar'
         }
     }
 

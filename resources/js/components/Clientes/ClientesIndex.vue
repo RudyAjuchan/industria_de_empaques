@@ -177,6 +177,7 @@ export default {
             headers: [
                 { title: 'Nombre', key: 'nombre' },
                 { title: 'Contacto', key: 'contacto' },
+                { title: 'País', key: 'pais' },
                 { title: 'Ubicación', key: 'ubicacion' },
                 { title: 'Dirección', key: 'direccion' },
                 { title: 'DPI', key: 'dpi' },

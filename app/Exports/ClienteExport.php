@@ -70,6 +70,7 @@ class ClienteExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Correos',
             'Teléfonos',
             'DPI',
+            'País',
             'Ubicación',
             'Dirección',
             'NIT',
@@ -93,6 +94,7 @@ class ClienteExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
             $cliente->dpi,
 
+            $cliente->pais,
             // Ubicación
             $cliente->municipio
                 ? "{$cliente->municipio->nombre}, {$cliente->municipio->departamento->nombre}"

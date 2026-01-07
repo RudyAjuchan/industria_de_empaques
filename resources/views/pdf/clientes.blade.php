@@ -62,6 +62,7 @@
                 <th>Nombre</th>
                 <th>Contactos</th>
                 <th>Ubicación</th>
+                <th>País</th>
                 <th>DPI</th>
                 <th>NIT</th>
                 <th>Dirección</th>
@@ -104,6 +105,9 @@
                             {{ $cli->estado_pais }}
                         @endif
                     </td>
+
+                    {{-- País --}}
+                    <td>{{ $cli->pais }}</td>
 
                     {{-- DPI --}}
                     <td>{{ $cli->dpi }}</td>

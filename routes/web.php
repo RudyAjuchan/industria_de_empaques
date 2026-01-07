@@ -10,6 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\TipoAgarradorController;
 use App\Http\Controllers\TipoPapelController;
+use App\Http\Controllers\UbicacionController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -126,6 +127,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA CLIENTES */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/cliente', [ClienteController::class, 'index'])->middleware('permission:cliente.ver');
+    Route::get('/departamentos', [UbicacionController::class, 'departamentos']);
+    Route::get('/municipios/{departamento}', [UbicacionController::class, 'municipios']);
     Route::post('/cliente', [ClienteController::class, 'store'])->middleware('permission:cliente.crear');
     Route::get('/cliente/{cliente}', [ClienteController::class, 'show'])->middleware('permission:cliente.ver');
     Route::put('/cliente/{cliente}', [ClienteController::class, 'update'])->middleware('permission:cliente.editar');

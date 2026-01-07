@@ -68,7 +68,7 @@
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar la página
+                    Eliminar el banco
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">

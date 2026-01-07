@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('genero');
-            $table->string('telefono')->nullable();
+            $table->string('genero');            
             $table->string('dpi')->nullable();
-            $table->string('email')->unique()->nullable();
-            $table->string('departamento')->nullable();
-            $table->string('municipio')->nullable();
+            $table->foreignId('municipios_id')->nullable()->constrained('municipios');
+            $table->text('pais')->nullable();
+            $table->text('estado_pais')->nullable();
+            $table->text('ciudad_pais')->nullable();
             $table->text('direccion')->nullable();
             $table->string('nit')->nullable();
             $table->integer('estado')->default(1);

@@ -27,21 +27,76 @@
                             </v-list-item>
                         </v-list>
                     </v-menu>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/cliente/create')" variant="tonal" :loading="loading"
-                        v-if="can('cliente.crear')">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/cliente/create')"
+                        variant="tonal" :loading="loading" v-if="can('cliente.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
             </v-row>
         </div>
 
-        <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
-            v-if="can('cliente.ver')">
+        <v-data-table :headers="headers" :items="clientes" :loading="loading" fixed-header height="400px"
+            :header-props="{ class: 'bg-green-darken-2' }" density="compact" v-if="can('cliente.ver')">
+
+            <template v-slot:[`item.contacto`]="{ item }">
+                <v-menu open-on-hover location="end" v-if="item.emails.length > 0">
+                    <template #activator="{ props }">
+                        <span v-bind="props" class="cursor-pointer">
+                            📧 {{ item.emails[0].email }}
+                            <span v-if="item.emails.length > 1" class="text-caption text-medium-emphasis">
+                                (+{{ item.emails.length - 1 }})
+                            </span>
+                        </span>
+                    </template>
+
+                    <v-list density="compact">
+                        <v-list-item v-for="(e, i) in item.emails" :key="i">
+                            <v-list-item-title>{{ e.email }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+
+
+                <v-menu open-on-hover location="end" v-if="item.telefonos.length > 0">
+                    <template #activator="{ props }">
+                        <span v-bind="props" class="cursor-pointer">
+                            📞 {{ item.telefonos[0].telefono_codigo_pais }} {{ item.telefonos[0].telefono_numero }}
+                            <span v-if="item.telefonos.length > 1" class="text-caption text-medium-emphasis">
+                                (+{{ item.telefonos.length - 1 }})
+                            </span>
+                        </span>
+                    </template>
+
+                    <v-list density="compact">
+                        <v-list-item v-for="(t, i) in item.telefonos" :key="i">
+                            <v-list-item-title>
+                                {{ t.telefono_codigo_pais }} {{ t.telefono_numero }}
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+
+            </template>
+
+            <template v-slot:[`item.ubicacion`]="{ item }">
+                <div class="text-body-2">
+                    <template v-if="item.municipio">
+                        {{ item.municipio.nombre }},
+                        {{ item.municipio.departamento.nombre }}
+                    </template>
+
+                    <template v-else>
+                        {{ item.ciudad_pais }} — {{ item.estado_pais }}
+                    </template>
+                </div>
+            </template>
+
+
+
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
-                    <v-btn icon @click="$router.push(`/cliente/${item.id}/edit`)" color="primary" variant="tonal" density="compact"
-                        v-if="can('cliente.editar')">
+                    <v-btn icon @click="$router.push(`/cliente/${item.id}/edit`)" color="primary" variant="tonal"
+                        density="compact" v-if="can('cliente.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
@@ -61,7 +116,7 @@
             </template>
         </v-data-table>
 
-        
+
 
         <!-- DIALOG PARA ELIMINAR -->
         <v-dialog v-model="deleteDialog" max-width="420">
@@ -113,7 +168,7 @@ export default {
     },
     data() {
         return {
-            roles: [],
+            clientes: [],
             loading: false,
             deleting: false,
             showPermissions: false,
@@ -121,13 +176,11 @@ export default {
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
-                { title: 'Teléfono', key: 'telefono' },
-                { title: 'DPI', key: 'dpi' },
-                { title: 'Correo', key: 'email' },
-                { title: 'Departamento', key: 'departamento' },
-                { title: 'Municipio', key: 'municipio' },
+                { title: 'Contacto', key: 'contacto' },
+                { title: 'Ubicación', key: 'ubicacion' },
                 { title: 'Dirección', key: 'direccion' },
-                { title: 'Nit', key: 'nit' },
+                { title: 'DPI', key: 'dpi' },
+                { title: 'NIT', key: 'nit' },
                 { title: 'Creado', key: 'created_at' },
                 { title: 'Actualizado', key: 'updated_at' },
                 { title: 'Acciones', key: 'actions', sortable: false }
@@ -142,13 +195,47 @@ export default {
 
     mounted() {
         this.fetchCliente()
+        const toastType = this.$route.query.toast
+
+        if (toastType === 'saved') {
+            toast.success('Cliente guardado correctamente', {
+                autoClose: 2000,
+                onClose: () => {
+                    this.$router.replace({ query: {} })
+                }
+            })
+        }
+
+        if (toastType === 'updated') {
+            toast.success('Cliente actualizado correctamente', {
+                autoClose: 2000,
+                onClose: () => {
+                    this.$router.replace({ query: {} })
+                }
+            })
+        }
+    },
+
+    watch: {
+        search() {
+            clearTimeout(this.debounceTimer)
+
+            this.debounceTimer = setTimeout(() => {
+                this.fetchCliente()
+            }, 300)
+        }
     },
 
     methods: {
         async fetchCliente() {
             this.loading = true
-            await axios.get('/cliente')
-                .then(res => this.roles = res.data)
+
+            const params = {
+                search: this.search
+            }
+
+            await axios.get('/cliente', { params })
+                .then(res => this.clientes = res.data)
                 .finally(() => this.loading = false)
         },
 
@@ -170,12 +257,6 @@ export default {
                 search: this.search
             })
             window.open(`/cliente/export/pdf?${params.toString()}`, '_blank')
-        },
-
-
-        onSaved(tipo) {
-            this.fetchCliente();
-            toast.success('Cliente guardado')
         },
 
         async confirmDelete() {

@@ -9,13 +9,28 @@ class Cliente extends Model
     protected $fillable = [
         'nombre',
         'genero',
-        'telefono',
         'dpi',
-        'email',
-        'departamento',
-        'municipio',
+        'municipios_id',
+        'pais',
+        'estado_pais',
+        'ciudad_pais',
         'direccion',
         'nit',
         'estado',
     ];
+
+    public function emails()
+    {
+        return $this->hasMany(Cliente_email::class, 'clientes_id');
+    }
+
+    public function telefonos()
+    {
+        return $this->hasMany(Cliente_telefono::class, 'clientes_id');
+    }
+
+    public function municipio()
+    {
+        return $this->belongsTo(Municipio::class, 'municipios_id');
+    }
 }

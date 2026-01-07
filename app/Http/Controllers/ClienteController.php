@@ -10,33 +10,107 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ClienteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Cliente::where('estado', 1)->orderBy('nombre')->get();
+        $search = trim($request->query('search', ''));
+
+        $clientes = Cliente::with([
+            'emails',
+            'telefonos',
+            'municipio.departamento'
+        ])
+            ->where('estado', 1)
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+
+                    // Cliente
+                    $sub->where('nombre', 'like', "%{$search}%")
+                        ->orWhere('dpi', 'like', "%{$search}%")
+                        ->orWhere('nit', 'like', "%{$search}%")
+                        ->orWhere('direccion', 'like', "%{$search}%")
+                        ->orWhere('estado_pais', 'like', "%{$search}%")
+                        ->orWhere('ciudad_pais', 'like', "%{$search}%");
+
+                    // Emails
+                    $sub->orWhereHas('emails', function ($q) use ($search) {
+                        $q->where('email', 'like', "%{$search}%");
+                    });
+
+                    // Teléfonos
+                    $sub->orWhereHas('telefonos', function ($q) use ($search) {
+                        $q->where('telefono_codigo_pais', 'like', "%{$search}%")
+                            ->orWhere('telefono_numero', 'like', "%{$search}%");
+                    });
+
+                    // Municipio / Departamento
+                    $sub->orWhereHas('municipio', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhereHas('departamento', function ($d) use ($search) {
+                                $d->where('nombre', 'like', "%{$search}%");
+                            });
+                    });
+                });
+            })
+            ->orderBy('nombre')
+            ->get();
+
+        return response()->json($clientes);
     }
+
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'genero' => 'required|string|max:20',
-            'telefono' => 'nullable|string|max:50',
-            'dpi' => 'nullable|string|digits:13',
-            'email' => 'nullable|email|unique:clientes,email',
-            'departamento' => 'nullable|string|max:255',
-            'municipio' => 'nullable|string|max:255',
+
+            'dpi' => 'nullable|digits:13',
+            'municipios_id' => 'nullable|exists:municipios,id',
+
+            'pais' => 'nullable|string',
+            'estado_pais' => 'nullable|string|max:255',
+            'ciudad_pais' => 'nullable|string|max:255',
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
+
+            'emails' => 'nullable|array',
+            'emails.*' => 'required|email|max:255',
+
+            'telefonos' => 'nullable|array',
+            'telefonos.*.telefono_pais' => 'nullable|string',
+            'telefonos.*.telefono_pais_nombre' => 'nullable|string',
+            'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
+            'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
 
         $cliente = Cliente::create($data);
+
+        // Emails
+        if (!empty($data['emails'])) {
+            foreach ($data['emails'] as $email) {
+                $cliente->emails()->create([
+                    'email' => $email
+                ]);
+            }
+        }
+
+        // Teléfonos
+        if (!empty($data['telefonos'])) {
+            foreach ($data['telefonos'] as $tel) {
+                $cliente->telefonos()->create($tel);
+            }
+        }
 
         return response()->json($cliente, 201);
     }
 
     public function show(Cliente $cliente)
     {
-        return $cliente;
+        return $cliente->load([
+            'emails',
+            'telefonos',
+            'municipio.departamento',
+        ]);
     }
 
     public function update(Request $request, Cliente $cliente)
@@ -44,16 +118,39 @@ class ClienteController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'genero' => 'required|string|max:20',
-            'telefono' => 'nullable|string|max:50',
-            'dpi' => 'nullable|string|digits:13',
-            'email' => 'nullable|email|unique:clientes,email,' . $cliente->id,
-            'departamento' => 'nullable|string|max:255',
-            'municipio' => 'nullable|string|max:255',
+
+            'dpi' => 'nullable|digits:13',
+            'municipios_id' => 'nullable|exists:municipios,id',
+
+            'pais' => 'nullable|string',
+            'estado_pais' => 'nullable|string|max:255',
+            'ciudad_pais' => 'nullable|string|max:255',
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
+
+            'emails' => 'nullable|array',
+            'emails.*' => 'required|email|max:255',
+
+            'telefonos' => 'nullable|array',
+            'telefonos.*.telefono_pais' => 'nullable|string',
+            'telefonos.*.telefono_pais_nombre' => 'nullable|string',
+            'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
+            'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
 
         $cliente->update($data);
+
+        $cliente->emails()->delete();
+        foreach ($data['emails'] ?? [] as $email) {
+            $cliente->emails()->create([
+                'email' => $email,
+            ]);
+        }
+
+        $cliente->telefonos()->delete();
+        foreach ($data['telefonos'] ?? [] as $tel) {
+            $cliente->telefonos()->create($tel);
+        }
 
         return response()->json($cliente);
     }
@@ -70,28 +167,56 @@ class ClienteController extends Controller
     public function exportPdf(Request $request)
     {
         $search = trim($request->query('search', ''));
-        $search = ($search === "null") ? null : $search;
+        $search = ($search === 'null' || $search === '') ? null : $search;
 
-        $cliente = Cliente::when($search !== '', function ($q) use ($search) {
-            $q->where(function ($sub) use ($search) {
-                $sub->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('telefono', 'like', "%{$search}%")
-                    ->orWhere('dpi', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('departamento', 'like', "%{$search}%")
-                    ->orWhere('municipio', 'like', "%{$search}%")
-                    ->orWhere('direccion', 'like', "%{$search}%")
-                    ->orWhere('nit', 'like', "%{$search}%");
-            });
-        })
+        $clientes = Cliente::with([
+            'emails',
+            'telefonos',
+            'municipio.departamento'
+        ])
             ->where('estado', 1)
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+
+                    // Cliente
+                    $sub->where('nombre', 'like', "%{$search}%")
+                        ->orWhere('dpi', 'like', "%{$search}%")
+                        ->orWhere('nit', 'like', "%{$search}%")
+                        ->orWhere('direccion', 'like', "%{$search}%")
+                        ->orWhere('estado_pais', 'like', "%{$search}%")
+                        ->orWhere('ciudad_pais', 'like', "%{$search}%");
+
+                    // Emails
+                    $sub->orWhereHas('emails', function ($q) use ($search) {
+                        $q->where('email', 'like', "%{$search}%");
+                    });
+
+                    // Teléfonos
+                    $sub->orWhereHas('telefonos', function ($q) use ($search) {
+                        $q->where('telefono_codigo_pais', 'like', "%{$search}%")
+                            ->orWhere('telefono_numero', 'like', "%{$search}%");
+                    });
+
+                    // Municipio / Departamento
+                    $sub->orWhereHas('municipio', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhereHas('departamento', function ($d) use ($search) {
+                                $d->where('nombre', 'like', "%{$search}%");
+                            });
+                    });
+                });
+            })
             ->orderBy('nombre')
             ->get();
 
-        return Pdf::loadView('pdf.clientes', compact('cliente', 'search'))
+        return Pdf::loadView('pdf.clientes', [
+            'clientes' => $clientes,
+            'search' => $search
+        ])
             ->setPaper('letter', 'landscape')
             ->stream('clientes.pdf');
     }
+
 
     public function exportExcel(Request $request)
     {

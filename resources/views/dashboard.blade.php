@@ -104,6 +104,14 @@
                         <div class="label">Clientes</div>
                     </a>
                 @endcan
+                @can('menu.producto')
+                    <a href="#" data-route="/productos" data-title="Productos">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-cube-outline"></i>
+                        </div>
+                        <div class="label">Productos</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

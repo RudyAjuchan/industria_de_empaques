@@ -19,6 +19,10 @@ import * as directives from 'vuetify/directives'
 import Toast from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
+import 'filepond/dist/filepond.min.css'
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
+
+
 const vuetify = createVuetify({
     components,
     directives

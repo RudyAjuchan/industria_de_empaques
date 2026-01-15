@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -137,6 +138,20 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     ->middleware('permission:cliente.reporte');
     Route::get('/cliente/export/excel', [ClienteController::class, 'exportExcel'])
     ->middleware('permission:cliente.reporte');
+});
+
+/* RUTAS PARA PRODUCTOS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver');
+    Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.ver');
+    Route::get('/producto/{producto}', [ProductosController::class, 'show'])->middleware('permission:producto.editar');
+    Route::post('/producto', [ProductosController::class, 'store'])->middleware('permission:producto.crear');
+    Route::put('/producto/{producto}', [ProductosController::class, 'update'])->middleware('permission:producto.editar');
+    Route::delete('/producto/{producto}', [ProductosController::class, 'destroy'])->middleware('permission:producto.borrar');
+    Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])
+    ->middleware('permission:producto.reporte');
+    Route::get('/producto/export/excel', [ProductosController::class, 'exportExcel'])
+    ->middleware('permission:producto.reporte');
 });
 
 require __DIR__.'/auth.php';

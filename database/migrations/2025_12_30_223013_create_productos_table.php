@@ -17,8 +17,7 @@ return new class extends Migration
             $table->float('alto');
             $table->float('ancho');
             $table->float('fuelle');
-            $table->foreignId('tipo_agarradors_id')->constrained('tipo_agarradors');
-            $table->foreignId('tipo_papels_id')->constrained('tipo_papels');
+            $table->string('tipo');
             $table->foreignId('paginas_id')->constrained('paginas');
             $table->integer('estado')->default(1);
             $table->timestamps();

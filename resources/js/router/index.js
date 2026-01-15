@@ -17,6 +17,10 @@ const ClienteComponent = () => import('../components/Clientes/ClientesIndex.vue'
 const ClienteCreateComponent = () => import('../components/Clientes/ClientesCreate.vue');
 const ClienteEditComponent = () => import('../components/Clientes/ClientesEdit.vue');
 
+/* COMPONENTES PARA PRODUCTOS */
+const productosComponent = () => import('../components/Productos/ProductosIndex.vue');
+const ProductosCreateComponent = () => import('../components/Productos/ProductosCreate.vue');
+const ProductosEditComponent = () => import('../components/Productos/ProductosEdit.vue');
 
 const routes = [
     /* RUTAS DEL MENÚ */
@@ -84,6 +88,14 @@ const routes = [
             permission: 'menu.cliente'
         }
     },
+    {
+        path: '/productos',
+        name: 'productos.index',
+        component: productosComponent,
+        meta: {
+            permission: 'menu.producto'
+        }
+    },
     
     /* RUTAS PARA ROLES */
     {
@@ -117,6 +129,23 @@ const routes = [
         component: ClienteEditComponent,
         meta: {
             permission: 'cliente.editar'
+        }
+    },
+    /* RUTAS PARA PRODUCTOS */
+    {
+        path: '/producto/create',
+        name: 'producto.create',
+        component: ProductosCreateComponent,
+        meta: {
+            permission: 'producto.crear'
+        }
+    },
+    {
+        path: '/producto/:id/edit',
+        name: 'producto.edit',
+        component: ProductosEditComponent,
+        meta: {
+            permission: 'producto.editar'
         }
     }
 

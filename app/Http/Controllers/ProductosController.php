@@ -15,12 +15,27 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class ProductosController extends Controller
 {
     /* LISTAR */
-    public function index()
+    public function index(Request $request)
     {
-        return Producto::with(['imagenes'])
-            ->where('estado', 1)
-            ->orderBy('id', 'desc')
-            ->get();
+        $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $query = Producto::query();
+
+        if ($search) {
+            $query->where('nombre', 'like', "%{$search}%");
+        }
+
+        $allowedSorts = ['id', 'nombre', 'created_at', 'updated_at'];
+        if (!in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'id';
+        }
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        return $query->paginate($perPage);
     }
 
     public function getPaginas()
@@ -39,6 +54,8 @@ class ProductosController extends Controller
             'fuelle' => 'required|numeric',
             'tipo' => 'required|string',
             'paginas_id' => 'required|exists:paginas,id',
+            'imagenes_ordenadas' => 'required|array',
+            'main_index' => 'required|integer',
         ]);
 
         DB::beginTransaction();
@@ -53,15 +70,13 @@ class ProductosController extends Controller
                 'paginas_id',
             ]));
 
-            if ($request->hasFile('imagenes_nuevas')) {
-                $mainIndex = $request->input('main_index', 0);
-                foreach ($request->file('imagenes_nuevas') as $index => $imagen) {
-                    $path = $imagen->store('productos', 'public');
+            foreach ($request->imagenes_ordenadas as $index => $imgData) {
 
+                if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
                     $producto->imagenes()->create([
-                        'path' => $path,
-                        'is_main' => $index == $mainIndex,
+                        'path' => $imgData['file']->store('productos', 'public'),
                         'orden' => $index,
+                        'is_main' => ($index == $request->main_index),
                     ]);
                 }
             }
@@ -72,14 +87,16 @@ class ProductosController extends Controller
                 $producto->load('imagenes'),
                 201
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Error al crear producto',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function show(Producto $producto)
     {
@@ -101,7 +118,6 @@ class ProductosController extends Controller
             'imagenes_ordenadas' => 'required|array',
         ]);
 
-        // 1. Actualizar producto
         $producto->update($request->only([
             'nombre',
             'alto',
@@ -111,7 +127,6 @@ class ProductosController extends Controller
             'paginas_id'
         ]));
 
-        // 2. Eliminar imágenes que ya no existen
         $idsExistentes = collect($request->imagenes_ordenadas)
             ->where('tipo', 'existente')
             ->pluck('id')
@@ -124,7 +139,6 @@ class ProductosController extends Controller
                 $img->delete();
             });
 
-        // 3. Procesar orden + principal
         foreach ($request->imagenes_ordenadas as $index => $imgData) {
 
             // EXISTENTE
@@ -154,11 +168,7 @@ class ProductosController extends Controller
         DB::beginTransaction();
 
         try {
-            foreach ($producto->imagenes as $img) {
-                Storage::disk('public')->delete($img->path);
-            }
-
-            $producto->delete();
+            $producto->update(['estado' => 0]);
 
             DB::commit();
 
@@ -172,16 +182,38 @@ class ProductosController extends Controller
         }
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $productos = Producto::with('imagenes')->get();
+        $search = $request->input('search');
+        $search = ($search === 'null' || $search === '') ? null : $search;
 
-        $pdf = Pdf::loadView('productos.pdf', compact('productos'));
-        return $pdf->download('productos.pdf');
+        $productos = Producto::query()
+            ->with(['imagenes' => function ($q) {
+                $q->where('is_main', true);
+            }])
+            ->when($search, function ($query) use ($search) {
+                $query->where('nombre', 'like', '%' . $search . '%')
+                    ->orWhere('tipo', 'like', '%' . $search . '%');
+            })
+            ->where('estado', 1)
+            ->orderBy('id')
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.productos', [
+            'productos' => $productos,
+            'search'    => $search,
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream('productos.pdf');
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
-        return Excel::download(new ProductosExport, 'productos.xlsx');
+        $search = $request->query('search');
+
+        return Excel::download(
+            new ProductosExport($search),
+            'productos.xlsx'
+        );
     }
 }

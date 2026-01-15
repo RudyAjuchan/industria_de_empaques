@@ -27,21 +27,24 @@
                             </v-list-item>
                         </v-list>
                     </v-menu>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/producto/create')" variant="tonal" :loading="loading"
-                        v-if="can('producto.crear')">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/producto/create')"
+                        variant="tonal" :loading="loading" v-if="can('producto.crear')">
                         Nuevo
                     </v-btn>
                 </v-col>
             </v-row>
         </div>
-
-        <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
-            v-if="can('producto.ver')">
+        <v-data-table-server :headers="headers" :items="productos" :items-length="total" :loading="loading"
+            @update:options="fetchProducto" fixed-header height="500px"
+            :header-props="{ class: 'bg-green-darken-2' }" density="compact" v-if="can('producto.ver')" :options="options">
+            <template v-slot:[`item.imagen`]="{ item }">
+                <v-img :src="item.imagen_principal_url || imagePlaceholder" width="52" height="52" aspect-ratio="1"
+                    contain loading="lazy"/>
+            </template>
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
-                    <v-btn icon @click="$router.push(`/producto/${item.id}/edit`)" color="primary" variant="tonal" density="compact"
-                        v-if="can('producto.editar')">
+                    <v-btn icon @click="$router.push(`/producto/${item.id}/edit`)" color="primary" variant="tonal"
+                        density="compact" v-if="can('producto.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
@@ -59,7 +62,7 @@
             <template v-slot:[`item.updated_at`]="{ item }">
                 {{ formatDate(item.updated_at) }}
             </template>
-        </v-data-table>
+        </v-data-table-server>
 
 
         <!-- DIALOG PARA ELIMINAR -->
@@ -110,7 +113,7 @@ export default {
     name: 'producto.index',
     data() {
         return {
-            roles: [],
+            productos: [],
             loading: false,
             deleting: false,
             showPermissions: false,
@@ -118,6 +121,12 @@ export default {
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
+                { title: 'Imagen', key: 'imagen', sortable: false },
+                { title: 'Alto', key: 'alto' },
+                { title: 'Ancho', key: 'ancho' },
+                { title: 'Fuelle', key: 'fuelle' },
+                { title: 'Tipo', key: 'tipo' },
+                { title: 'Página', key: 'paginas.nombre' },
                 { title: 'Creado', key: 'created_at' },
                 { title: 'Actualizado', key: 'updated_at' },
                 { title: 'Acciones', key: 'actions', sortable: false }
@@ -128,6 +137,14 @@ export default {
             deleteDialog: false,
             informationDialog: false,
             message: "",
+            imagePlaceholder: '/storage/no-image.png',
+            total: 0,
+            options: {
+                page: 1,
+                itemsPerPage: 10,
+                sortBy: [{ key: 'id', order: 'desc' }],
+            },
+            debounceTimer: null,
         }
     },
 
@@ -154,11 +171,25 @@ export default {
     },
 
     methods: {
-        async fetchProducto() {
+        async fetchProducto(options = this.options) {
             this.loading = true
-            await axios.get('/producto')
-                .then(res => this.roles = res.data)
-                .finally(() => this.loading = false)
+
+            // sincronizamos options cuando viene del data-table
+            this.options = options
+
+            const { data } = await axios.get('/producto', {
+                params: {
+                    page: options.page,
+                    per_page: options.itemsPerPage,
+                    search: this.search,
+                    sort_by: options.sortBy?.[0]?.key,
+                    sort_order: options.sortBy?.[0]?.order,
+                }
+            })
+
+            this.productos = data.data
+            this.total = data.total
+            this.loading = false
         },
 
         openDelete(item) {
@@ -209,7 +240,19 @@ export default {
                 hour: '2-digit',
                 minute: '2-digit',
             })
+        },
+    },
+    watch: {
+        search(newValue) {
+            clearTimeout(this.debounceTimer)
+
+            this.options.page = 1
+
+            this.debounceTimer = setTimeout(() => {
+                this.fetchProducto()
+            }, 800)
         }
     }
+
 }
 </script>

@@ -37,4 +37,9 @@ class Producto extends Model
             ? asset('storage/' . $this->imagenPrincipal->path)
             : null;
     }
+
+    public function paginas()
+    {
+        return $this->belongsTo(Pagina::class, 'paginas_id');
+    }
 }

@@ -37,7 +37,7 @@
                         <template #item="{ element, index }">
                             <v-col cols="4">
                                 <v-card outlined class="pa-2" :color="index === mainIndex ? 'green-lighten-4' : ''">
-                                    <v-img :src="filePreview(element)" height="120" cover />
+                                    <v-img :src="filePreview(element)" height="120" contain />
 
                                     <v-btn block size="small" color="green" variant="tonal" class="mt-2"
                                         @click="setMain(index)">

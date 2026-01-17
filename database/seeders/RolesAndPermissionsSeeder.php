@@ -89,9 +89,19 @@ class RolesAndPermissionsSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
+        $produccion = Role::firstOrCreate([
+            'name' => 'Producción',
+            'guard_name' => 'web',
+        ]);
+
 
         $adminRole->givePermissionTo(Permission::all());
         $asesorRole->givePermissionTo([
+            'usuario.ver',
+            'menu.inicio',
+        ]);
+
+        $produccion->givePermissionTo([
             'usuario.ver',
             'menu.inicio',
         ]);

@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class DetalleVenta extends Model
+{
+    protected $table = 'detalle_ventas';
+
+    protected $fillable = [
+        'ventas_id',
+        'productos_id',
+        'tipo_agarradors_id',
+        'tipo_papels_id',
+        'color_agarrador',
+        'detalle_impresion',
+        'nombre_logo',
+        'precio',
+        'cantidad',
+        'total',
+    ];
+
+    // Venta
+    public function venta()
+    {
+        return $this->belongsTo(Venta::class, 'ventas_id');
+    }
+
+    // Producto
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'productos_id');
+    }
+
+    public function tipoAgarrador()
+    {
+        return $this->belongsTo(TipoAgarrador::class, 'tipo_agarradors_id');
+    }
+
+    public function tipoPapel()
+    {
+        return $this->belongsTo(TipoPapel::class, 'tipo_papels_id');
+    }
+}

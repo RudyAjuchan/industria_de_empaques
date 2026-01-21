@@ -29,7 +29,14 @@
 
                 <v-col cols="12">
                     <v-autocomplete v-model="form.paginas_id" variant="outlined" label="Página" density="compact"
-                        :items="paginas" item-title="nombre" item-value="id" :error-messages="errors.paginas_id" />
+                        :items="paginas" item-title="nombre" item-value="id" :error-messages="errors.paginas_id">
+                        <template #append-inner>
+                            <v-btn icon size="small" variant="text" @click.stop="dialogPagina = true">
+                                <v-icon size="18">mdi-plus</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-autocomplete>
+                    <DialogPagina v-model="dialogPagina" @saved="onPaginaSave"></DialogPagina>
                 </v-col>
 
                 <v-col cols="12">
@@ -74,6 +81,8 @@
 import axios from 'axios'
 import { FilePond } from '../../plugins/filepond'
 import draggable from 'vuedraggable'
+import DialogPagina from '../Paginas/PaginaDialog.vue'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ProductosForm',
@@ -81,6 +90,7 @@ export default {
     components: {
         FilePond,
         draggable,
+        DialogPagina,
     },
 
     emits: ['saved', 'cancel'],
@@ -123,51 +133,13 @@ export default {
                             error('Error al cargar imagen')
                         })
                 }
-            }
+            },
+            dialogPagina: false,
         }
     },
 
     mounted() {
-        if (this.producto) {
-            this.form = { ...this.producto }
-
-            if (this.producto.imagen_principal_url) {
-                this.files = [{
-                    source: this.producto.imagen_principal_url,
-                    options: { type: 'local' }
-                }]
-            }
-        }
-
-        this.fetchPaginas()
-
-        if (this.producto) {
-            this.form = {
-                nombre: this.producto.nombre,
-                alto: this.producto.alto,
-                ancho: this.producto.ancho,
-                fuelle: this.producto.fuelle,
-                tipo: this.producto.tipo,
-                paginas_id: this.producto.paginas_id,
-            }
-
-            // cargar imágenes existentes
-            this.files = this.producto.imagenes.map(img => ({
-                source: `/storage/${img.path}`,
-                options: {
-                    type: 'local',
-                    metadata: {
-                        id: img.id,
-                        orden: img.orden,
-                        is_main: img.is_main
-                    }
-                }
-            }))
-
-            // imagen principal
-            const principal = this.producto.imagenes.findIndex(i => i.is_main)
-            this.mainIndex = principal !== -1 ? principal : 0
-        }
+        this.fetchPaginas();
     },
 
     methods: {
@@ -185,43 +157,41 @@ export default {
                 }
             })
 
-            // imagen
             this.files.forEach((item, index) => {
-
-                // IMAGEN EXISTENTE
-                if (item.getMetadata('id')) {
-                    formData.append(`imagenes_ordenadas[${index}][id]`, item.getMetadata('id'));
-                    formData.append(`imagenes_ordenadas[${index}][tipo]`, 'existente');
+                if (item.getMetadata?.('id')) {
+                    formData.append(`imagenes_ordenadas[${index}][id]`, item.getMetadata('id'))
+                    formData.append(`imagenes_ordenadas[${index}][tipo]`, 'existente')
                 }
 
-                // IMAGEN NUEVA
                 if (item.file instanceof File) {
-                    formData.append(`imagenes_ordenadas[${index}][file]`, item.file);
-                    formData.append(`imagenes_ordenadas[${index}][tipo]`, 'nueva');
+                    formData.append(`imagenes_ordenadas[${index}][file]`, item.file)
+                    formData.append(`imagenes_ordenadas[${index}][tipo]`, 'nueva')
                 }
-            });
-
+            })
 
             formData.append('main_index', this.mainIndex)
 
             try {
+                let response
+
                 if (this.producto) {
-                    await axios.post(
+                    response = await axios.post(
                         `/producto/${this.producto.id}?_method=PUT`,
                         formData
                     )
                 } else {
-                    await axios.post('/producto', formData)
+                    response = await axios.post('/producto', formData)
                 }
 
-                this.$emit('saved')
+                this.$emit('saved', response.data)
+
             } catch (err) {
-                const e = err.response?.data?.errors
                 this.errors = err.response?.data?.errors || {}
             } finally {
                 this.loading = false
             }
         },
+
         async fetchPaginas() {
             const { data } = await axios.get(`/producto/paginas/`)
             this.paginas = data
@@ -245,16 +215,68 @@ export default {
 
         setMain(index) {
             this.mainIndex = index
+        },
+
+        onPaginaSave(pagina) {
+            this.paginas.push(pagina)
+            this.form.paginas_id = pagina.id
+            toast.success('Pagina guardado')
         }
     },
 
     watch: {
+        producto: {
+            immediate: true,
+            handler(producto) {
+                if (!producto) {
+                    // modo crear
+                    this.form = {
+                        nombre: '',
+                        alto: '',
+                        ancho: '',
+                        fuelle: '',
+                        tipo: '',
+                        paginas_id: null,
+                    }
+                    this.files = []
+                    this.mainIndex = 0
+                    return
+                }
+
+                // modo editar
+                this.form = {
+                    nombre: producto.nombre,
+                    alto: producto.alto,
+                    ancho: producto.ancho,
+                    fuelle: producto.fuelle,
+                    tipo: producto.tipo,
+                    paginas_id: producto.paginas_id,
+                }
+
+                this.files = producto.imagenes.map(img => ({
+                    source: `/storage/${img.path}`,
+                    options: {
+                        type: 'local',
+                        metadata: {
+                            id: img.id,
+                            orden: img.orden,
+                            is_main: img.is_main
+                        }
+                    }
+                }))
+
+                const principal = producto.imagenes.findIndex(i => i.is_main)
+                this.mainIndex = principal !== -1 ? principal : 0
+            }
+        },
+
         files() {
             if (this.mainIndex >= this.files.length) {
                 this.mainIndex = 0
             }
         }
     }
+
 
 }
 </script>

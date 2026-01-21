@@ -227,4 +227,19 @@ class ClienteController extends Controller
             'clientes.xlsx'
         );
     }
+
+    public function search(Request $request)
+    {
+        $q = $request->get('q');
+
+        if (!$q || strlen($q) < 2) {
+            return [];
+        }
+
+        return Cliente::where('nombre', 'like', "%{$q}%")
+            ->orWhere('nit', 'like', "%{$q}%")
+            ->limit(15)
+            ->get(['id', 'nombre', 'nit']);
+    }
+
 }

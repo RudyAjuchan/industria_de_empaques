@@ -112,6 +112,14 @@
                         <div class="label">Productos</div>
                     </a>
                 @endcan
+                @can('menu.venta')
+                    <a href="#" data-route="/ventas" data-title="Ventas">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-cart-outline"></i>
+                        </div>
+                        <div class="label">Ventas</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">
@@ -152,6 +160,7 @@
     <script>
         window.LOGIN_SUCCESS = @json(session('login_success', false));
         window.USER_PERMISSIONS = @json(auth()->user()->getAllPermissions()->pluck('name'));
+        window.AUTH_USER = @json(auth()->user());
     </script>
 
 </body>

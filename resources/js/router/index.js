@@ -22,6 +22,10 @@ const productosComponent = () => import('../components/Productos/ProductosIndex.
 const ProductosCreateComponent = () => import('../components/Productos/ProductosCreate.vue');
 const ProductosEditComponent = () => import('../components/Productos/ProductosEdit.vue');
 
+/* COMPONENTES PARA VENTAS */
+const ventasComponent = () => import('../components/Ventas/VentasIndex.vue');
+const ventasCreateComponent = () => import('../components/Ventas/VentasCreate.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -96,6 +100,14 @@ const routes = [
             permission: 'menu.producto'
         }
     },
+    {
+        path: '/ventas',
+        name: 'ventas.index',
+        component: ventasComponent,
+        meta: {
+            permission: 'menu.venta'
+        }
+    },
     
     /* RUTAS PARA ROLES */
     {
@@ -147,7 +159,16 @@ const routes = [
         meta: {
             permission: 'producto.editar'
         }
-    }
+    },
+    /* RUTAS PARA VENTAS */
+    {
+        path: '/venta/create',
+        name: 'venta.create',
+        component: ventasCreateComponent,
+        meta: {
+            permission: 'venta.crear'
+        }
+    },
 
 ];
 const router = createRouter({

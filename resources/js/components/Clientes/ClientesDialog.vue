@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="open" max-width="800">
+    <v-dialog v-model="open" max-width="900">
         <v-card>
             <v-card-title>
                 {{ cliente ? 'Editar cliente' : 'Nuevo cliente' }}
@@ -13,10 +13,10 @@
 </template>
 
 <script>
-import ClienteForm from './ClienteForm.vue'
+import ClienteForm from './ClientesForm.vue'
 
 export default {
-    name: 'ClienteDialog',
+    name: 'ClientesDialog',
 
     components: { ClienteForm },
 

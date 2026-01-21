@@ -4,8 +4,8 @@
     --g3: #2abb00;
 
     /* Fondo NO negro (verde/gris elegante) */
-    --sidebar-bg: #0f1a17;
-    --sidebar-bg-2: #0b1412;
+    --sidebar-bg: #002721;
+    --sidebar-bg-2: #002721;
 
     --pill: #ffffff;
     --text: rgba(255, 255, 255, .90);
@@ -519,7 +519,7 @@ body {
     padding: 0 24px;
     display: flex;
     align-items: center;
-    background: #dfdfdf;
+    background: #26A69A;
     border-bottom: 1px solid #e5e7eb;
     border-radius: 15px;
     position: sticky;
@@ -531,6 +531,7 @@ body {
     -ms-border-radius: 15px;
     -o-border-radius: 15px;
     margin-left: 20px;
+    color: white;
 }
 
 /* Área scrolleable */

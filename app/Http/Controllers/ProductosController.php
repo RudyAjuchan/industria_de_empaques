@@ -22,7 +22,7 @@ class ProductosController extends Controller
         $sortBy = $request->input('sort_by', 'id');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Producto::query();
+        $query = Producto::with(['paginas']);
 
         if ($search) {
             $query->where('nombre', 'like', "%{$search}%");
@@ -54,7 +54,7 @@ class ProductosController extends Controller
             'fuelle' => 'required|numeric',
             'tipo' => 'required|string',
             'paginas_id' => 'required|exists:paginas,id',
-            'imagenes_ordenadas' => 'required|array',
+            //'imagenes_ordenadas' => 'required|array',
             'main_index' => 'required|integer',
         ]);
 
@@ -69,15 +69,16 @@ class ProductosController extends Controller
                 'tipo',
                 'paginas_id',
             ]));
-
-            foreach ($request->imagenes_ordenadas as $index => $imgData) {
-
-                if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
-                    $producto->imagenes()->create([
-                        'path' => $imgData['file']->store('productos', 'public'),
-                        'orden' => $index,
-                        'is_main' => ($index == $request->main_index),
-                    ]);
+            if($request->imagenes_ordenadas ){
+                foreach ($request->imagenes_ordenadas as $index => $imgData) {
+    
+                    if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
+                        $producto->imagenes()->create([
+                            'path' => $imgData['file']->store('productos', 'public'),
+                            'orden' => $index,
+                            'is_main' => ($index == $request->main_index),
+                        ]);
+                    }
                 }
             }
 
@@ -115,7 +116,7 @@ class ProductosController extends Controller
             'tipo' => 'required|string',
             'paginas_id' => 'required|exists:paginas,id',
             'main_index' => 'required|integer',
-            'imagenes_ordenadas' => 'required|array',
+            //'imagenes_ordenadas' => 'required|array',
         ]);
 
         $producto->update($request->only([
@@ -127,37 +128,40 @@ class ProductosController extends Controller
             'paginas_id'
         ]));
 
-        $idsExistentes = collect($request->imagenes_ordenadas)
-            ->where('tipo', 'existente')
-            ->pluck('id')
-            ->toArray();
-
-        $producto->imagenes()
-            ->whereNotIn('id', $idsExistentes)
-            ->each(function ($img) {
-                Storage::disk('public')->delete($img->path);
-                $img->delete();
-            });
-
-        foreach ($request->imagenes_ordenadas as $index => $imgData) {
-
-            // EXISTENTE
-            if ($imgData['tipo'] === 'existente') {
-                ProductoImagen::where('id', $imgData['id'])->update([
-                    'orden' => $index,
-                    'is_main' => ($index == $request->main_index),
-                ]);
-            }
-
-            // NUEVA
-            if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
-                $producto->imagenes()->create([
-                    'path' => $imgData['file']->store('productos', 'public'),
-                    'orden' => $index,
-                    'is_main' => ($index == $request->main_index),
-                ]);
+        if($request->imagenes_ordenadas ){
+            $idsExistentes = collect($request->imagenes_ordenadas)
+                ->where('tipo', 'existente')
+                ->pluck('id')
+                ->toArray();
+    
+            $producto->imagenes()
+                ->whereNotIn('id', $idsExistentes)
+                ->each(function ($img) {
+                    Storage::disk('public')->delete($img->path);
+                    $img->delete();
+                });
+    
+            foreach ($request->imagenes_ordenadas as $index => $imgData) {
+    
+                // EXISTENTE
+                if ($imgData['tipo'] === 'existente') {
+                    ProductoImagen::where('id', $imgData['id'])->update([
+                        'orden' => $index,
+                        'is_main' => ($index == $request->main_index),
+                    ]);
+                }
+    
+                // NUEVA
+                if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
+                    $producto->imagenes()->create([
+                        'path' => $imgData['file']->store('productos', 'public'),
+                        'orden' => $index,
+                        'is_main' => ($index == $request->main_index),
+                    ]);
+                }
             }
         }
+
 
         return response()->json(['ok' => true]);
     }
@@ -215,5 +219,9 @@ class ProductosController extends Controller
             new ProductosExport($search),
             'productos.xlsx'
         );
+    }
+
+    public function search(Request $request){
+        return Producto::where('estado', 1)->where('paginas_id', $request->id)->get();
     }
 }

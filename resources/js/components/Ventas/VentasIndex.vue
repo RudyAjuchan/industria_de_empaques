@@ -37,6 +37,10 @@
         <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('venta.ver')" fixed-header height="400px"
             :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search">
 
+            <template v-slot:[`item.created_at`]="{ item }">
+                {{ formatDate(item.created_at) }}
+            </template>
+
             <template v-slot:[`item.estado`]="{ item }">
                 <v-chip :color="item.estado === 'anulada' ? 'red' : 'green'" dark>
                     {{ item.estado }}
@@ -44,9 +48,24 @@
             </template>
 
             <template v-slot:[`item.acciones`]="{ item }">
-                <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'">
-                    <v-icon>mdi-cancel</v-icon>
-                </v-btn>
+                <div class="d-flex ga-1">
+                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="red" variant="tonal">
+                        <v-tooltip activator="parent" location="top">Anular</v-tooltip>
+                        <v-icon>mdi-cancel</v-icon>
+                    </v-btn>
+                    <v-btn icon size="small" @click="verDetalle(item)" color="primary" variant="tonal">
+                        <v-tooltip activator="parent" location="top">Ver</v-tooltip>
+                        <v-icon>mdi-eye</v-icon>
+                    </v-btn>
+                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="green" variant="tonal">
+                        <v-tooltip activator="parent" location="top">Imprimir</v-tooltip>
+                        <v-icon>mdi-printer</v-icon>
+                    </v-btn>
+                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="orange" variant="tonal">
+                        <v-tooltip activator="parent" location="top">Ver estados</v-tooltip>
+                        <v-icon>mdi-list-status</v-icon>
+                    </v-btn>
+                </div>
             </template>
 
         </v-data-table>
@@ -64,11 +83,11 @@ export default {
             ventas: [],
             loading: false,
             headers: [
-                { title: 'Serie', key: 'serie' },
-                { title: 'Número', key: 'numero' },
+                { title: 'Número', key: 'numero_completo' },
                 { title: 'Cliente', key: 'cliente.nombre' },
                 { title: 'Total', key: 'total' },
                 { title: 'Estado', key: 'estado' },
+                { title: 'Fecha emitida', key: 'created_at' },
                 { title: 'Acciones', key: 'acciones', sortable: false },
             ],
             search: null,
@@ -96,6 +115,23 @@ export default {
 
         },exportPdf(){
 
+        },
+        verDetalle(item){
+            this.$router.push(`/venta/${item.id}`)
+        },
+        formatDate(date) {
+            if (!date) return ''
+            return new Date(date).toLocaleString('es-GT', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+        },
+
+        imprimirVenta(id) {
+            window.open(`/venta/${id}/imprimir`, '_blank')
         }
     },
 

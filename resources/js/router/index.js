@@ -25,6 +25,7 @@ const ProductosEditComponent = () => import('../components/Productos/ProductosEd
 /* COMPONENTES PARA VENTAS */
 const ventasComponent = () => import('../components/Ventas/VentasIndex.vue');
 const ventasCreateComponent = () => import('../components/Ventas/VentasCreate.vue');
+const ventasDetalleComponent = () => import('../components/Ventas/Detalle/VentasDetalle.vue');
 
 const routes = [
     /* RUTAS DEL MENÚ */
@@ -167,6 +168,14 @@ const routes = [
         component: ventasCreateComponent,
         meta: {
             permission: 'venta.crear'
+        }
+    },
+    {
+        path: '/venta/:id',
+        name: 'venta.detalle',
+        component: ventasDetalleComponent,
+        meta: {
+            permission: 'venta.ver'
         }
     },
 

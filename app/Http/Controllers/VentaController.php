@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreVentaRequest;
 use App\Models\DetalleVenta;
 use App\Models\Pagina;
 use App\Models\Venta;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class VentaController extends Controller
@@ -29,71 +32,106 @@ class VentaController extends Controller
     /**
      * Guardar nueva venta
      */
-    public function store(Request $request)
+    public function store(StoreVentaRequest $request)
     {
-        DB::beginTransaction();
+        return DB::transaction(function () use ($request) {
 
-        try {
+            $data = $request->validated();
+
+            $serie = 'VTA';
+
+            $ultimoNumero = Venta::where('serie', $serie)->lockForUpdate()->max('numero');
+            $numero = ($ultimoNumero ?? 0) + 1;
+
+            $subtotal = collect($data['detalle'])->sum(function ($item) {
+                return $item['precio'] * $item['cantidad'];
+            });
+
+            $costoLogo = $data['costo_logo'] ?? 0;
+            $costoEnvio = $data['costo_envio'] ?? 0;
+            $descuento = $data['descuento'] ?? 0;
+            $promociones = $data['promociones'] ?? 0;
+            $deposito = $data['cantidad_deposito'] ?? 0;
+
+            $total = $subtotal
+                + $costoLogo
+                + $costoEnvio
+                - $descuento
+                - $promociones;
+
+            $pendiente = $total - $deposito;
 
             $venta = Venta::create([
-                'vendedor_id' => $request->vendedor_id,
-                'clientes_id' => $request->clientes_id,
-                'bancos_id' => $request->bancos_id,
-                'serie' => $request->serie,
-                'numero' => $request->numero,
-                'fecha_entrega' => $request->fecha_entrega,
-                'tipo_pago' => $request->tipo_pago,
-                'no_deposito' => $request->no_deposito,
-                'cantidad_deposito' => $request->cantidad_deposito,
-                'pendiente_pagar' => $request->pendiente_pagar,
-                'costo_logo' => $request->costo_logo,
-                'subtotal' => $request->subtotal,
-                'descuento' => $request->descuento,
-                'promociones' => $request->promociones,
-                'costo_envio' => $request->costo_envio,
-                'total' => $request->total,
-                'proceso_estado_produccions_id' => $request->proceso_estado_produccions_id,
-                'estado' => 'emitida'
+                'serie' => $serie,
+                'numero' => $numero,
+                'vendedor_id' => Auth::user()->id,
+                'clientes_id' => $data['clientes_id'],
+                'bancos_id' => $data['bancos_id'],
+                'fecha_entrega' => $data['fecha_entrega'],
+                'tipo_pago' => $data['tipo_pago'],
+
+                'no_deposito' => $data['no_deposito'] ?? null,
+                'cantidad_deposito' => $deposito,
+                'pendiente_pagar' => $pendiente,
+
+                'costo_logo' => $costoLogo,
+                'subtotal' => $subtotal,
+                'descuento' => $descuento,
+                'promociones' => $promociones,
+                'costo_envio' => $costoEnvio,
+                'total' => $total,
+
+                'proceso_estado_produccions_id' => 1,
+                'estado' => 'emitida',
             ]);
 
-            foreach ($request->detalle as $item) {
-                DetalleVenta::create([
-                    'ventas_id' => $venta->id,
+            foreach ($data['detalle'] as $item) {
+                $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
                     'tipo_agarradors_id' => $item['tipo_agarradors_id'],
                     'tipo_papels_id' => $item['tipo_papels_id'],
-                    'color_agarrador' => $item['color_agarrador'],
-                    'detalle_impresion' => $item['detalle_impresion'],
-                    'nombre_logo' => $item['nombre_logo'],
+                    'color_agarrador' => $item['color_agarrador'] ?? '',
+                    'detalle_impresion' => $item['detalle_impresion'] ?? '',
+                    'nombre_logo' => $item['nombre_logo'] ?? '',
                     'precio' => $item['precio'],
                     'cantidad' => $item['cantidad'],
-                    'total' => $item['total'],
+                    'total' => $item['precio'] * $item['cantidad'],
                 ]);
             }
-
-            DB::commit();
-
             return response()->json([
                 'message' => 'Venta registrada correctamente',
-                'venta' => $venta->load(['cliente', 'detalle'])
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'message' => 'Error al registrar venta',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+                'venta'   => $venta->load('detalles')
+            ], 201);
+        });
     }
+
 
     /**
      * Mostrar una venta
      */
     public function show(Venta $venta)
     {
-        return $venta->load(['cliente', 'vendedor', 'banco', 'detalle']);
+        $venta->load([
+            'cliente',
+            'cliente.telefonos',
+            'cliente.emails',
+            'cliente.municipio.departamento',
+            'banco',
+            'detalles.producto.paginas',
+            'detalles.tipoAgarrador',
+            'detalles.tipoPapel',
+            'vendedor',
+        ]);
+        $nombresPaginas = $venta->detalles
+            ->map(function ($detalle) {
+                return $detalle->producto->paginas->nombre ?? null;
+            })
+            ->filter()
+            ->unique();
+
+        $venta->nombres_paginas_productos = $nombresPaginas->implode(' / ');
+
+        return response()->json($venta);
     }
 
     /**
@@ -110,19 +148,40 @@ class VentaController extends Controller
         ]);
     }
 
-    /**
-     * Exportar PDF (opcional)
-     */
     public function exportPdf()
     {
-        return Venta::all(); // aquí luego puedes adaptar igual que hiciste con clientes
+        return Venta::all();
     }
 
-    /**
-     * Exportar Excel (opcional)
-     */
     public function exportExcel()
     {
         return Venta::all();
+    }
+
+    public function imprimir(Venta $venta){
+        $venta->load([
+            'cliente',
+            'cliente.telefonos',
+            'cliente.emails',
+            'cliente.municipio.departamento',
+            'banco',
+            'detalles.producto.paginas',
+            'detalles.tipoAgarrador',
+            'detalles.tipoPapel',
+            'vendedor',
+        ]);
+        $nombresPaginas = $venta->detalles
+            ->map(function ($detalle) {
+                return $detalle->producto->paginas->nombre ?? null;
+            })
+            ->filter()
+            ->unique();
+
+        $venta->nombres_paginas_productos = $nombresPaginas->implode(' / ');
+
+        $pdf = Pdf::loadView('pdf.venta.venta', compact('venta'))
+            ->setPaper('letter', 'portrait');
+
+        return $pdf->stream("venta-{$venta->numero_completo}.pdf");
     }
 }

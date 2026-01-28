@@ -236,10 +236,14 @@ class ClienteController extends Controller
             return [];
         }
 
-        return Cliente::where('nombre', 'like', "%{$q}%")
+        return Cliente::with([
+            'emails',
+            'telefonos',
+            'municipio.departamento'
+        ])->where('nombre', 'like', "%{$q}%")
             ->orWhere('nit', 'like', "%{$q}%")
             ->limit(15)
-            ->get(['id', 'nombre', 'nit']);
+            ->get(['id', 'nombre', 'nit', 'municipios_id', 'direccion', 'ciudad_pais', 'estado_pais']);
     }
 
 }

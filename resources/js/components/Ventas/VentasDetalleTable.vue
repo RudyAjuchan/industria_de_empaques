@@ -36,7 +36,7 @@
                     <td>
                         <v-autocomplete :items="productos" item-title="nombre" item-value="id"
                             v-model="item.productos_id" @update:modelValue="actualizarProducto(item)" dense
-                            hide-details density="compact" variant="outlined">
+                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'productos_id')">
                             <template #append-inner>
                                 <v-btn icon size="small" variant="text" @click.stop="openProductoDialog(index)">
                                     <v-icon size="18">mdi-plus</v-icon>
@@ -50,11 +50,11 @@
                     <td><v-text-field v-model="item.fuelle" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
                     <td><v-text-field v-model="item.tipo" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
 
-                    <td><v-text-field v-model="item.color_agarrador" dense hide-details density="compact" variant="outlined"/></td>
-                    <td><v-text-field v-model="item.detalle_impresion" dense hide-details density="compact" variant="outlined" /></td>
+                    <td><v-text-field v-model="item.color_agarrador" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'color_agarrador')"/></td>
+                    <td><v-text-field v-model="item.detalle_impresion" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'detalle_impresion')"/></td>
                     <td>
                         <v-select :items="tiposAgarrador" item-title="nombre" item-value="id"
-                            v-model="item.tipo_agarradors_id" dense hide-details density="compact" variant="outlined">
+                            v-model="item.tipo_agarradors_id" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'tipo_agarradors_id')">
                             <template #append-inner>
                                 <v-btn icon size="small" variant="text" @click.stop="openAgarradorDialog(index)">
                                     <v-icon size="18">mdi-plus</v-icon>
@@ -65,7 +65,7 @@
 
                     <td>
                         <v-select :items="tiposPapel" item-title="nombre" item-value="id" v-model="item.tipo_papels_id"
-                            dense hide-details density="compact" variant="outlined">
+                            dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'tipo_papels_id')">
                             <template #append-inner>
                                 <v-btn icon size="small" variant="text" @click.stop="openPapelDialog(index)">
                                     <v-icon size="18">mdi-plus</v-icon>
@@ -77,16 +77,16 @@
 
 
 
-                    <td><v-text-field v-model="item.nombre_logo" dense hide-details density="compact" variant="outlined"/></td>
+                    <td><v-text-field v-model="item.nombre_logo" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'nombre_logo')"/></td>
 
                     <td>
                         <v-text-field v-model="item.precio" @input="calcularFila(item)" dense
-                            hide-details density="compact" variant="outlined"/>
+                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'precio')"/>
                     </td>
 
                     <td>
                         <v-text-field v-model="item.cantidad" @input="calcularFila(item)" dense
-                            hide-details density="compact" variant="outlined"/>
+                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'cantidad')"/>
                     </td>
 
                     <td>
@@ -121,7 +121,8 @@ export default {
         modelValue: Array,
         productos: Array,
         tiposAgarrador: Array,
-        tiposPapel: Array
+        tiposPapel: Array,
+        errors: Object
     },
     components:{
         AgarradorDialog,
@@ -256,6 +257,10 @@ export default {
 
             toast.success('Producto guardado')
         },
+
+        fieldError(index, field) {
+            return this.errors?.[`detalle.${index}.${field}`] ?? []
+        }
 
     },
 

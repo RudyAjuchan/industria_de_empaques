@@ -160,7 +160,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/venta', [VentaController::class, 'index'])->middleware('permission:venta.ver');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
     Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver');
-    Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.anular');
+    Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar');
+    Route::get('/venta/{venta}/imprimir', [VentaController::class, 'imprimir'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/pdf', [VentaController::class, 'exportPdf'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/excel', [VentaController::class, 'exportExcel'])->middleware('permission:venta.reporte');
 

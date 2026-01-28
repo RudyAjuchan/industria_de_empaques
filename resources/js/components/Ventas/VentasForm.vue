@@ -8,7 +8,8 @@
                 <v-text-field variant="outlined" density="compact" label="Hora" v-model="hora" disabled hide-details="auto"></v-text-field>
             </v-col>
             <v-col cols="4">
-                <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega" v-model="form.fecha_entrega" hide-details="auto"></v-text-field>
+                <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega" v-model="form.fecha_entrega" hide-details="auto" 
+                :error-messages="errors.fecha_entrega"></v-text-field>
             </v-col>
         </v-row>
         <v-row class="justify-center bg-teal-lighten-5">
@@ -24,9 +25,9 @@
         <v-row>
             <v-col cols="6">
                 <h2>Datos del cliente</h2>
-                <v-autocomplete label="Cliente" v-model="form.clientes_id" v-model:search="searchCliente"
-                    :items="clientes" item-title="nombre" item-value="id" variant="outlined" density="compact"
-                    :loading="loadingClientes" hide-no-data no-filter return-object>
+                <v-autocomplete label="Cliente" v-model="cliente" v-model:search="searchCliente"
+                    :items="clientes" item-title="nombre" variant="outlined" density="compact"
+                    :loading="loadingClientes" hide-no-data no-filter return-object @update:model-value="setDataCliente" :error-messages="errors.clientes_id">
                     <template #append-inner>
                         <v-btn icon size="small" variant="text" @click.stop="clienteDialog = true">
                             <v-icon size="18">mdi-plus</v-icon>
@@ -35,15 +36,16 @@
                 </v-autocomplete>
                 <ClientesDialog v-model="clienteDialog" @saved="onClienteSaved" @cancel="clienteDialog = false"></ClientesDialog>
 
-                <v-text-field label="Nombre" variant="outlined" density="compact"></v-text-field>
-                <v-text-field label="Teléfono" variant="outlined" density="compact"></v-text-field>
-                <v-text-field label="Dirección" variant="outlined" density="compact"></v-text-field>
+                <v-text-field label="Nombre" variant="outlined" density="compact" disabled v-model="cliente.nombre"></v-text-field>
+                <v-text-field label="Teléfono" variant="outlined" density="compact" disabled v-model="cliente.telefono"></v-text-field>
+                <v-text-field label="Dirección" variant="outlined" density="compact" disabled v-model="cliente.direccion"></v-text-field>
+                <v-text-field label="Nit" variant="outlined" density="compact" disabled v-model="cliente.nit"></v-text-field>
             </v-col>
             <v-col cols="6">
                 <h2>Datos de pago</h2>
                 <!-- PARA EL BANCO -->
                 <v-select label="Banco" :items="bancos" item-title="nombre" item-value="id" v-model="form.bancos_id"
-                    variant="outlined" density="compact">
+                    variant="outlined" density="compact" :error-messages="errors.bancos_id">
                     <template #append-inner>
                         <v-btn icon size="small" variant="text" @click.stop="openBancoDialog">
                             <v-icon size="18">mdi-plus</v-icon>
@@ -53,16 +55,16 @@
                 <!-- Dialog -->
                 <BancoDialog v-model="bancoDialog" :tipo="null" @saved="onBancoSaved" />
                 <!-- FINAL PARA EL BANCO -->
-                <v-select label="Tipo pago" :items="tipoPago" item-title="nombre" item-value="nombre" v-model="form.tipo_pago" variant="outlined" density="compact" />
+                <v-select label="Tipo pago" :items="tipoPago" item-title="nombre" item-value="nombre" v-model="form.tipo_pago" variant="outlined" density="compact" :error-messages="errors.tipo_pago"/>
                 <v-text-field label="No. Depósito" density="compact" variant="outlined" v-model="form.no_deposito"></v-text-field>
-                <v-text-field label="Cantidad depósito" density="compact" variant="outlined" v-model="form.cantidad_deposito"></v-text-field>
-                <v-text-field label="Pendiente a pagar" density="compact" variant="outlined" v-model="form.pendiente_pagar"></v-text-field>
+                <v-text-field label="Cantidad depósito" density="compact" variant="outlined" v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito"></v-text-field>
+                <v-text-field label="Pendiente a pagar" density="compact" variant="outlined" v-model="pendientePagar" disabled></v-text-field>
             </v-col>
         </v-row>
 
         <VentasDetalleTable :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
             v-model="form.detalle" @producto-saved="onProductoSaved" @agarrador-saved="onAgarradorSaved"
-            @papel-saved="onPapelSaved" />
+            @papel-saved="onPapelSaved" :errors="errors"/>
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
                 <v-btn color="green" variant="tonal" @click="guardarVenta" :loading="loading">
@@ -73,14 +75,18 @@
                 </v-btn>
             </v-col>
             <v-col cols="4">
-                <v-text-field label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact"/>
+                <v-text-field label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact" :error-messages="errors.costo_logo"/>
             </v-col>
             <v-col cols="4">
-                <v-text-field label="Subtotal" :model-value="form.subtotal" readonly variant="outlined" density="compact"/>
-                <v-text-field label="Descuento" v-model="form.descuento" variant="outlined" density="compact"/>
-                <v-text-field label="Promociones" v-model="form.promociones" variant="outlined" density="compact"/>
-                <v-text-field label="Costo Envío" v-model="form.costo_envio" variant="outlined" density="compact"/>
-                <v-text-field label="Total" :model-value="form.total" readonly variant="outlined" density="compact"/>
+                <v-text-field label="Subtotal" :model-value="subtotalCalculado" disabled variant="outlined"
+                    density="compact" />
+                <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact" :error-messages="errors.descuento"/>
+                <v-text-field label="Promociones" v-model.number="form.promociones" variant="outlined"
+                    density="compact" :error-messages="errors.promociones"/>
+                <v-text-field label="Costo Envío" v-model.number="form.costo_envio" variant="outlined"
+                    density="compact" :error-messages="errors.costo_envio"/>
+                <v-text-field label="Total" :model-value="totalCalculado" readonly variant="outlined"
+                    density="compact" disabled />
             </v-col>
         </v-row>
 
@@ -105,6 +111,12 @@ export default {
             loadingClientes: false,
             debounceCliente: null,
             clientes: [],
+            cliente:{
+                nombre: null,
+                telefono: null,
+                direccion: null,
+                nit: null,
+            },
             clienteDialog: false,
             productos: [],
             bancos: [],
@@ -129,13 +141,10 @@ export default {
                 fecha_entrega: '',
                 no_deposito: '',
                 cantidad_deposito: 0,
-                pendiente_pagar: 0,
                 costo_logo: 0,
-                subtotal: 0,
                 descuento: 0,
                 promociones: 0,
                 costo_envio: 0,
-                total: 0,
                 proceso_estado_produccions_id: 1,
                 detalle: [],
                 tipo_pago: null,
@@ -146,6 +155,7 @@ export default {
             user: window.AUTH_USER || {},
             paginas_id: 1,
             paginas: [],
+            errors: {},
         }
     },
 
@@ -160,27 +170,24 @@ export default {
             this.tiposPapel = (await axios.get('/tipo-papel')).data
         },
 
-        calcularTotales() {
-            this.form.subtotal = this.form.detalle.reduce((s, i) => s + parseFloat(i.total || 0), 0)
-
-            this.form.total =
-                this.form.subtotal
-                - parseFloat(this.form.descuento || 0)
-                - parseFloat(this.form.promociones || 0)
-                + parseFloat(this.form.costo_envio || 0)
-                + parseFloat(this.form.costo_logo || 0)
-        },
-
         async guardarVenta() {
             this.loading = true
             try {
-                this.calcularTotales()
-
+                this.form.subtotal = this.subtotalCalculado;
+                this.form.total = this.totalCalculado;
+                this.form.pendiente_pagar = this.pendientePagar;
                 await axios.post('/venta', this.form)
 
                 alert('Venta registrada')
                 this.$router.push('/ventas')
 
+            } catch (e) {
+                if (e.response?.status === 422) {
+                    this.errors = e.response.data.errors
+                    toast.error('Revisa los campos marcados')
+                } else {
+                    toast.error('Error inesperado al guardar')
+                }
             } finally {
                 this.loading = false
             }
@@ -191,7 +198,7 @@ export default {
             this.fecha = ahora.toLocaleDateString('es-ES', {
                 weekday: 'long',
                 day: 'numeric',
-                month: 'long',
+                month: 'long', 
                 year: 'numeric'
             });
 
@@ -266,15 +273,27 @@ export default {
                 this.tiposPapel.push(papel)
             }
         },
+
+        setDataCliente(item) {
+            if (!item) return;
+
+            this.form.clientes_id = item.id;
+
+            this.cliente = {
+                nombre: item.nombre,
+                nit: item.nit,
+                telefono: item.telefonos
+                    .map(t => `${t.telefono_codigo_pais} ${t.telefono_numero}`)
+                    .join(' / '),
+                direccion: item.municipio
+                    ? `${item.direccion}, ${item.municipio.nombre}, ${item.municipio.departamento.nombre}`
+                    : `${item.direccion}, ${item.ciudad_pais}, ${item.estado_pais}`,
+            };
+        }
+
     },
 
     watch: {
-        'form.detalle': {
-            handler() {
-                this.calcularTotales()
-            },
-            deep: true
-        },
         searchCliente(val) {
 
             if (!val || val.length < 2) {
@@ -287,6 +306,26 @@ export default {
             this.debounceCliente = setTimeout(() => {
                 this.buscarClientes(val)
             }, 800)
+        }
+    },
+
+    computed: {
+        subtotalCalculado() {
+            return this.form.detalle.reduce((s, i) => s + parseFloat(i.total || 0), 0);
+        },
+        totalCalculado() {
+            const sub = this.subtotalCalculado;
+            const logo = parseFloat(this.form.costo_logo || 0);
+            const descuento = parseFloat(this.form.descuento || 0);
+            const promo = parseFloat(this.form.promociones || 0);
+            const envio = parseFloat(this.form.costo_envio || 0);
+
+            return (sub + logo + envio) - (descuento + promo);
+        },
+        pendientePagar(){
+            const total = parseFloat(this.totalCalculado || 0);
+            const totalDeposito = parseFloat(this.form.cantidad_deposito || 0);
+            return total - totalDeposito;
         }
     },
 

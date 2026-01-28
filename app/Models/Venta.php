@@ -38,6 +38,16 @@ class Venta extends Model
         'sat_respuesta' => 'array',
     ];
 
+    protected $appends = ['numero_completo'];
+
+    public function getNumeroCompletoAttribute()
+    {
+        // str_pad añade ceros a la izquierda hasta llegar a 6 dígitos
+        $numeroConCeros = str_pad($this->numero, 6, '0', STR_PAD_LEFT);
+        
+        return "{$this->serie}-{$numeroConCeros}";
+    }
+
     // Vendedor
     public function vendedor()
     {

@@ -19,15 +19,20 @@ class EstadosDefault extends Seeder
         EstadoProduccion::create([
             'nombre' => 'Área de bodega',
             'users_id' => 3,
-            'orden' => 2,
+            'orden' => 1,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de impresión',
             'users_id' => 4,
+            'orden' => 2,
+        ]);
+        EstadoProduccion::create([
+            'nombre' => 'Área de corte',
+            'users_id' => 3,
             'orden' => 3,
         ]);
         EstadoProduccion::create([
-            'nombre' => 'Área de proceso de corte',
+            'nombre' => 'Área de troquelado',
             'users_id' => 3,
             'orden' => 4,
         ]);
@@ -37,9 +42,14 @@ class EstadosDefault extends Seeder
             'orden' => 5,
         ]);
         EstadoProduccion::create([
-            'nombre' => 'Área de producción planta 2',
+            'nombre' => 'Área de colocación de cinta',
             'users_id' => 6,
             'orden' => 6,
+        ]);
+        EstadoProduccion::create([
+            'nombre' => 'Área de revisión y calidad',
+            'users_id' => 7,
+            'orden' => 7,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de empaque',
@@ -85,14 +95,14 @@ class EstadosDefault extends Seeder
             'nombre' => 'EN AREA DE CORTE',
             'estado_produccions_id' => 1,
         ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 1,
+        ]);
 
         //-----------------
         ProcesoEstadoProduccion::create([
             'nombre' => 'FINALIZADO',
-            'estado_produccions_id' => 2,
-        ]);
-        ProcesoEstadoProduccion::create([
-            'nombre' => 'PENDIENTE SERIGRAFIA',
             'estado_produccions_id' => 2,
         ]);
         ProcesoEstadoProduccion::create([
@@ -127,6 +137,10 @@ class EstadosDefault extends Seeder
             'nombre' => 'ATRASO DE PAPEL',
             'estado_produccions_id' => 2,
         ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 2,
+        ]);
         //----------------
 
         ProcesoEstadoProduccion::create([
@@ -154,106 +168,170 @@ class EstadosDefault extends Seeder
             'estado_produccions_id' => 3,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'FINALIZADO',
+            'nombre' => 'FINALIZADO/REVISADO',
             'estado_produccions_id' => 3,
+        ]);
+        //------------------------
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE IMPRESIÓN',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE CORTE',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'INCOMPLETAS',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE TROQUEL',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'MAL IMPRESAS',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'ENVIADAS',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'DESHECHADAS',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'EN PROCESO',
+            'estado_produccions_id' => 4,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 4,
         ]);
 
         //--------------------
         ProcesoEstadoProduccion::create([
             'nombre' => 'ARMANDO BOLSAS',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'SIN VERIFICAR',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'BOLSAS FINALIZADAS',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'BOLSAS FINALIZADAS EXISTENTES',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'BOLSAS SIN  CINTA',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'BOLSAS SIN PERFORAR',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'PENDIENTE LISTON',
-            'estado_produccions_id' => 4,
+            'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'PAQUETE INCOMPLETO',
-            'estado_produccions_id' => 4,
-        ]);
-
-        //---------------
-        ProcesoEstadoProduccion::create([
-            'nombre' => 'CINTA FINALIZADA ',
             'estado_produccions_id' => 5,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'PENDIENTE PERFORAR',
-            'estado_produccions_id' => 5,
-        ]);
-        ProcesoEstadoProduccion::create([
-            'nombre' => 'LISTON NO DISPONIBLE',
-            'estado_produccions_id' => 5,
-        ]);
-        ProcesoEstadoProduccion::create([
-            'nombre' => 'POLIESTER NO DISPONIBLE',
-            'estado_produccions_id' => 5,
-        ]);
-        ProcesoEstadoProduccion::create([
-            'nombre' => 'NO VERIFICADO',
+            'nombre' => 'FINALIZADO/REVISADO',
             'estado_produccions_id' => 5,
         ]);
 
         //---------------
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE MATERIA PRIMA ',
+            'estado_produccions_id' => 6,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE ACETATO ',
+            'estado_produccions_id' => 6,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'EN PROCESO ',
+            'estado_produccions_id' => 6,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 6,
+        ]);
+        
+
+        //---------------
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'DESHECHAS',
+            'estado_produccions_id' => 7,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'EN PROCESO',
+            'estado_produccions_id' => 7,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'INCOMPLETAS',
+            'estado_produccions_id' => 7,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FALTA DE PERFORACIÓN',
+            'estado_produccions_id' => 7,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 7,
+        ]);
+        //-----------------------------
+
         ProcesoEstadoProduccion::create([
             'nombre' => 'EN AREA DE REVISION',
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'PROCESO EMPAQUE',
-            'estado_produccions_id' => 6,
+            'nombre' => 'PROCESO EMPAQUE ',
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'EMPACADO-FINALIZADO - FALTA DE GUIA',
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'FALTA DE GUIA',
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'PAQUETE ENVIADO',
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'PAQUETE ATRASADO',
-            'estado_produccions_id' => 6,
+            'nombre' => 'PAQUETE ATRASADO ',
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'PAQUETE EN ELABORACION',
-            'estado_produccions_id' => 6,
+            'nombre' => 'PAQUETE EN ELABORACION ',
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'AREA DE IMPRESIÓN',
-            'estado_produccions_id' => 6,
+            'nombre' => 'AREA DE IMPRESIÓN ',
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
-            'nombre' => 'SIN VERIFICAR',
-            'estado_produccions_id' => 6,
+            'nombre' => 'SIN VERIFICAR ',
+            'estado_produccions_id' => 8,
         ]);
         ProcesoEstadoProduccion::create([
             'nombre' => 'NO ENVIADO/ FALTA DE PAGO',
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
+        ]);
+        ProcesoEstadoProduccion::create([
+            'nombre' => 'FINALIZADO/REVISADO',
+            'estado_produccions_id' => 8,
         ]);
 
         // TERCERO DETALLE DE ESTADOS /-----------------------------------------------------------
@@ -282,51 +360,6 @@ class EstadosDefault extends Seeder
             'estado_produccions_id' => 2,
             'tipo' => 'entero',
             'nombre' => 'IMPRESIÓN EXTRA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'CAJAS 21*21*12',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'CAJAS - PLANCHA NEGRAS 21*21*12',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'CAJA 28*22*9',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'CAJAS PERSONALIZADA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'FOLDER MANILA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'SOBRE MANILA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'ENVOLTORIO PAPEL CHINA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'SOBRES',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'ETIQUETAS/ TARJETAS',
         ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 2,
@@ -386,85 +419,66 @@ class EstadosDefault extends Seeder
             'tipo' => 'entero',
             'nombre' => 'UNIDADES EXTRAS',
         ]);
-        //--------------
+        //----------------
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 5,
+            'tipo' => 'fecha',
+            'nombre' => 'FECHA INICIAL ELABORACIÓN',
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 5,
+            'tipo' => 'fecha',
+            'nombre' => 'FECHA FINAL ELABORACIÓN',
+        ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 5,
             'tipo' => 'entero',
-            'nombre' => 'CANTIDAD ELABORADAS',
+            'nombre' => 'UNIDAD DE BOLSAS',
         ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 5,
             'tipo' => 'entero',
-            'nombre' => 'DESECHADAS',
-        ]);
-        //----------
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'FECHA',
-            'nombre' => 'FECHA DE EMPAQUE',
+            'nombre' => 'ETIQUETAS/TARJETAS',
         ]);
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 5,
             'tipo' => 'entero',
             'nombre' => 'UNIDADES DESECHADAS',
         ]);
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 5,
+            'tipo' => 'entero',
+            'nombre' => 'UNIDADES EXTRAS',
+        ]);
+
+        //----------
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 8,
+            'tipo' => 'FECHA',
+            'nombre' => 'FECHA DE EMPAQUE',
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 8,
+            'tipo' => 'entero',
+            'nombre' => 'UNIDADES DESECHADAS',
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 8,
             'tipo' => 'entero',
             'nombre' => 'UNIDADES  EXTRAS',
         ]);
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
             'tipo' => 'entero',
             'nombre' => 'UNIDAD FALTANTE',
         ]);
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
             'tipo' => 'entero',
             'nombre' => 'TOTAL, BOLSAS ENVIADAS',
         ]);
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'SOBRES',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'ETIQUETAS/ TARJETAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'CAJAS 21*21*12',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'CAJA 28*22*9',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'CAJAS PERSONALIZADAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'FOLDER OFICIO/ CARTA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'SOBRE MANILA   OFICIO/CARTA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
-            'tipo' => 'entero',
-            'nombre' => 'ENVOLTORIO PAPEL MATE CHINA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 6,
+            'estado_produccions_id' => 8,
             'tipo' => 'entero',
             'nombre' => 'OTROS',
         ]);

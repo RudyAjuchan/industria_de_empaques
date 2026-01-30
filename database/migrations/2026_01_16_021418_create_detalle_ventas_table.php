@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('productos_id')->constrained('productos');
             $table->foreignId('tipo_agarradors_id')->constrained('tipo_agarradors');
             $table->foreignId('tipo_papels_id')->constrained('tipo_papels');
+            $table->foreignId('proceso_estado_produccions_id')->constrained('proceso_estado_produccions');
             $table->string('color_agarrador');
             $table->text('detalle_impresion');
             $table->string('nombre_logo');

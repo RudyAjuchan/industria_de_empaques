@@ -27,6 +27,9 @@ const ventasComponent = () => import('../components/Ventas/VentasIndex.vue');
 const ventasCreateComponent = () => import('../components/Ventas/VentasCreate.vue');
 const ventasDetalleComponent = () => import('../components/Ventas/Detalle/VentasDetalle.vue');
 
+/* COMPONENTES PARA VER LOS ESTADOS */
+const trackingVentaComponent = () => import('../components/Ventas/Estado/TrackingVentas.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -174,6 +177,15 @@ const routes = [
         path: '/venta/:id',
         name: 'venta.detalle',
         component: ventasDetalleComponent,
+        meta: {
+            permission: 'venta.ver'
+        }
+    },
+    /*  RUTAS PARA VER LOS ESTADOS */
+    {
+        path: '/venta/:id/tracking',
+        name: 'venta.tracking',
+        component: trackingVentaComponent,
         meta: {
             permission: 'venta.ver'
         }

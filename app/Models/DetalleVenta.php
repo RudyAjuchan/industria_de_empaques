@@ -13,6 +13,7 @@ class DetalleVenta extends Model
         'productos_id',
         'tipo_agarradors_id',
         'tipo_papels_id',
+        'proceso_estado_produccions_id',
         'color_agarrador',
         'detalle_impresion',
         'nombre_logo',
@@ -41,5 +42,22 @@ class DetalleVenta extends Model
     public function tipoPapel()
     {
         return $this->belongsTo(TipoPapel::class, 'tipo_papels_id');
+    }
+
+    public function historialEstados()
+    {
+        return $this->hasMany(
+            HistorialEstadoProduccion::class,
+            'detalle_ventas_id'
+        )->orderBy('fecha_inicio');
+    }
+
+    // Estado actual (el activo)
+    public function estadoActual()
+    {
+        return $this->hasOne(
+            HistorialEstadoProduccion::class,
+            'detalle_ventas_id'
+        )->whereNull('fecha_fin');
     }
 }

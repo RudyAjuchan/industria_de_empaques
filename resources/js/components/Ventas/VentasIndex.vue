@@ -61,7 +61,7 @@
                         <v-tooltip activator="parent" location="top">Imprimir</v-tooltip>
                         <v-icon>mdi-printer</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="orange" variant="tonal">
+                    <v-btn icon size="small" @click="verEstados(item.id)" color="orange" variant="tonal">
                         <v-tooltip activator="parent" location="top">Ver estados</v-tooltip>
                         <v-icon>mdi-list-status</v-icon>
                     </v-btn>
@@ -132,6 +132,10 @@ export default {
 
         imprimirVenta(id) {
             window.open(`/venta/${id}/imprimir`, '_blank')
+        },
+
+        verEstados(id){
+            this.$router.push(`/venta/${id}/tracking`)
         }
     },
 

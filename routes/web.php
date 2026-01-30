@@ -5,6 +5,9 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\Produccion\ColaProduccionController;
+use App\Http\Controllers\Produccion\EstadoProduccionController;
+use App\Http\Controllers\Produccion\HistorialProduccionController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -171,6 +174,31 @@ Route::middleware(['auth', 'force.password'])->group(function () {
         ->middleware('permission:venta.crear');
     Route::post('/product/search', [ProductosController::class, 'search'])
         ->middleware('permission:venta.crear');
+});
+
+/* RUTAS DE TRACKING DE PRODUCCIÓN */
+Route::middleware(['auth', 'force.password'])->group(function () {
+
+    // Ver tracking completo de una venta
+    Route::get(
+        '/venta/{venta}/tracking', [HistorialProduccionController::class, 'trackingVenta'])->middleware('permission:venta.ver');
+
+    // Tracking por producto (detalle)
+    Route::get(
+        '/venta/detalle/{detalleVenta}/tracking', [HistorialProduccionController::class, 'trackingDetalle'])->middleware('permission:venta.ver');
+});
+
+/* RUTAS DE PRODUCCIÓN (OPERATIVAS) */
+Route::middleware(['auth', 'force.password'])->group(function () {
+
+    // Cola de trabajo por estado
+    Route::get('/produccion/estado/{estadoProduccion}', [ColaProduccionController::class, 'colaPorEstado'])->middleware('permission:produccion.ver');
+
+    // Cambiar subestado
+    Route::post('/produccion/detalle/{detalleVenta}/proceso', [EstadoProduccionController::class, 'cambiarProceso'])->middleware('permission:produccion.editar');
+
+    // Cambiar estado (avanzar o retroceder)
+    Route::post('/produccion/detalle/{detalleVenta}/estado', [EstadoProduccionController::class, 'cambiarEstado'])->middleware('permission:produccion.editar');
 });
 
 

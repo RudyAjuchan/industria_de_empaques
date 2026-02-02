@@ -2,15 +2,15 @@
     <v-expansion-panels>
         <v-expansion-panel v-for="(item, index) in historial" :key="index">
             <v-expansion-panel-title>
-                {{ item.proceso_estado?.nombre ?? 'Sin proceso' }}
+                {{ item.proceso_estado?.nombre ?? 'Sin iniciar' }}
             </v-expansion-panel-title>
 
             <v-expansion-panel-text>
                 <div class="text-caption">
-                    Responsable: {{ item.usuario.name }}
+                    Responsable: {{ item.proceso_estado ? item.usuario.name: 'sin asignar' }}
                 </div>
                 <div class="text-caption">
-                    Inicio: {{ format(item.fecha_inicio) }}
+                    Inicio: {{ item.proceso_estado ? format(item.fecha_inicio): 'sin asignar' }}
                 </div>
                 <div v-if="item.fecha_fin" class="text-caption">
                     Fin: {{ format(item.fecha_fin) }}

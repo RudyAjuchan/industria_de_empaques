@@ -19,7 +19,7 @@
             </v-expansion-panel-title>
 
             <v-expansion-panel-text>
-                <EstadoStepper :historial="detalle.historial_estados" />
+                <EstadoStepper :estados="estados" :historial="detalle.historial_estados" />
 
                 <v-divider class="my-4" />
 
@@ -35,7 +35,8 @@ import SubEstadosCola from './SubEstadosCola.vue'
 
 export default {
     props: {
-        detalle: { type: Object, required: true }
+        detalle: { type: Object, required: true },
+        estados: { type: Object, required: true }
     },
 
     components: { EstadoStepper, SubEstadosCola },
@@ -45,6 +46,10 @@ export default {
             const actual = this.detalle.historial_estados.find(h => !h.fecha_fin)
             return actual?.estado_produccion?.nombre ?? '—'
         }
+    },
+
+    created(){
+        console.log(this.detalle);
     }
 }
 

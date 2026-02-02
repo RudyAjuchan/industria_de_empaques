@@ -14,7 +14,7 @@
 
         <v-row v-else>
             <v-col cols="12" v-for="detalle in detalles" :key="detalle.id">
-                <ProductoTrackingCard :detalle="detalle" />
+                <ProductoTrackingCard :detalle="detalle" :estados="estados" />
             </v-col>
         </v-row>
     </v-container>
@@ -41,7 +41,8 @@ export default {
         this.loading = true
         try {
             const { data } = await axios.get(`/venta/${this.$route.params.id}/tracking`)
-            this.detalles = data
+            this.detalles = data.detalles
+            this.estados = data.estados
         } finally {
             this.loading = false
         }

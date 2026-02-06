@@ -119,9 +119,10 @@ class VentaController extends Controller
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
-                    'proceso_estado_produccions_id' => $procesoInicial?->id,
+                    'proceso_estado_produccions_id' => null,
                     'users_id' => Auth::user()->id,
                     'fecha_inicio' => now(),
+                    'tipo_evento' => 'entrada_estado',
                 ]);
             }
 

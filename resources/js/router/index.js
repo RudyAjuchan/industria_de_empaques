@@ -30,6 +30,9 @@ const ventasDetalleComponent = () => import('../components/Ventas/Detalle/Ventas
 /* COMPONENTES PARA VER LOS ESTADOS */
 const trackingVentaComponent = () => import('../components/Ventas/Estado/TrackingVentas.vue');
 
+/* COMPONENTES PARA PRODUCCIÓN */
+const operativaProduccionComponent = () => import('../components/Produccion/OperativaProduccion.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -112,7 +115,7 @@ const routes = [
             permission: 'menu.venta'
         }
     },
-    
+
     /* RUTAS PARA ROLES */
     {
         path: '/roles/create',
@@ -190,6 +193,15 @@ const routes = [
             permission: 'venta.ver'
         }
     },
+    /* RUTAS PARA LA PRODUCCIÓN (OPERARIOS) */
+    {
+        path: '/produccion',
+        name: 'produccion.operativa',
+        component: operativaProduccionComponent,
+        meta: { 
+            permission: 'produccion.ver' 
+        }
+    }
 
 ];
 const router = createRouter({

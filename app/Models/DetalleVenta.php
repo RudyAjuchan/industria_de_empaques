@@ -53,11 +53,21 @@ class DetalleVenta extends Model
     }
 
     // Estado actual (el activo)
-    public function estadoActual()
+    public function getEstadoActual()
     {
-        return $this->hasOne(
-            HistorialEstadoProduccion::class,
-            'detalle_ventas_id'
-        )->whereNull('fecha_fin');
+        return $this->historialEstados()
+            ->whereNull('fecha_fin')
+            ->orderByDesc('fecha_inicio')
+            ->first();
+    }
+
+
+    public function getProcesoActivo()
+    {
+        return $this->historialEstados()
+            ->whereNotNull('proceso_estado_produccions_id')
+            ->whereNull('fecha_fin')
+            ->orderByDesc('fecha_inicio')
+            ->first();
     }
 }

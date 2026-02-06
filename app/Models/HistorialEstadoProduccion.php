@@ -16,6 +16,7 @@ class HistorialEstadoProduccion extends Model
         'fecha_inicio',
         'fecha_fin',
         'observacion',
+        'tipo_evento',
     ];
 
     protected $casts = [

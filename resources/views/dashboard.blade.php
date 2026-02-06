@@ -120,6 +120,14 @@
                         <div class="label">Ventas</div>
                     </a>
                 @endcan
+                @can('menu.produccion')
+                    <a href="#" data-route="produccion" data-title="Ventas">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-cog-sync"></i>
+                        </div>
+                        <div class="label">Producción</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

@@ -10,7 +10,7 @@
                         </div>
                     </v-col>
                     <v-col cols="2">
-                        <v-chip color="orange" variant="tonal">
+                        <v-chip color="teal" variant="tonal">
                             {{ estadoActual }}
                         </v-chip>
                     </v-col>
@@ -43,12 +43,16 @@ export default {
 
     computed: {
         estadoActual() {
-            const actual = this.detalle.historial_estados.find(h => !h.fecha_fin)
+            const actual = [...this.detalle.historial_estados]
+                .filter(h => !h.fecha_fin)
+                .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
+
             return actual?.estado_produccion?.nombre ?? '—'
         }
+
     },
 
-    created(){
+    created() {
         console.log(this.detalle);
     }
 }

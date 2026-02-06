@@ -23,7 +23,8 @@ class HistorialProduccionController extends Controller
 
         return response()->json([
             'estados' => $estados,
-            'detalles' => $detalles
+            'detalles' => $detalles,
+            'venta' => $venta,
         ]);
     }
 

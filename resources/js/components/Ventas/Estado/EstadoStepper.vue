@@ -1,8 +1,7 @@
 <template>
-    <v-stepper alt-labels class="mt-4 shadow-none border-0">
+    <v-stepper alt-labels class="mt-4 shadow-none border-0" v-model="activeStep">
         <v-stepper-header>
             <template v-for="(estado, index) in estados" :key="estado.id">
-
                 <v-stepper-item :value="index" :complete="estadosCompletados.includes(estado.id)"
                     :color="getColor(estado.id)" :title="estado.nombre">
                     <template #icon>
@@ -34,24 +33,35 @@ export default {
 
     computed: {
         estadoActualId() {
-            const actual = this.historial.find(h => !h.fecha_fin)
-            return actual?.estado_produccions_id ?? null
+            const activo = [...this.historial]
+                .filter(h => !h.fecha_fin)
+                .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
+
+            return activo?.estado_produccions_id ?? null
         },
 
+
         estadosCompletados() {
-            return this.historial
-                .filter(h => h.fecha_fin)
-                .map(h => h.estado_produccions_id)
+            const estadoActual = this.estados.find(
+                e => e.id === this.estadoActualId
+            )
+
+            if (!estadoActual) return []
+
+            return this.estados
+                .filter(e => e.orden < estadoActual.orden)
+                .map(e => e.id)
         },
+
 
         getIcon() {
             return (estadoId) => {
-                if (this.estadosCompletados.includes(estadoId)) {
-                    return 'mdi-check-circle'
-                }
-
                 if (estadoId === this.estadoActualId) {
                     return 'mdi-progress-clock'
+                }
+
+                if (this.estadosCompletados.includes(estadoId)) {
+                    return 'mdi-check-circle'
                 }
 
                 return 'mdi-circle-outline'
@@ -70,6 +80,12 @@ export default {
 
                 return 'grey'
             }
+        },
+
+        activeStep() {
+            return this.estados.findIndex(
+                e => e.id === this.estadoActualId
+            )
         }
     }
 }

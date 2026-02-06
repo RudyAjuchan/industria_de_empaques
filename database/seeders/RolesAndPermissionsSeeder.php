@@ -69,18 +69,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'venta.editar',
             'venta.borrar',
             'venta.reporte',
-            /* PERMISOS PARA ESTADOS */
-            'estado.ver',
-            'estado.crear',
-            'estado.editar',
-            'estado.borrar',
-            'estado.reporte',
-            /* PERMISOS PARA SUBESTADOS */
-            'subestado.ver',
-            'subestado.crear',
-            'subestado.editar',
-            'subestado.borrar',
-            'subestado.reporte',
+            /* PERMISOS PARA LOS OPERARIOS PUEDAN VER LAS VENTAS Y CAMBIAR PROCESOS */
+            'produccion.ver',
+            'produccion.crear',
+            'produccion.editar',
+            'produccion.borrar',
+            'produccion.reporte',
             /* PERMISOS PARA SIDEBAR */
             'menu.inicio',
             'menu.usuarios',
@@ -92,8 +86,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'menu.producto',
             'menu.cliente',
             'menu.venta',
-            'menu.estado',
-            'menu.subestado',
+            'menu.produccion',
         ];
 
         foreach ($permisos as $p) {

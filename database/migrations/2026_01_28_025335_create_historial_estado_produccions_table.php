@@ -29,7 +29,7 @@ return new class extends Migration
                 ->constrained('proceso_estado_produccions', 'id', 'hist_proc_prod_fk');
 
             // Usuario responsable del cambio
-            $table->foreignId('users_id')
+            $table->foreignId('users_id')->nullable()
                 ->constrained('users');
 
             // Control de tiempo
@@ -38,6 +38,14 @@ return new class extends Migration
 
             // Observaciones opcionales
             $table->text('observacion')->nullable();
+
+            $table->enum('tipo_evento', [
+                'entrada_estado',
+                'inicio_proceso',
+                'cambio_proceso',
+                'finalizacion_estado'
+            ]);
+
 
             $table->timestamps();
         });

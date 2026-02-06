@@ -4,7 +4,7 @@
             <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
 
-        <h2 class="mb-4">Tracking de la venta {{ venta.numero_completo }}</h2>
+        <h2 class="mb-4">Tracking de la venta <v-chip color="">{{ venta.numero_completo }}</v-chip></h2>
 
         <v-row v-if="loading">
             <v-col cols="12">
@@ -43,6 +43,7 @@ export default {
             const { data } = await axios.get(`/venta/${this.$route.params.id}/tracking`)
             this.detalles = data.detalles
             this.estados = data.estados
+            this.venta = data.venta
         } finally {
             this.loading = false
         }

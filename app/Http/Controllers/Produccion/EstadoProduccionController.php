@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
 use App\Models\DetalleVenta;
+use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
+use App\Models\ProcesoEstadoProduccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,5 +58,15 @@ class EstadoProduccionController extends Controller
         ]);
 
         return response()->json(['ok' => true]);
+    }
+
+    public function procesos(EstadoProduccion $estadoProduccion)
+    {
+        $procesos = ProcesoEstadoProduccion::where('estado_produccions_id',$estadoProduccion->id)
+            ->where('estado', 1)
+            ->orderBy('id')
+            ->get();
+
+        return response()->json($procesos);
     }
 }

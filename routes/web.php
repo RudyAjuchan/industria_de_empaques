@@ -8,6 +8,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Produccion\ColaProduccionController;
 use App\Http\Controllers\Produccion\EstadoProduccionController;
 use App\Http\Controllers\Produccion\HistorialProduccionController;
+use App\Http\Controllers\ProduccionOperativaController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -200,6 +201,23 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     // Cambiar estado (avanzar o retroceder)
     Route::post('/produccion/detalle/{detalleVenta}/estado', [EstadoProduccionController::class, 'cambiarEstado'])->middleware('permission:produccion.editar');
 });
+
+/* RUTAS OPERATIVAS DE PRODUCCIÓN */
+Route::middleware(['auth', 'force.password'])->group(function () {
+
+    // PARA LISTAR PRODUCTOS SEGÚN OPERARIO Y ÁREA
+    Route::get('/produccion/operativa',[ProduccionOperativaController::class, 'index'])->middleware('permission:produccion.ver');
+
+    // INICIAR O CAMBIAR PROCESO
+    Route::post('/produccion/detalle/{detalleVenta}/proceso',[ProduccionOperativaController::class, 'iniciarProceso'])->middleware('permission:produccion.editar');
+
+    // FINALIZAR PROCESO Y CAMBIAR AL SIGUIENTE ESTADO
+    Route::post('/produccion/detalle/{detalleVenta}/finalizar',[ProduccionOperativaController::class, 'finalizarProceso'])->middleware('permission:produccion.editar');
+
+    //OBTENER PROCESOS DEL ESTADO DEL DETALLE VENTA.
+    Route::get('/produccion/estado/{estadoProduccion}/procesos', [EstadoProduccionController::class, 'procesos'])->middleware('permission:produccion.ver');
+});
+
 
 
 require __DIR__.'/auth.php';

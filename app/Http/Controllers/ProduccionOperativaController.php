@@ -29,6 +29,9 @@ class ProduccionOperativaController extends Controller
             ->with([
                 'detalleVenta.producto',
                 'detalleVenta.venta',
+                'detalleVenta.historialEstados.estadoProduccion',
+                'detalleVenta.historialEstados.procesoEstado',
+                'detalleVenta.historialEstados.usuario',
                 'procesoEstado'
             ])
             ->orderBy('fecha_inicio')

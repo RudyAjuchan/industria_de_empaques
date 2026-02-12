@@ -55,18 +55,22 @@ export default {
         },
 
         titulo(item) {
-            switch (item.tipo_evento) {
+    switch (item.tipo_evento) {
+
                 case 'entrada_estado':
-                    return `Entrada a ${item.estado_produccion.nombre}`
+                    return `Entrada a ${item.estado_produccion?.nombre}`
 
                 case 'inicio_proceso':
-                    return `Inicio de proceso: ${item.proceso_estado.nombre}`
+                    return `Inicio de proceso: ${item.proceso_estado?.nombre}`
 
                 case 'cambio_proceso':
-                    return `Cambio de proceso: ${item.proceso_estado.nombre}`
+                    return `Cambio de proceso: ${item.proceso_estado?.nombre}`
 
                 case 'finalizacion_estado':
-                    return `Finalización de ${item.estado_produccion.nombre}`
+                    return `Finalización de ${item.estado_produccion?.nombre}`
+
+                case 'regreso_estado':
+                    return `Regresado desde ${item.estado_produccion?.nombre}`
 
                 default:
                     return item.proceso_estado?.nombre

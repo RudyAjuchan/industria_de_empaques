@@ -43,6 +43,7 @@ return new class extends Migration
                 'entrada_estado',
                 'inicio_proceso',
                 'cambio_proceso',
+                'regreso_estado',
                 'finalizacion_estado'
             ]);
 

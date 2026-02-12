@@ -8,6 +8,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Produccion\ColaProduccionController;
 use App\Http\Controllers\Produccion\EstadoProduccionController;
 use App\Http\Controllers\Produccion\HistorialProduccionController;
+use App\Http\Controllers\Produccion\ProduccionController;
 use App\Http\Controllers\ProduccionOperativaController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProfileController;
@@ -217,6 +218,10 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
     //OBTENER PROCESOS DEL ESTADO DEL DETALLE VENTA.
     Route::get('/produccion/estado/{estadoProduccion}/procesos', [EstadoProduccionController::class, 'procesos'])->middleware('permission:produccion.ver');
+    /* RUTAS PARA REGRESAR DE UN ESTADO */
+    Route::get('/produccion/estados-anteriores/{tarea}', [ProduccionController::class, 'estadosAnteriores'])->middleware('permission:produccion.editar');
+    Route::post('/produccion/detalle/{detalleVenta}/regresar', [ProduccionController::class, 'regresarEstado'])->middleware('permission:produccion.editar');
+
 });
 
 

@@ -11,7 +11,7 @@
 
         <v-row>
             <v-col cols="12" md="6" lg="4" v-for="tarea in tareas" :key="tarea.id">
-                <TareaProduccionCard :tarea="tarea" @iniciar="abrirProceso" @finalizar="abrirFinalizar" />
+                <TareaProduccionCard :tarea="tarea" @iniciar="abrirProceso" @finalizar="abrirFinalizar" @regresar="abrirRegresar"/>
             </v-col>
         </v-row>
 
@@ -19,6 +19,9 @@
         <ModalProceso v-model="modalProceso" :tarea="tareaSeleccionada" @guardado="recargar" />
 
         <ConfirmarFinalizar v-model="modalFinalizar" :tarea="tareaSeleccionada" @confirmado="recargar" />
+
+        <ModalRegresar v-model="modalRegresar" :tarea="tareaSeleccionada" @confirmado="recargar" />
+
     </v-container>
 </template>
 <script>
@@ -26,12 +29,14 @@ import axios from 'axios'
 import TareaProduccionCard from './TareaProduccionCard.vue'
 import ModalProceso from './ModalProceso.vue'
 import ConfirmarFinalizar from './ConfirmarFinalizar.vue'
+import ModalRegresar from './ModalRegresar.vue'
 
 export default {
     components: {
         TareaProduccionCard,
         ModalProceso,
-        ConfirmarFinalizar
+        ConfirmarFinalizar,
+        ModalRegresar
     },
 
     data() {
@@ -40,7 +45,8 @@ export default {
             tareas: [],
             modalProceso: false,
             modalFinalizar: false,
-            tareaSeleccionada: null
+            tareaSeleccionada: null,
+            modalRegresar: false,
         }
     },
 
@@ -65,7 +71,13 @@ export default {
             this.modalProceso = false
             this.modalFinalizar = false
             this.cargar()
+        },
+
+        abrirRegresar(tarea) {
+            this.tareaSeleccionada = tarea
+            this.modalRegresar = true
         }
+
     },
 
     mounted() {

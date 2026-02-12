@@ -40,8 +40,14 @@ export default {
             return activo?.estado_produccions_id ?? null
         },
 
-
         estadosCompletados() {
+            // Si está finalizado → todos completos
+            if (this.estaFinalizado) {
+                return this.estados.map(e => e.id)
+            }
+
+            if (!this.estadoActualId) return []
+
             const estadoActual = this.estados.find(
                 e => e.id === this.estadoActualId
             )
@@ -53,9 +59,14 @@ export default {
                 .map(e => e.id)
         },
 
-
         getIcon() {
             return (estadoId) => {
+
+                // Si está finalizado, todos con check
+                if (this.estaFinalizado) {
+                    return 'mdi-check-circle'
+                }
+
                 if (estadoId === this.estadoActualId) {
                     return 'mdi-progress-clock'
                 }
@@ -70,6 +81,11 @@ export default {
 
         getColor() {
             return (estadoId) => {
+
+                if (this.estaFinalizado) {
+                    return 'green'
+                }
+
                 if (this.estadosCompletados.includes(estadoId)) {
                     return 'green'
                 }
@@ -86,7 +102,16 @@ export default {
             return this.estados.findIndex(
                 e => e.id === this.estadoActualId
             )
+        },
+
+        estaFinalizado() {
+
+            const activo = this.historial.some(h => !h.fecha_fin)
+
+            return !activo
         }
+
+
     }
 }
 </script>

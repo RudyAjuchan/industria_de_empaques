@@ -161,9 +161,10 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA VENTAS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/venta', [VentaController::class, 'index'])->middleware('permission:venta.ver');
+    Route::get('/venta', [VentaController::class, 'index'])->middleware('permission:venta.ver|produccion.activa');
+    Route::get('/produccionActiva', [VentaController::class, 'ventas_activas'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
-    Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver');
+    Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa');
     Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar');
     Route::get('/venta/{venta}/imprimir', [VentaController::class, 'imprimir'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/pdf', [VentaController::class, 'exportPdf'])->middleware('permission:venta.reporte');
@@ -182,11 +183,11 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
     // Ver tracking completo de una venta
     Route::get(
-        '/venta/{venta}/tracking', [HistorialProduccionController::class, 'trackingVenta'])->middleware('permission:venta.ver');
+        '/venta/{venta}/tracking', [HistorialProduccionController::class, 'trackingVenta'])->middleware('permission:venta.ver|produccion.activa');
 
     // Tracking por producto (detalle)
     Route::get(
-        '/venta/detalle/{detalleVenta}/tracking', [HistorialProduccionController::class, 'trackingDetalle'])->middleware('permission:venta.ver');
+        '/venta/detalle/{detalleVenta}/tracking', [HistorialProduccionController::class, 'trackingDetalle'])->middleware('permission:venta.ver|produccion.activa');
 });
 
 /* RUTAS DE PRODUCCIÓN (OPERATIVAS) */

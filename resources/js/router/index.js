@@ -33,6 +33,9 @@ const trackingVentaComponent = () => import('../components/Ventas/Estado/Trackin
 /* COMPONENTES PARA PRODUCCIÓN */
 const operativaProduccionComponent = () => import('../components/Produccion/OperativaProduccion.vue');
 
+/* COMPONENTES PARA PRODUCCIÓN ACTIVA */
+const produccionActivaComponent = () => import('../components/Produccion/ProduccionActiva.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -190,7 +193,7 @@ const routes = [
         name: 'venta.tracking',
         component: trackingVentaComponent,
         meta: {
-            permission: 'venta.ver'
+            permission: ['venta.ver', 'produccion.activa']
         }
     },
     /* RUTAS PARA LA PRODUCCIÓN (OPERARIOS) */
@@ -201,8 +204,16 @@ const routes = [
         meta: { 
             permission: 'produccion.ver' 
         }
+    },
+    /* RUTAS PARA VER LOS PRODUCTOS ACTIVOS */
+    {
+        path: '/produccion-activa',
+        name: 'produccion.activa',
+        component: produccionActivaComponent,
+        meta: { 
+            permission: 'produccion.activa' 
+        }
     }
-
 ];
 const router = createRouter({
     history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -210,18 +221,27 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    const permission = to.meta.permission
+    const metaPermission = to.meta.permission
 
-    if (!permission) {
+    if (!metaPermission) {
         return next()
     }
 
-    const permissions = window.USER_PERMISSIONS || []
+    const userPermissions = window.USER_PERMISSIONS || []
 
-    if (permissions.includes(permission)) {
+    // Convertimos a arreglo si es un string para manejar todo igual
+    const requiredPermissions = Array.isArray(metaPermission)
+        ? metaPermission
+        : [metaPermission]
+
+    // Lógica: ¿El usuario tiene AL MENOS UNO de los permisos requeridos?
+    const hasPermission = requiredPermissions.some(p => userPermissions.includes(p))
+
+    if (hasPermission) {
         return next()
     }
 
+    // Si no tiene permiso, lo mandamos al inicio
     return next('/')
 })
 export default router;

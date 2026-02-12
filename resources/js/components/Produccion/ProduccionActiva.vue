@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona las ventas</div>
+                    <div class="text-body-2 text-medium-emphasis">Mira los productos que están en producción</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -17,24 +17,24 @@
 
                         <v-list density="compact">
                             <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
-                                v-if="can('venta.reporte')">
+                                v-if="can('produccion.activa')">
                                 <v-list-item-title>Excel</v-list-item-title>
                             </v-list-item>
 
                             <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
-                                v-if="can('venta.reporte')">
+                                v-if="can('produccion.activa')">
                                 <v-list-item-title>PDF</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
                     <v-btn color="primary" prepend-icon="mdi-plus" variant="tonal" :loading="loading" @click="$router.push('/venta/create')"
-                        v-if="can('venta.crear')">
+                        v-if="can('produccion.activa')">
                         Nuevo
                     </v-btn>
                 </v-col>
             </v-row>
         </div>
-        <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('venta.ver')" fixed-header height="400px"
+        <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('produccion.activa')" fixed-header height="400px"
             :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search">
 
             <template v-slot:[`item.created_at`]="{ item }">
@@ -49,29 +49,11 @@
 
             <template v-slot:[`item.acciones`]="{ item }">
                 <div class="d-flex ga-1">
-                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="red" variant="tonal">
-                        <v-tooltip activator="parent" location="top">Anular</v-tooltip>
-                        <v-icon>mdi-cancel</v-icon>
-                    </v-btn>
-                    <v-btn icon size="small" @click="verDetalle(item)" color="primary" variant="tonal">
-                        <v-tooltip activator="parent" location="top">Ver</v-tooltip>
-                        <v-icon>mdi-eye</v-icon>
-                    </v-btn>
-                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="green" variant="tonal">
-                        <v-tooltip activator="parent" location="top">Imprimir</v-tooltip>
-                        <v-icon>mdi-printer</v-icon>
-                    </v-btn>
                     <v-btn icon size="small" @click="verEstados(item.id)" color="orange" variant="tonal">
                         <v-tooltip activator="parent" location="top">Ver estados</v-tooltip>
                         <v-icon>mdi-list-status</v-icon>
                     </v-btn>
                 </div>
-            </template>
-
-            <template v-slot:[`item.estado_produccion`]="{ item }">
-                <v-chip v-if="item.estado_produccion=='sin_iniciar'">{{ format_estado(item.estado_produccion) }}</v-chip>
-                <v-chip v-if="item.estado_produccion=='en_produccion'" color="red">{{ format_estado(item.estado_produccion) }}</v-chip>
-                <v-chip v-if="item.estado_produccion=='finalizada'" color="green">{{ format_estado(item.estado_produccion) }}</v-chip>
             </template>
 
         </v-data-table>
@@ -91,9 +73,6 @@ export default {
             headers: [
                 { title: 'Número', key: 'numero_completo' },
                 { title: 'Cliente', key: 'cliente.nombre' },
-                { title: 'Total', key: 'total' },
-                { title: 'Estado', key: 'estado' },
-                { title: 'Estado Producción', key: 'estado_produccion' },
                 { title: 'Fecha emitida', key: 'created_at' },
                 { title: 'Acciones', key: 'acciones', sortable: false },
             ],
@@ -105,7 +84,7 @@ export default {
         async getVentas() {
             this.loading = true
             try {
-                const { data } = await axios.get('/venta')
+                const { data } = await axios.get('/produccionActiva')
                 this.ventas = data
             } finally {
                 this.loading = false
@@ -143,13 +122,6 @@ export default {
 
         verEstados(id){
             this.$router.push(`/venta/${id}/tracking`)
-        },
-
-        format_estado(estado){
-            return estado.replace('_', ' ')
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
         }
     },
 

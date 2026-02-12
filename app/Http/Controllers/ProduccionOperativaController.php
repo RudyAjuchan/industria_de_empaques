@@ -41,8 +41,6 @@ class ProduccionOperativaController extends Controller
         ]);
     }
 
-
-
     public function iniciarProceso(Request $request, DetalleVenta $detalleVenta)
     {
         $request->validate([
@@ -50,39 +48,43 @@ class ProduccionOperativaController extends Controller
             'observacion' => 'nullable|string'
         ]);
 
-        // Estado activo REAL (entrada_estado vigente)
-        $estadoActual = $detalleVenta->getEstadoActual();
+        // Puede ser null si ya estamos en proceso
+        $estadoActivo = $detalleVenta->getEstadoActivo();
 
-        if (!$estadoActual) {
+        // Proceso activo (si existe)
+        $procesoActivo = $detalleVenta->getProcesoActivo();
+
+        // Caso inválido: no hay estado en cola NI proceso en curso
+        if (!$estadoActivo && !$procesoActivo) {
             return response()->json([
-                'message' => 'El producto no tiene estado activo'
+                'message' => 'El producto no tiene un estado válido para iniciar o cambiar proceso'
             ], 422);
         }
 
-        // Obtener proceso activo ANTES de cerrar nada
-        $procesoActivo = $detalleVenta->getProcesoActivo();
+        // Determinar el estado real (desde donde se trabaja)
+        $estadoProduccionId = $estadoActivo
+            ? $estadoActivo->estado_produccions_id
+            : $procesoActivo->estado_produccions_id;
 
-        //Cerrar la espera (entrada_estado)
-
-        $detalleVenta->historialEstados()
-            ->where('estado_produccions_id', $estadoActual->estado_produccions_id)
-            ->where('tipo_evento', 'entrada_estado')
-            ->whereNull('fecha_fin')
-            ->update([
+        //Cerrar espera SOLO si existe
+        if ($estadoActivo) {
+            $estadoActivo->update([
                 'fecha_fin' => now()
             ]);
-        //Cerrar proceso activo (si existe)
+        }
+
+        //Cerrar proceso activo SOLO si existe
+
         if ($procesoActivo) {
             $procesoActivo->update([
                 'fecha_fin' => now()
             ]);
         }
-
         //Crear nuevo proceso
 
         HistorialEstadoProduccion::create([
             'detalle_ventas_id' => $detalleVenta->id,
-            'estado_produccions_id' => $estadoActual->estado_produccions_id,
+            'estado_produccions_id' => $estadoProduccionId,
             'proceso_estado_produccions_id' => $request->proceso_estado_produccions_id,
             'users_id' => Auth::id(),
             'fecha_inicio' => now(),
@@ -92,10 +94,13 @@ class ProduccionOperativaController extends Controller
                 : 'inicio_proceso',
         ]);
 
+        $detalleVenta->venta->recalcularEstadoProduccion();
+
         return response()->json([
             'message' => 'Proceso actualizado correctamente'
         ]);
     }
+
 
     public function finalizarProceso(Request $request, DetalleVenta $detalleVenta)
     {
@@ -103,7 +108,6 @@ class ProduccionOperativaController extends Controller
             'observacion' => 'nullable|string'
         ]);
 
-        //Obtener el estado activo REAL
         $estadoActivo = $detalleVenta->getEstadoActual();
 
         if (!$estadoActivo) {
@@ -118,20 +122,14 @@ class ProduccionOperativaController extends Controller
             ->orderBy('orden')
             ->first();
 
-        if (!$siguienteEstado) {
-            return response()->json([
-                'message' => 'Este producto ya está en el último estado'
-            ], 422);
-        }
-
-        //CERRAR el estado actual
+        //Cerrar el estado actual (SIEMPRE)
         $estadoActivo->update([
             'fecha_fin' => now(),
             'observacion' => $request->observacion,
             'users_id' => Auth::id(),
         ]);
 
-        // Crear evento de finalización
+        //Evento histórico de finalización (opcional)
         HistorialEstadoProduccion::create([
             'detalle_ventas_id' => $detalleVenta->id,
             'estado_produccions_id' => $estadoActivo->estado_produccions_id,
@@ -142,16 +140,23 @@ class ProduccionOperativaController extends Controller
             'observacion' => $request->observacion,
         ]);
 
-        //CREAR entrada al siguiente estado
-        HistorialEstadoProduccion::create([
-            'detalle_ventas_id' => $detalleVenta->id,
-            'estado_produccions_id' => $siguienteEstado->id,
-            'fecha_inicio' => now(),
-            'tipo_evento' => 'entrada_estado',
-        ]);
+        //Solo si HAY siguiente estado, crear entrada
+        if ($siguienteEstado) {
+            HistorialEstadoProduccion::create([
+                'detalle_ventas_id' => $detalleVenta->id,
+                'estado_produccions_id' => $siguienteEstado->id,
+                'fecha_inicio' => now(),
+                'tipo_evento' => 'entrada_estado',
+            ]);
+        }
+
+        //Recalcular estado de la venta
+        $detalleVenta->venta->recalcularEstadoProduccion();
 
         return response()->json([
-            'message' => 'Producto enviado al siguiente estado'
+            'message' => $siguienteEstado
+                ? 'Producto enviado al siguiente estado'
+                : 'Producto finalizado completamente'
         ]);
     }
 }

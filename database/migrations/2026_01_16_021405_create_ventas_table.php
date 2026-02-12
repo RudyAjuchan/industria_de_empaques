@@ -30,14 +30,13 @@ return new class extends Migration
             $table->decimal('promociones', 12, 2);
             $table->decimal('costo_envio', 12, 2);
             $table->decimal('total', 12, 2);
-            $table->foreignId('proceso_estado_produccions_id')->constrained('proceso_estado_produccions');
             $table->enum('estado', [
                 'pendiente',   // reservado
                 'emitida',     // válida (interna o SAT)
                 'error',       // fallo técnico
                 'anulada'      // anulada legalmente
             ])->default('emitida'); // hoy emite directo
-
+            $table->string('estado_produccion', 30)->default('sin_iniciar');
             // Campos SAT (para el futuro)
             $table->string('sat_uuid')->nullable();
             $table->timestamp('sat_fecha')->nullable();

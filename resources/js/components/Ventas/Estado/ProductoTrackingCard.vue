@@ -10,7 +10,7 @@
                         </div>
                     </v-col>
                     <v-col cols="2">
-                        <v-chip color="teal" variant="tonal">
+                        <v-chip :color="chipColor" variant="tonal">
                             {{ estadoActual }}
                         </v-chip>
                     </v-col>
@@ -43,18 +43,45 @@ export default {
 
     computed: {
         estadoActual() {
-            const actual = [...this.detalle.historial_estados]
-                .filter(h => !h.fecha_fin)
+
+            const historial = this.detalle.historial_estados
+
+            // Obtener la última entrada_estado registrada
+            const ultimaEntrada = historial
+                .filter(h => h.tipo_evento === 'entrada_estado')
                 .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
 
-            return actual?.estado_produccion?.nombre ?? '—'
-        }
+            if (!ultimaEntrada) {
+                return 'Sin iniciar'
+            }
 
+            // Verificar si existe una finalización para ese mismo estado
+            const fueFinalizado = historial.some(h =>
+                h.tipo_evento === 'finalizacion_estado' &&
+                h.estado_produccions_id === ultimaEntrada.estado_produccions_id
+            )
+
+            // Obtener último estado del sistema
+            const ultimoEstado = [...this.estados]
+                .sort((a, b) => b.orden - a.orden)[0]
+
+            if (
+                fueFinalizado &&
+                ultimaEntrada.estado_produccions_id === ultimoEstado.id
+            ) {
+                return 'Finalizado'
+            }
+
+            return ultimaEntrada.estado_produccion?.nombre
+        },
+
+        chipColor() {
+            if (this.estadoActual === 'Finalizado') return 'green'
+            if (this.estadoActual === 'Sin iniciar') return 'grey'
+            return 'orange'
+        }
     },
 
-    created() {
-        console.log(this.detalle);
-    }
 }
 
 </script>

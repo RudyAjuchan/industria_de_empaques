@@ -121,11 +121,19 @@
                     </a>
                 @endcan
                 @can('menu.produccion')
-                    <a href="#" data-route="produccion" data-title="Ventas">
+                    <a href="#" data-route="/produccion" data-title="Producción">
                         <div class="ico" aria-hidden="true">
                             <i class="mdi mdi-cog-sync"></i>
                         </div>
                         <div class="label">Producción</div>
+                    </a>
+                @endcan
+                @can('menu.produccion-activa')
+                    <a href="#" data-route="/produccion-activa" data-title="Productos Activos">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-cog-play-outline"></i>
+                        </div>
+                        <div class="label">Productos Activos</div>
                     </a>
                 @endcan
             </nav>

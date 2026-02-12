@@ -26,6 +26,13 @@ class VentaController extends Controller
             ->get();
     }
 
+    public function ventas_activas(){
+        return Venta::with(['cliente', 'vendedor', 'banco'])
+            ->where('estado_produccion','<>', 'finalizada')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
     public function getPaginas()
     {
         return Pagina::where('estado', 1)
@@ -82,8 +89,6 @@ class VentaController extends Controller
                 'costo_envio' => $costoEnvio,
                 'total' => $total,
 
-                // SOLO como resumen visual (opcional)
-                'proceso_estado_produccions_id' => 1,
                 'estado' => 'emitida',
             ]);
 

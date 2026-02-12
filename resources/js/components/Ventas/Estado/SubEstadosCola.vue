@@ -2,7 +2,14 @@
     <v-expansion-panels>
         <v-expansion-panel v-for="(item, index) in historial" :key="index">
             <v-expansion-panel-title>
-                {{ titulo(item) }}
+                <v-row class="justify-space-between">
+                    <v-col cols="5">
+                        {{ titulo(item) }}
+                    </v-col>
+                    <v-col cols="3">
+                        <v-chip density="compact" :color="getChipColor(item.estado_produccion.orden)">{{ `${item.estado_produccion.orden}. ${item.estado_produccion.nombre}` }}</v-chip>
+                    </v-col>
+                </v-row>
             </v-expansion-panel-title>
 
             <v-expansion-panel-text>
@@ -66,6 +73,28 @@ export default {
                         ?? item.estado_produccion?.nombre
                         ?? 'Evento'
             }
+        },
+
+        getChipColor(id) {
+            const colorMap = {
+                1: 'primary',       // Azul Marca
+                2: 'pink',          // Rosa Vibrante (Salto total de tono)
+                3: 'indigo',        // Azul Profundo
+                4: 'cyan',          // Turquesa Claro
+                5: 'deep-purple',   // Morado Oscuro
+                6: 'teal',          // Verde Azulado
+                7: 'orange-darken-1',     // Gris Azulado Neutro
+                8: 'purple-lighten-2', // Lavanda suave
+                9: 'blue',          // Azul Rey
+                10: 'brown',        // Tierra
+                11: 'light-blue',   // Celeste
+                12: 'grey-darken-3',// Gris Carbon
+                13: 'purple',       // Morado Brillante
+                14: 'light-blue-darken-3', // Azul Petróleo
+                15: 'info'          // Cian Informativo
+            };
+
+            return colorMap[id] || 'grey';
         }
     },
 }

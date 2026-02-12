@@ -60,6 +60,13 @@ class DetalleVenta extends Model
             ->orderByDesc('fecha_inicio')
             ->first();
     }
+    public function getEstadoActivo()
+    {
+        return $this->historialEstados()
+            ->where('tipo_evento', 'entrada_estado')
+            ->whereNull('fecha_fin')
+            ->first();
+    }
 
 
     public function getProcesoActivo()

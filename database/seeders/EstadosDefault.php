@@ -54,7 +54,7 @@ class EstadosDefault extends Seeder
         EstadoProduccion::create([
             'nombre' => 'Área de empaque',
             'users_id' => 7,
-            'orden' => 7,
+            'orden' => 8,
         ]);
 
 

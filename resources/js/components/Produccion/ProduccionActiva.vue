@@ -74,6 +74,7 @@ export default {
                 { title: 'Número', key: 'numero_completo' },
                 { title: 'Cliente', key: 'cliente.nombre' },
                 { title: 'Fecha emitida', key: 'created_at' },
+                { title: 'Vendedor', key: 'vendedor.name' },
                 { title: 'Acciones', key: 'acciones', sortable: false },
             ],
             search: null,

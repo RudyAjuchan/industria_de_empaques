@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\VentaExport;
 use App\Http\Requests\StoreVentaRequest;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
@@ -13,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VentaController extends Controller
 {
@@ -182,14 +184,58 @@ class VentaController extends Controller
         ]);
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        return Venta::all();
+        $search = trim($request->query('search', ''));
+        $search = ($search === 'null' || $search === '') ? null : $search;
+
+        $ventas = Venta::with(['cliente', 'vendedor'])
+            ->when($search, function ($q) use ($search) {
+
+                $q->where(function ($sub) use ($search) {
+
+                    if (str_contains($search, '-')) {
+
+                        [$serie, $numero] = explode('-', $search);
+                        $numero = ltrim($numero, '0');
+
+                        $sub->where('serie', 'like', "%{$serie}%")
+                            ->where('numero', $numero);
+                    } else {
+
+                        $sub->where('serie', 'like', "%{$search}%")
+                            ->orWhere('numero', 'like', "%{$search}%");
+                    }
+
+                    $sub->orWhereHas('cliente', function ($c) use ($search) {
+                        $c->where('nombre', 'like', "%{$search}%");
+                    });
+
+                    $sub->orWhereHas('vendedor', function ($v) use ($search) {
+                        $v->where('name', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return Pdf::loadView('pdf.venta.venta-lista', [
+            'ventas' => $ventas,
+            'search' => $search
+        ])
+            ->setPaper('letter', 'landscape')
+            ->stream('venta.venta-lista.pdf');
     }
 
-    public function exportExcel()
+
+    public function exportExcel(Request $request)
     {
-        return Venta::all();
+        $search = $request->query('search');
+
+        return Excel::download(
+            new VentaExport($search),
+            'ventas.xlsx'
+        );
     }
 
     public function imprimir(Venta $venta)

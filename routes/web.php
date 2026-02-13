@@ -189,6 +189,11 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     // Tracking por producto (detalle)
     Route::get(
         '/venta/detalle/{detalleVenta}/tracking', [HistorialProduccionController::class, 'trackingDetalle'])->middleware('permission:venta.ver|produccion.activa');
+
+    Route::get('/venta/{venta}/tracking/pdf', [HistorialProduccionController::class, 'exportTrackingPdf'])->middleware('permission:venta.reporte|');
+
+    Route::get('/venta/{venta}/tracking/excel', [HistorialProduccionController::class, 'exportTrackingExcel'])->middleware('permission:venta.reporte||produccion.activa');
+
 });
 
 /* RUTAS DE PRODUCCIÓN (OPERATIVAS) */

@@ -5,6 +5,15 @@
         </v-btn>
 
         <h2 class="mb-4">Tracking de la venta <v-chip color="">{{ venta.numero_completo }}</v-chip></h2>
+        <v-row class="mb-3 justify-end">
+            <v-btn color="red" variant="tonal" prepend-icon="mdi-file-pdf-box" class="mr-2" @click="exportPdf">
+                PDF
+            </v-btn>
+
+            <v-btn color="teal" variant="tonal" prepend-icon="mdi-file-excel" @click="exportExcel">
+                Excel
+            </v-btn>
+        </v-row>
 
         <v-row v-if="loading">
             <v-col cols="12">
@@ -46,6 +55,16 @@ export default {
             this.venta = data.venta
         } finally {
             this.loading = false
+        }
+    },
+
+    methods:{
+        exportPdf() {
+            window.open(`/venta/${this.$route.params.id}/tracking/pdf`, '_blank')
+        },
+
+        exportExcel() {
+            window.open(`/venta/${this.$route.params.id}/tracking/excel`)
         }
     }
 }

@@ -92,6 +92,7 @@ export default {
                 { title: 'Número', key: 'numero_completo' },
                 { title: 'Cliente', key: 'cliente.nombre' },
                 { title: 'Total', key: 'total' },
+                { title: 'Vendedor', key: 'vendedor.name' },
                 { title: 'Estado', key: 'estado' },
                 { title: 'Estado Producción', key: 'estado_produccion' },
                 { title: 'Fecha emitida', key: 'created_at' },
@@ -119,9 +120,16 @@ export default {
             this.getVentas()
         },
         exportExcel(){
+            const params = new URLSearchParams({
+                search: this.search
+            })
 
+            window.location.href = `/venta/export/excel?${params.toString()}`
         },exportPdf(){
-
+            const params = new URLSearchParams({
+                search: this.search
+            })
+            window.open(`/venta/export/pdf?${params.toString()}`, '_blank')
         },
         verDetalle(item){
             this.$router.push(`/venta/${item.id}`)

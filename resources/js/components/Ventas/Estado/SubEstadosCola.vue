@@ -29,6 +29,19 @@
                 <div v-if="item.observacion" class="mt-2">
                     {{ item.observacion }}
                 </div>
+
+                <div v-if="item.campos && item.campos.length" class="mt-2">
+                    <div v-for="campo in item.campos" :key="campo.id" class="text-caption">
+                        <strong>{{ campo.campo.label || campo.campo.nombre }}:</strong>
+                        {{ obtenerValorCampo(campo) }}
+                    </div>
+                </div>
+                <div v-if="item.tipo_evento === 'finalizacion_estado'">
+                    <div class="text-caption">
+                        <strong>Unidades Extras:</strong>
+                        {{ calcularExtras(item) }}
+                    </div>
+                </div>
             </v-expansion-panel-text>
 
         </v-expansion-panel>
@@ -45,7 +58,8 @@ export default {
             type: Array,
             required: true,
             default: () => []
-        }
+        },
+        cantidadPedido: Number
     },
 
     methods: {
@@ -55,7 +69,7 @@ export default {
         },
 
         titulo(item) {
-    switch (item.tipo_evento) {
+            switch (item.tipo_evento) {
 
                 case 'entrada_estado':
                     return `Entrada a ${item.estado_produccion?.nombre}`
@@ -99,6 +113,36 @@ export default {
             };
 
             return colorMap[id] || 'grey';
+        },
+
+        obtenerValorCampo(campo) {
+            return (
+                campo.valor_string ??
+                campo.valor_integer ??
+                campo.valor_double ??
+                campo.valor_date ??
+                '-'
+            )
+        },
+
+        getCampo(item, nombre) {
+            const campo = item.campos?.find(c => c.campo.nombre === nombre)
+
+            if (!campo) return 0
+
+            return (
+                campo.valor_integer ??
+                campo.valor_double ??
+                campo.valor_string ??
+                0
+            )
+        },
+
+        calcularExtras(item) {
+            const finalizadas = this.getCampo(item, 'finalizadas')
+            const pedido = this.cantidadPedido || 0
+
+            return Math.max(finalizadas - pedido, 0)
         }
     },
 }

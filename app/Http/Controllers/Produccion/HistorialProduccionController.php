@@ -19,7 +19,8 @@ class HistorialProduccionController extends Controller
             'producto',
             'historialEstados.estadoProduccion',
             'historialEstados.procesoEstado',
-            'historialEstados.usuario'
+            'historialEstados.usuario',
+            'historialEstados.campos.campo'
         ])->get();
 
         return response()->json([
@@ -36,7 +37,8 @@ class HistorialProduccionController extends Controller
             'producto',
             'historialEstados.estadoProduccion',
             'historialEstados.procesoEstado',
-            'historialEstados.usuario'
+            'historialEstados.usuario',
+            'historialEstados.campos.campo'
         ]);
     }
 
@@ -47,6 +49,7 @@ class HistorialProduccionController extends Controller
             'detalles.historialEstados.estadoProduccion',
             'detalles.historialEstados.procesoEstado',
             'detalles.historialEstados.usuario',
+            'detalles.historialEstados.campos.campo'
         ]);
 
         return Pdf::loadView('pdf.venta.tracking.detalle-venta', [

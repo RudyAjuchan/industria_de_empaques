@@ -23,6 +23,8 @@
         "@fortawesome/fontawesome-free": "^7.1.0",
         "@lottiefiles/dotlottie-vue": "^0.10.10",
         "@mdi/font": "^7.4.47",
+        "chart.js": "^4.5.1",
+        "chartjs-plugin-datalabels": "^2.2.0",
         "filepond": "^4.32.11",
         "filepond-plugin-file-validate-type": "^1.2.9",
         "filepond-plugin-image-preview": "^4.6.12",

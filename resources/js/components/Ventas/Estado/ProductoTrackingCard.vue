@@ -23,7 +23,7 @@
 
                 <v-divider class="my-4" />
 
-                <SubEstadosCola :historial="detalle.historial_estados" />
+                <SubEstadosCola :historial="detalle.historial_estados" :cantidadPedido="detalle.cantidad" />
             </v-expansion-panel-text>
         </v-expansion-panel>
     </v-expansion-panels>

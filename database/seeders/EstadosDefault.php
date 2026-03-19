@@ -337,150 +337,123 @@ class EstadosDefault extends Seeder
         // TERCERO DETALLE DE ESTADOS /-----------------------------------------------------------
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 1,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA ENTREGA',
+            'tipo' => 'entero',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
         ]);
+
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 1,
             'tipo' => 'entero',
-            'nombre' => 'PLIEGOS EXTRAS',
-        ]);
-        //--------
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA IMPRESIÓN',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
         ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 2,
             'tipo' => 'entero',
-            'nombre' => 'UNIDAD IMPRESIÓN',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'IMPRESIÓN EXTRA',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'OTROS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 2,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDADES DESECHADAS',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
         ]);
 
-        //-----------------
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 3,
+            'estado_produccions_id' => 2,
             'tipo' => 'entero',
-            'nombre' => 'CANTIDAD',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 3,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA CORTE',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
         ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 3,
             'tipo' => 'entero',
-            'nombre' => 'DESECHADAS',
-        ]);
-        //----------------
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA INICIAL ELABORACIÓN',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA FINAL ELABORACIÓN',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDAD DE BOLSAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'entero',
-            'nombre' => 'ETIQUETAS/TARJETAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDADES DESECHADAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 4,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDADES EXTRAS',
-        ]);
-        //----------------
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA INICIAL ELABORACIÓN',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'fecha',
-            'nombre' => 'FECHA FINAL ELABORACIÓN',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDAD DE BOLSAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'entero',
-            'nombre' => 'ETIQUETAS/TARJETAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDADES DESECHADAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 5,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDADES EXTRAS',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
         ]);
 
-        //----------
         DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 8,
-            'tipo' => 'FECHA',
-            'nombre' => 'FECHA DE EMPAQUE',
+            'estado_produccions_id' => 3,
+            'tipo' => 'entero',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 4,
+            'tipo' => 'entero',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
+        ]);
+
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 4,
+            'tipo' => 'entero',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 5,
+            'tipo' => 'entero',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
+        ]);
+
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 5,
+            'tipo' => 'entero',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 6,
+            'tipo' => 'entero',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
+        ]);
+
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 6,
+            'tipo' => 'entero',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
+        ]);
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 7,
+            'tipo' => 'entero',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
+        ]);
+
+        DetalleEstadoProduccion::create([
+            'estado_produccions_id' => 7,
+            'tipo' => 'entero',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
         ]);
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 8,
             'tipo' => 'entero',
-            'nombre' => 'UNIDADES DESECHADAS',
+            'nombre' => 'finalizadas',
+            'label' => 'Unidades Finalizadas',
+            'requerido' => true,
         ]);
+
         DetalleEstadoProduccion::create([
             'estado_produccions_id' => 8,
             'tipo' => 'entero',
-            'nombre' => 'UNIDADES  EXTRAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 8,
-            'tipo' => 'entero',
-            'nombre' => 'UNIDAD FALTANTE',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 8,
-            'tipo' => 'entero',
-            'nombre' => 'TOTAL, BOLSAS ENVIADAS',
-        ]);
-        DetalleEstadoProduccion::create([
-            'estado_produccions_id' => 8,
-            'tipo' => 'entero',
-            'nombre' => 'OTROS',
+            'nombre' => 'desechadas',
+            'label' => 'Unidades Desechadas',
+            'requerido' => false,
         ]);
     }
 }

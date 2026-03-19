@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DetalleEstadoProduccion;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
+use App\Models\HistorialEstadoCampo;
 use App\Models\HistorialEstadoProduccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -107,11 +109,48 @@ class ProduccionOperativaController extends Controller
 
     public function finalizarProceso(Request $request, DetalleVenta $detalleVenta)
     {
-        $request->validate([
-            'observacion' => 'nullable|string'
-        ]);
-
         $estadoActivo = $detalleVenta->getEstadoActual();
+
+        if (!$estadoActivo) {
+            return response()->json([
+                'message' => 'No hay estado activo'
+            ], 422);
+        }
+
+        // Obtener campos definidos del estado actual
+        $camposDefinidos = DetalleEstadoProduccion::where(
+            'estado_produccions_id',
+            $estadoActivo->estado_produccions_id
+        )->get();
+
+        // Construir reglas dinámicas
+        $rules = [
+            'observacion' => 'nullable|string',
+            'campos' => 'nullable|array'
+        ];
+
+        foreach ($camposDefinidos as $campo) {
+
+            $rule = match ($campo->tipo) {
+                'texto'   => 'string',
+                'entero'  => 'integer',
+                'decimal' => 'numeric',
+                'fecha'   => 'date',
+                default   => 'nullable'
+            };
+
+            $rules["campos.{$campo->id}"] = $campo->requerido
+                ? "required|$rule"
+                : "nullable|$rule";
+        }
+
+        $attributes = [];
+
+        foreach ($camposDefinidos as $campo) {
+            $attributes["campos.{$campo->id}"] = $campo->label ?? $campo->nombre;
+        }
+
+        $request->validate($rules, [], $attributes);
 
         if (!$estadoActivo) {
             return response()->json([
@@ -133,7 +172,7 @@ class ProduccionOperativaController extends Controller
         ]);
 
         //Evento histórico de finalización (opcional)
-        HistorialEstadoProduccion::create([
+        $eventoFinalizacion = HistorialEstadoProduccion::create([
             'detalle_ventas_id' => $detalleVenta->id,
             'estado_produccions_id' => $estadoActivo->estado_produccions_id,
             'users_id' => Auth::id(),
@@ -153,6 +192,22 @@ class ProduccionOperativaController extends Controller
             ]);
         }
 
+        // Guardar campos dinámicos si existen
+        if ($request->has('campos') && is_array($request->campos)) {
+            foreach ($request->campos as $campoId => $valor) {
+                $campo = DetalleEstadoProduccion::find($campoId);
+                if (!$campo) continue;
+                HistorialEstadoCampo::create([
+                    'historial_estado_produccions_id' => $eventoFinalizacion->id,
+                    'detalle_estado_produccions_id' => $campoId,
+                    'valor_string'  => $campo->tipo === 'texto'  ? $valor : null,
+                    'valor_double'  => $campo->tipo === 'decimal'  ? $valor : null,
+                    'valor_integer' => $campo->tipo === 'entero' ? $valor : null,
+                    'valor_date'    => $campo->tipo === 'fecha'    ? $valor : null,
+                ]);
+            }
+        }
+
         //Recalcular estado de la venta
         $detalleVenta->venta->recalcularEstadoProduccion();
 
@@ -162,4 +217,25 @@ class ProduccionOperativaController extends Controller
                 : 'Producto finalizado completamente'
         ]);
     }
+
+    public function camposFinalizacion(DetalleVenta $detalleVenta)
+{
+    $estadoActivo = $detalleVenta->getEstadoActual();
+
+    if (!$estadoActivo) {
+        return response()->json([
+            'message' => 'No hay estado activo'
+        ], 422);
+    }
+
+    $campos = DetalleEstadoProduccion::where(
+        'estado_produccions_id',
+        $estadoActivo->estado_produccions_id
+    )->get();
+
+    return response()->json([
+        'estado_id' => $estadoActivo->estado_produccions_id,
+        'campos' => $campos
+    ]);
+}
 }

@@ -1,10 +1,10 @@
-:root {
+/*:root {
     --g1: #167160;
     --g2: #136d28;
     --g3: #2abb00;
 
     /* Fondo NO negro (verde/gris elegante) */
-    --sidebar-bg: #002721;
+    /*--sidebar-bg: #002721;
     --sidebar-bg-2: #002721;
 
     --pill: #ffffff;
@@ -13,6 +13,37 @@
     --muted2: rgba(255, 255, 255, .55);
 
     --shadow: 0 18px 55px rgba(0, 0, 0, .25);
+    --radius: 22px;
+
+    --w-open: 260px;
+    --w-rail: 92px;
+
+    --t: 220ms;
+}*/
+
+:root {
+    /* Verde institucional oscuro */
+    --g1: #00432C;
+
+    /* Verde medio profundo */
+    --g2: #327808;
+
+    /* Verde acento brillante */
+    --g3: #46BD01;
+
+    /* Fondo sidebar (institucional oscuro elegante) */
+    --sidebar-bg: #0C2A00;
+    --sidebar-bg-2: #002E1F;
+
+    /* Pill activa */
+    --pill: #ffffff;
+
+    /* Textos */
+    --text: rgba(255, 255, 255, .92);
+    --muted: rgba(255, 255, 255, .75);
+    --muted2: rgba(255, 255, 255, .55);
+
+    --shadow: 0 18px 55px rgba(0, 0, 0, .30);
     --radius: 22px;
 
     --w-open: 260px;
@@ -30,6 +61,7 @@ body {
     min-height: 100vh;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     padding: 24px;
+    background: #f4f7f6;
 }
 
 /* Topbar móvil */
@@ -453,7 +485,8 @@ body {
 
 .logout:hover {
     background: rgba(255, 255, 255, .10);
-    border-color: rgba(42, 187, 0, .35);
+    /* border-color: rgba(42, 187, 0, .35); */
+    border-color: #6FB408;
     transform: translateY(-1px);
 }
 
@@ -515,11 +548,12 @@ body {
 
 /* Header del contenido */
 .main-header {
-    height: 64px;
+    height: 56px;
     padding: 0 24px;
     display: flex;
     align-items: center;
-    background: #26A69A;
+    /* background: #26A69A; */
+    background: linear-gradient(90deg, #00432C, #327808);
     border-bottom: 1px solid #e5e7eb;
     border-radius: 15px;
     position: sticky;

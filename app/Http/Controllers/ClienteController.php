@@ -101,6 +101,12 @@ class ClienteController extends Controller
             }
         }
 
+        $cliente = Cliente::with([
+            'emails',
+            'telefonos',
+            'municipio.departamento'
+        ])->find($cliente->id);
+
         return response()->json($cliente, 201);
     }
 

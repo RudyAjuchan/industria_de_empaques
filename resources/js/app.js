@@ -21,11 +21,29 @@ import 'vue3-toastify/dist/index.css'
 
 import 'filepond/dist/filepond.min.css'
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
+import '../../public/css/global.css'
 
 
 const vuetify = createVuetify({
     components,
-    directives
+    directives,
+    theme: {
+        defaultTheme: 'light',
+        themes: {
+            light: {
+                dark: false,
+                colors: {
+                    primary2: '#00432C',
+                    secondary: '#019EB1',   // Turquesa
+                    accent: '#46BD01',      // Verde brillante
+                    success: '#6FB408',
+                    info: '#019EB1',
+                    warning: '#7DBA19',
+                    error: '#B00020'
+                }
+            }
+        }
+    }
 })
 
 const app = createApp(App)

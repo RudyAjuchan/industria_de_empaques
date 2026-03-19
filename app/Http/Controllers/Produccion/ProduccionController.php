@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
+use App\Models\DetalleEstadoProduccion;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
@@ -94,6 +95,24 @@ class ProduccionController extends Controller
         return response()->json([
             'message' => 'Estado regresado correctamente'
         ]);
+    }
+
+    public function camposFinalizacion(DetalleVenta $detalleVenta)
+    {
+        $estadoActivo = $detalleVenta->getEstadoActual();
+
+        if (!$estadoActivo) {
+            return response()->json([
+                'message' => 'No hay estado activo'
+            ], 422);
+        }
+
+        $campos = DetalleEstadoProduccion::where(
+            'estado_produccions_id',
+            $estadoActivo->estado_produccions_id
+        )->get();
+
+        return response()->json($campos);
     }
 
 }

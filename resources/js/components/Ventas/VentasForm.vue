@@ -253,8 +253,14 @@ export default {
             toast.success('Banco guardado')
         },
         onClienteSaved(cliente) {
-            this.clientes.push(cliente)
-            this.form.clientes_id = cliente.id
+            if (!this.clientes.find(c => c.id === cliente.id)) {
+                this.clientes.push(cliente)
+            }
+
+            this.cliente = cliente
+
+            this.setDataCliente(cliente)
+
             toast.success('Cliente guardado')
         },
 
@@ -275,19 +281,40 @@ export default {
         },
 
         setDataCliente(item) {
-            if (!item) return;
+            if (!item) {
+                this.form.clientes_id = null;
+                this.cliente = {
+                    nombre: null,
+                    telefono: null,
+                    direccion: null,
+                    nit: null,
+                };
+                return;
+            }
 
             this.form.clientes_id = item.id;
+
+            const direccionParts = item.municipio
+                ? [
+                    item.direccion,
+                    item.municipio?.nombre,
+                    item.municipio?.departamento?.nombre
+                ]
+                : [
+                    item.direccion,
+                    item.ciudad_pais,
+                    item.estado_pais
+                ];
 
             this.cliente = {
                 nombre: item.nombre,
                 nit: item.nit,
-                telefono: item.telefonos
+                telefono: (item.telefonos || [])
                     .map(t => `${t.telefono_codigo_pais} ${t.telefono_numero}`)
                     .join(' / '),
-                direccion: item.municipio
-                    ? `${item.direccion}, ${item.municipio.nombre}, ${item.municipio.departamento.nombre}`
-                    : `${item.direccion}, ${item.ciudad_pais}, ${item.estado_pais}`,
+                direccion: direccionParts
+                    .filter(p => p && p.toString().trim() !== '')
+                    .join(', ') || 'Sin dirección',
             };
         }
 

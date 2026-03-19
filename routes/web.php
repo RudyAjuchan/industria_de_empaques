@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\EstadisticasProduccionController;
 use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PermissionController;
@@ -226,9 +227,17 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     /* RUTAS PARA REGRESAR DE UN ESTADO */
     Route::get('/produccion/estados-anteriores/{tarea}', [ProduccionController::class, 'estadosAnteriores'])->middleware('permission:produccion.editar');
     Route::post('/produccion/detalle/{detalleVenta}/regresar', [ProduccionController::class, 'regresarEstado'])->middleware('permission:produccion.editar');
+    
+    // Obtener campos dinámicos del estado activo
+    Route::get('/produccion/{detalleVenta}/campos-finalizacion', [ProduccionOperativaController::class, 'camposFinalizacion']);
 
 });
 
-
-
+/* ESTADÍSTICAS PARA DASHBOARD */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/estadisticas-produccion', [EstadisticasProduccionController::class, 'estadisticasProduccion']);
+    Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion']);
+    Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF']);
+    Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel']);
+});
 require __DIR__.'/auth.php';

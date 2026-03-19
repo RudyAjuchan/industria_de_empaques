@@ -50,4 +50,9 @@ class HistorialEstadoProduccion extends Model
     {
         return $this->belongsTo(User::class, 'users_id');
     }
+
+    public function campos()
+    {
+        return $this->hasMany( HistorialEstadoCampo::class, 'historial_estado_produccions_id');
+    }
 }

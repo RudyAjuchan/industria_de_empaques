@@ -36,6 +36,10 @@ const operativaProduccionComponent = () => import('../components/Produccion/Oper
 /* COMPONENTES PARA PRODUCCIÓN ACTIVA */
 const produccionActivaComponent = () => import('../components/Produccion/ProduccionActiva.vue');
 
+/* COMPONENTES PARA COTIZACIONES DEL ECOMMERCE */
+const cotizacionesComponent = () => import('../components/Ecommerce/EcommerceIndex.vue');
+const editarCotizacionComponent = () => import('../components/Ventas/VentasForm.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -212,6 +216,23 @@ const routes = [
         component: produccionActivaComponent,
         meta: { 
             permission: 'produccion.activa' 
+        }
+    },
+    /* RUTAS PARA VER LAS COTIZACIONES */
+    {
+        path: '/ecommerce',
+        name: 'ecommerce.index',
+        component: cotizacionesComponent,
+        meta: { 
+            permission: 'ecommerce.ver' 
+        }
+    },
+    {
+        path: '/ecommerce/editar/:id',
+        name: 'ecommerce.editar',
+        component: editarCotizacionComponent,
+        meta: { 
+            permission: 'ecommerce.editar' 
         }
     }
 ];

@@ -73,7 +73,7 @@ class ClienteController extends Controller
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
 
-            'emails' => 'nullable|array',
+            'emails' => 'required|array',
             'emails.*' => 'required|email|max:255',
 
             'telefonos' => 'nullable|array',
@@ -82,6 +82,10 @@ class ClienteController extends Controller
             'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
             'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
+
+        if(!empty($data['emails'])){
+            $data['email'] = $data['emails'][0];
+        }
 
         $cliente = Cliente::create($data);
 

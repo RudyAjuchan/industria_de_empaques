@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('color_agarrador');
             $table->text('detalle_impresion');
             $table->string('nombre_logo');
+            $table->string('logo_path')->nullable();
             $table->decimal('precio', 12, 2);
             $table->integer('cantidad');
             $table->decimal('total', 12, 2);

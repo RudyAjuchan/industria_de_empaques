@@ -303,7 +303,7 @@ export default {
             const labels = this.porEstado.map(e => e.estado)
             const produccion = this.porEstado.map(e => e.finalizadas)
             const desechadas = this.porEstado.map(e => e.desechadas)
-            const extras = this.porEstado.map(e => e.extras) // 🔥 FALTABA ESTO
+            const extras = this.porEstado.map(e => e.extras)
 
             this.chart = new Chart(ctx, {
                 type: 'bar',

@@ -2,44 +2,54 @@
     <v-card-text>
         <v-row>
             <v-col cols="4">
-                <v-text-field variant="outlined" density="compact" label="Fecha emisión" v-model="fecha" disabled hide-details="auto"></v-text-field>
+                <v-text-field variant="outlined" density="compact" label="Fecha emisión" v-model="fecha" disabled
+                    hide-details="auto"></v-text-field>
             </v-col>
             <v-col cols="4">
-                <v-text-field variant="outlined" density="compact" label="Hora" v-model="hora" disabled hide-details="auto"></v-text-field>
+                <v-text-field variant="outlined" density="compact" label="Hora" v-model="hora" disabled
+                    hide-details="auto"></v-text-field>
             </v-col>
             <v-col cols="4">
-                <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega" v-model="form.fecha_entrega" hide-details="auto" 
-                :error-messages="errors.fecha_entrega"></v-text-field>
+                <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega"
+                    v-model="form.fecha_entrega" hide-details="auto"
+                    :error-messages="errors.fecha_entrega"></v-text-field>
             </v-col>
         </v-row>
         <v-row class="justify-center bg-teal-lighten-5">
             <v-col cols="4">
-                <v-text-field label="Vendedor" v-model="form.nombre_vendedor" variant="outlined" density="compact" disabled hide-details="auto"></v-text-field>
+                <v-text-field label="Vendedor" v-model="form.nombre_vendedor" variant="outlined" density="compact"
+                    disabled hide-details="auto"></v-text-field>
             </v-col>
             <v-col cols="4">
-                <v-autocomplete variant="outlined" density="compact" :items="paginas" item-title="nombre" item-value="id" 
-                hide-details="auto" label="Página" @update:model-value="listProducts"></v-autocomplete>
+                <v-autocomplete variant="outlined" density="compact" :items="paginas" item-title="nombre"
+                    item-value="id" hide-details="auto" label="Página"
+                    @update:model-value="listProducts"></v-autocomplete>
             </v-col>
         </v-row>
 
         <v-row>
             <v-col cols="6">
                 <h2>Datos del cliente</h2>
-                <v-autocomplete label="Cliente" v-model="cliente" v-model:search="searchCliente"
-                    :items="clientes" item-title="nombre" variant="outlined" density="compact"
-                    :loading="loadingClientes" hide-no-data no-filter return-object @update:model-value="setDataCliente" :error-messages="errors.clientes_id">
+                <v-autocomplete label="Cliente" v-model="cliente" v-model:search="searchCliente" :items="clientes"
+                    item-title="nombre" variant="outlined" density="compact" :loading="loadingClientes" hide-no-data
+                    no-filter return-object @update:model-value="setDataCliente" :error-messages="errors.clientes_id">
                     <template #append-inner>
                         <v-btn icon size="small" variant="text" @click.stop="clienteDialog = true">
                             <v-icon size="18">mdi-plus</v-icon>
                         </v-btn>
                     </template>
                 </v-autocomplete>
-                <ClientesDialog v-model="clienteDialog" @saved="onClienteSaved" @cancel="clienteDialog = false"></ClientesDialog>
+                <ClientesDialog v-model="clienteDialog" @saved="onClienteSaved" @cancel="clienteDialog = false">
+                </ClientesDialog>
 
-                <v-text-field label="Nombre" variant="outlined" density="compact" disabled v-model="cliente.nombre"></v-text-field>
-                <v-text-field label="Teléfono" variant="outlined" density="compact" disabled v-model="cliente.telefono"></v-text-field>
-                <v-text-field label="Dirección" variant="outlined" density="compact" disabled v-model="cliente.direccion"></v-text-field>
-                <v-text-field label="Nit" variant="outlined" density="compact" disabled v-model="cliente.nit"></v-text-field>
+                <v-text-field label="Nombre" variant="outlined" density="compact" disabled
+                    v-model="cliente.nombre"></v-text-field>
+                <v-text-field label="Teléfono" variant="outlined" density="compact" disabled
+                    v-model="cliente.telefono"></v-text-field>
+                <v-text-field label="Dirección" variant="outlined" density="compact" disabled
+                    v-model="cliente.direccion"></v-text-field>
+                <v-text-field label="Nit" variant="outlined" density="compact" disabled
+                    v-model="cliente.nit"></v-text-field>
             </v-col>
             <v-col cols="6">
                 <h2>Datos de pago</h2>
@@ -55,38 +65,44 @@
                 <!-- Dialog -->
                 <BancoDialog v-model="bancoDialog" :tipo="null" @saved="onBancoSaved" />
                 <!-- FINAL PARA EL BANCO -->
-                <v-select label="Tipo pago" :items="tipoPago" item-title="nombre" item-value="nombre" v-model="form.tipo_pago" variant="outlined" density="compact" :error-messages="errors.tipo_pago"/>
-                <v-text-field label="No. Depósito" density="compact" variant="outlined" v-model="form.no_deposito"></v-text-field>
-                <v-text-field label="Cantidad depósito" density="compact" variant="outlined" v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito"></v-text-field>
-                <v-text-field label="Pendiente a pagar" density="compact" variant="outlined" v-model="pendientePagar" disabled></v-text-field>
+                <v-select label="Tipo pago" :items="tipoPago" item-title="nombre" item-value="nombre"
+                    v-model="form.tipo_pago" variant="outlined" density="compact" :error-messages="errors.tipo_pago" />
+                <v-text-field label="No. Depósito" density="compact" variant="outlined"
+                    v-model="form.no_deposito"></v-text-field>
+                <v-text-field label="Cantidad depósito" density="compact" variant="outlined"
+                    v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito"></v-text-field>
+                <v-text-field label="Pendiente a pagar" density="compact" variant="outlined" v-model="pendientePagar"
+                    disabled></v-text-field>
             </v-col>
         </v-row>
 
-        <VentasDetalleTable :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
+        <VentasDetalleTable v-if="ready && form.detalle" :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
             v-model="form.detalle" @producto-saved="onProductoSaved" @agarrador-saved="onAgarradorSaved"
-            @papel-saved="onPapelSaved" :errors="errors"/>
+            @papel-saved="onPapelSaved" :errors="errors" />
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
                 <v-btn color="green" variant="tonal" @click="guardarVenta" :loading="loading">
-                    Guardar Venta
+                    {{ modo === 'editar' ? 'Confirmar para venta' : 'Guardar Venta' }}
                 </v-btn>
-                <v-btn color="red" variant="tonal" @click="$emit('cancel')" :loading="loading">
+                <v-btn color="red" variant="tonal" @click="handleCancel" :loading="loading">
                     Cancelar
                 </v-btn>
             </v-col>
             <v-col cols="4">
-                <v-text-field label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact" :error-messages="errors.costo_logo"/>
+                <v-text-field label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact"
+                    :error-messages="errors.costo_logo" />
             </v-col>
             <v-col cols="4">
                 <v-text-field label="Subtotal" :model-value="subtotalCalculado" disabled variant="outlined"
                     density="compact" />
-                <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact" :error-messages="errors.descuento"/>
-                <v-text-field label="Promociones" v-model.number="form.promociones" variant="outlined"
-                    density="compact" :error-messages="errors.promociones"/>
-                <v-text-field label="Costo Envío" v-model.number="form.costo_envio" variant="outlined"
-                    density="compact" :error-messages="errors.costo_envio"/>
-                <v-text-field label="Total" :model-value="totalCalculado" readonly variant="outlined"
-                    density="compact" disabled />
+                <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact"
+                    :error-messages="errors.descuento" />
+                <v-text-field label="Promociones" v-model.number="form.promociones" variant="outlined" density="compact"
+                    :error-messages="errors.promociones" />
+                <v-text-field label="Costo Envío" v-model.number="form.costo_envio" variant="outlined" density="compact"
+                    :error-messages="errors.costo_envio" />
+                <v-text-field label="Total" :model-value="totalCalculado" readonly variant="outlined" density="compact"
+                    disabled />
             </v-col>
         </v-row>
 
@@ -103,7 +119,6 @@ import { toast } from 'vue3-toastify'
 export default {
     components: { VentasDetalleTable, BancoDialog, ClientesDialog },
     emits: ['saved', 'cancel'],
-
     data() {
         return {
             loading: false,
@@ -111,7 +126,7 @@ export default {
             loadingClientes: false,
             debounceCliente: null,
             clientes: [],
-            cliente:{
+            cliente: {
                 nombre: null,
                 telefono: null,
                 direccion: null,
@@ -123,11 +138,11 @@ export default {
             bancoDialog: false,
             tiposAgarrador: [],
             tiposPapel: [],
-            tipoPago:[
-                { nombre: 'Efectivo'},
-                { nombre: 'Pago con tarjeta'},
-                { nombre: 'Depósito'},
-                { nombre: 'Transferencia'},
+            tipoPago: [
+                { nombre: 'Efectivo' },
+                { nombre: 'Pago con tarjeta' },
+                { nombre: 'Depósito' },
+                { nombre: 'Transferencia' },
             ],
 
             form: {
@@ -156,6 +171,9 @@ export default {
             paginas_id: 1,
             paginas: [],
             errors: {},
+            modo: '',
+            venta: null,
+            ready: false
         }
     },
 
@@ -172,13 +190,24 @@ export default {
 
         async guardarVenta() {
             this.loading = true
+            console.log(this.form);
             try {
-                this.form.subtotal = this.subtotalCalculado;
-                this.form.total = this.totalCalculado;
-                this.form.pendiente_pagar = this.pendientePagar;
-                await axios.post('/venta', this.form)
+                this.form.subtotal = this.subtotalCalculado
+                this.form.total = this.totalCalculado
+                this.form.pendiente_pagar = this.pendientePagar
 
-                alert('Venta registrada')
+                if (this.modo === 'editar') {
+                    await axios.put(`/venta/${this.form.id}`, this.form)
+                } else {
+                    await axios.post('/venta', this.form)
+                }
+
+                toast.success(
+                    this.modo === 'editar'
+                        ? 'Cotización actualizada'
+                        : 'Venta registrada'
+                )
+
                 this.$router.push('/ventas')
 
             } catch (e) {
@@ -186,7 +215,7 @@ export default {
                     this.errors = e.response.data.errors
                     toast.error('Revisa los campos marcados')
                 } else {
-                    toast.error('Error inesperado al guardar')
+                    toast.error('Error inesperado')
                 }
             } finally {
                 this.loading = false
@@ -198,7 +227,7 @@ export default {
             this.fecha = ahora.toLocaleDateString('es-ES', {
                 weekday: 'long',
                 day: 'numeric',
-                month: 'long', 
+                month: 'long',
                 year: 'numeric'
             });
 
@@ -316,6 +345,62 @@ export default {
                     .filter(p => p && p.toString().trim() !== '')
                     .join(', ') || 'Sin dirección',
             };
+        },
+
+        async getVenta(id) {
+            try {
+                const { data } = await axios.get(`/ecommerce/${id}`)
+                this.venta = data
+                this.cargarVenta()
+            } catch (error) {
+                console.error(error)
+                toast.error('Error cargando cotización')
+            }
+        },
+
+        cargarVenta() {
+            this.form = {
+                ...this.form,
+                ...this.venta,
+                detalle: this.venta.detalle || []
+            }
+
+            this.setDataCliente(this.venta.cliente)
+            this.agregarProductosSeleccionados()
+            this.setDatosProductos()
+        },
+
+        agregarProductosSeleccionados() {
+            const productosDetalle = this.form.detalle
+                .map(d => d.producto)
+                .filter(p => p)
+            productosDetalle.forEach(prod => {
+                if (!this.productos.find(p => p.id === prod.id)) {
+                    this.productos.push(prod)
+                }
+            })
+        },
+
+        setDatosProductos() {
+            this.form.detalle.forEach(item => {
+
+                const producto = this.productos.find(p => p.id === item.productos_id)
+
+                if (producto) {
+                    item.alto = producto.alto
+                    item.ancho = producto.ancho
+                    item.fuelle = producto.fuelle
+                    item.tipo = producto.tipo
+                }
+            })
+        },
+
+        handleCancel() {
+            if (this.modo === 'editar') {
+                this.$router.push('/ecommerce')
+            } else {
+                this.$emit('cancel')
+            }
         }
 
     },
@@ -338,7 +423,9 @@ export default {
 
     computed: {
         subtotalCalculado() {
-            return this.form.detalle.reduce((s, i) => s + parseFloat(i.total || 0), 0);
+            if (!Array.isArray(this.form.detalle)) return 0
+
+            return this.form.detalle.reduce((s, i) => s + parseFloat(i.total || 0), 0)
         },
         totalCalculado() {
             const sub = this.subtotalCalculado;
@@ -349,15 +436,21 @@ export default {
 
             return (sub + logo + envio) - (descuento + promo);
         },
-        pendientePagar(){
+        pendientePagar() {
             const total = parseFloat(this.totalCalculado || 0);
             const totalDeposito = parseFloat(this.form.cantidad_deposito || 0);
             return total - totalDeposito;
         }
     },
 
-    mounted() {
-        this.loadCatalogos();
+    async mounted() {
+        await this.loadCatalogos();
+        const id = this.$route.params.id
+        if (id) {
+            this.modo = 'editar'
+            await this.getVenta(id) // 🔥 esperar
+        }
+        this.ready = true
         // PARA HORA
         this.actualizarReloj();
         this.timer = setInterval(() => {

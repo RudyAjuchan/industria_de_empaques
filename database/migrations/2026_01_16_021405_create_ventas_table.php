@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendedor_id')->constrained('users');
             $table->foreignId('clientes_id')->constrained('clientes');
-            $table->foreignId('bancos_id')->constrained('bancos');
+            $table->foreignId('bancos_id')->nullable()->constrained('bancos');
             $table->string('serie', 10);
             $table->unsignedBigInteger('numero');
             $table->unique(['serie', 'numero']);
@@ -34,7 +34,8 @@ return new class extends Migration
                 'pendiente',   // reservado
                 'emitida',     // válida (interna o SAT)
                 'error',       // fallo técnico
-                'anulada'      // anulada legalmente
+                'anulada',     // anulada legalmente
+                'rechazada'      // rechazada del ecommerce
             ])->default('emitida'); // hoy emite directo
             $table->string('estado_produccion', 30)->default('sin_iniciar');
             // Campos SAT (para el futuro)

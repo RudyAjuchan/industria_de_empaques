@@ -49,10 +49,10 @@ class ProductosController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string',
-            'alto' => 'required|numeric',
-            'ancho' => 'required|numeric',
-            'fuelle' => 'required|numeric',
-            'tipo' => 'required|string',
+            'alto' => 'numeric',
+            'ancho' => 'numeric',
+            'fuelle' => 'numeric',
+            'tipo' => 'string',
             'paginas_id' => 'required|exists:paginas,id',
             //'imagenes_ordenadas' => 'required|array',
             'main_index' => 'required|integer',
@@ -110,10 +110,10 @@ class ProductosController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string',
-            'alto' => 'required|numeric',
-            'ancho' => 'required|numeric',
-            'fuelle' => 'required|numeric',
-            'tipo' => 'required|string',
+            'alto' => 'numeric',
+            'ancho' => 'numeric',
+            'fuelle' => 'numeric',
+            'tipo' => 'string',
             'paginas_id' => 'required|exists:paginas,id',
             'main_index' => 'required|integer',
             //'imagenes_ordenadas' => 'required|array',

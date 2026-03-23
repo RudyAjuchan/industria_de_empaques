@@ -136,6 +136,14 @@
                         <div class="label">Productos Activos</div>
                     </a>
                 @endcan
+                @can('menu.ecommerce')
+                    <a href="#" data-route="/ecommerce" data-title="Cotizaciones ecommerce">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-file-plus"></i>
+                        </div>
+                        <div class="label">Ecommerce</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

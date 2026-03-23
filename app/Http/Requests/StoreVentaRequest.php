@@ -23,7 +23,7 @@ class StoreVentaRequest extends FormRequest
     {
         return [
             'clientes_id' => ['required', 'exists:clientes,id'],
-            'bancos_id' => ['required', 'exists:bancos,id'],
+            'bancos_id' => ['exists:bancos,id'],
             'fecha_entrega' => ['required', 'date'],
             'tipo_pago' => ['required', 'string'],
             'cantidad_deposito' => ['nullable', 'numeric'],
@@ -38,6 +38,7 @@ class StoreVentaRequest extends FormRequest
             'detalle.*.color_agarrador' => ['required', 'string'],
             'detalle.*.detalle_impresion' => ['required', 'string'],
             'detalle.*.nombre_logo' => ['required', 'string'],
+            'detalle.*.logo_path' => [ 'string'],
             'detalle.*.precio' => ['required', 'numeric', 'gt:0'],
             'detalle.*.cantidad' => ['required', 'integer', 'gt:0'],
             'detalle.*.total' => ['required', 'numeric', 'gt:0'],
@@ -51,11 +52,12 @@ class StoreVentaRequest extends FormRequest
     {
         return [
             'clientes_id.required' => 'Por favor, selecciona un cliente para continuar.',
-            'bancos_id.required'   => 'Por favor, selecciona un banco para continuar.',
+            'bancos_id.exists'   => 'El banco seleccionado no existen en la BD.',
             'detalle.*.productos_id.required' => 'Por favor, selecciona un producto',
             'detalle.*.color_agarrador.required' => 'Color agarrador es obligatorio',
             'detalle.*.detalle_impresion.required' => 'Detalle impresión es obligatorio',
             'detalle.*.nombre_logo.required' => 'Nombre logo es obligatorio',
+            'detalle.*.logo_path.string' => 'El logo subido es inválido',
             'detalle.*.precio.required' => 'El precio es obligatorio',
             'detalle.*.cantidad.required' => 'La cantidad es obligatorio',
             'detalle.*.precio.gt' => 'El precio debe ser mayor a cero',

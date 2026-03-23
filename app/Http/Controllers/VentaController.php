@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exports\VentaExport;
 use App\Http\Requests\StoreVentaRequest;
+use App\Mail\ConfirmarVentaMail;
+use App\Models\Cliente;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
@@ -15,6 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class VentaController extends Controller
 {
@@ -24,6 +28,15 @@ class VentaController extends Controller
     public function index()
     {
         return Venta::with(['cliente', 'vendedor', 'banco'])
+            ->where('estado', 'emitida')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
+    public function cotizaciones()
+    {
+        return Venta::with(['cliente', 'vendedor', 'banco'])
+            ->where('estado', 'pendiente')
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -116,6 +129,7 @@ class VentaController extends Controller
                     'color_agarrador' => $item['color_agarrador'] ?? '',
                     'detalle_impresion' => $item['detalle_impresion'] ?? '',
                     'nombre_logo' => $item['nombre_logo'] ?? '',
+                    'logo_path' => $item['logo_path'] ?? null,
                     'precio' => $item['precio'],
                     'cantidad' => $item['cantidad'],
                     'total' => $item['precio'] * $item['cantidad'],
@@ -132,6 +146,15 @@ class VentaController extends Controller
                     'tipo_evento' => 'entrada_estado',
                 ]);
             }
+
+            // CARGAR DETALLES
+            $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
+
+            // Cargar cliente
+            $cliente = Cliente::where('id', $data['clientes_id']);
+            // ENVIAR CORREO
+            Mail::to($cliente->email)
+                ->send(new ConfirmarVentaMail($cliente, $venta));
 
             return response()->json([
                 'message' => 'Venta registrada correctamente',
@@ -264,5 +287,138 @@ class VentaController extends Controller
             ->setPaper('letter', 'portrait');
 
         return $pdf->stream("venta-{$venta->numero_completo}.pdf");
+    }
+
+    public function getVenta($id)
+    {
+        $venta = Venta::with([
+            'cliente.municipio.departamento',
+            'cliente.telefonos',
+            'vendedor',
+            'banco',
+            'detalles.producto',
+            'detalles.tipoAgarrador',
+            'detalles.tipoPapel'
+        ])->findOrFail($id);
+
+        // adaptar estructura para el frontend
+        $venta->detalle = $venta->detalles->map(function ($d) {
+            return [
+                'id' => $d->id,
+                'productos_id' => $d->productos_id,
+                'tipo_agarradors_id' => $d->tipo_agarradors_id,
+                'tipo_papels_id' => $d->tipo_papels_id,
+                'color_agarrador' => $d->color_agarrador,
+                'detalle_impresion' => $d->detalle_impresion,
+                'nombre_logo' => $d->nombre_logo,
+                'logo_path' => $d->logo_path,
+                'precio' => $d->precio,
+                'cantidad' => $d->cantidad,
+                'total' => $d->total,
+
+                // extras para mostrar
+                'producto' => $d->producto,
+                'tipo_agarrador' => $d->tipoAgarrador,
+                'tipo_papel' => $d->tipoPapel,
+            ];
+        });
+
+        return $venta;
+    }
+
+    public function update(Request $request, $id)
+    {
+        return DB::transaction(function () use ($request, $id) {
+
+            $venta = Venta::with('detalles')->findOrFail($id);
+            $data = $request->all();
+
+            // CALCULOS
+            $subtotal = collect($data['detalle'])->sum(
+                fn($item) => $item['precio'] * $item['cantidad']
+            );
+
+            $costoLogo   = $data['costo_logo'] ?? 0;
+            $costoEnvio  = $data['costo_envio'] ?? 0;
+            $descuento   = $data['descuento'] ?? 0;
+            $promociones = $data['promociones'] ?? 0;
+            $deposito    = $data['cantidad_deposito'] ?? 0;
+
+            $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promociones;
+            $pendiente = $total - $deposito;
+
+            // UPDATE CABECERA
+            $venta->update([
+                'clientes_id' => $data['clientes_id'],
+                'bancos_id' => $data['bancos_id'],
+                'fecha_entrega' => $data['fecha_entrega'],
+                'tipo_pago' => $data['tipo_pago'],
+
+                'no_deposito' => $data['no_deposito'] ?? null,
+                'cantidad_deposito' => $deposito,
+                'pendiente_pagar' => $pendiente,
+
+                'costo_logo' => $costoLogo,
+                'subtotal' => $subtotal,
+                'descuento' => $descuento,
+                'promociones' => $promociones,
+                'costo_envio' => $costoEnvio,
+                'total' => $total,
+
+                'estado' => 'emitida',
+            ]);
+
+            // ELIMINAR DETALLE
+            $venta->detalles()->delete();
+
+            // ESTADO INICIAL
+            $estadoInicial = EstadoProduccion::orderBy('orden')->first();
+
+            if (!$estadoInicial) {
+                throw new \Exception('No existe un estado de producción inicial');
+            }
+
+            // CREAR NUEVO DETALLE + HISTORIAL
+            foreach ($data['detalle'] as $item) {
+
+                $detalle = $venta->detalles()->create([
+                    'productos_id' => $item['productos_id'],
+                    'tipo_agarradors_id' => $item['tipo_agarradors_id'],
+                    'tipo_papels_id' => $item['tipo_papels_id'],
+                    'color_agarrador' => $item['color_agarrador'] ?? '',
+                    'detalle_impresion' => $item['detalle_impresion'] ?? '',
+                    'nombre_logo' => $item['nombre_logo'] ?? '',
+                    'logo_path' => $item['logo_path'] ?? '',
+                    'precio' => $item['precio'],
+                    'cantidad' => $item['cantidad'],
+                    'total' => $item['precio'] * $item['cantidad'],
+                    'proceso_estado_produccions_id' => 1,
+                ]);
+
+                // HISTORIAL
+                HistorialEstadoProduccion::create([
+                    'detalle_ventas_id' => $detalle->id,
+                    'estado_produccions_id' => $estadoInicial->id,
+                    'proceso_estado_produccions_id' => null,
+                    'users_id' => Auth::user()->id,
+                    'fecha_inicio' => now(),
+                    'tipo_evento' => 'entrada_estado',
+                ]);
+            }
+
+            // CARGAR DETALLES
+            $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
+
+            // Cargar cliente
+            $cliente = Cliente::where('id', $data['clientes_id'])->first();
+            Log::info($cliente);
+            // ENVIAR CORREO
+            Mail::to($cliente->email)
+                ->send(new ConfirmarVentaMail($cliente, $venta));
+
+            return response()->json([
+                'message' => 'Venta actualizada correctamente'
+            ]);
+        });
     }
 }

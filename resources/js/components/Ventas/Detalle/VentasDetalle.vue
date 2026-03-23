@@ -7,11 +7,11 @@
         <VentaDetalleProducto v-for="(detalle, index) in venta.detalles" :key="index" :item="detalle" />
 
 
-        <v-row class="mt-4 ga-1">
-            <v-btn color="primary" variant="tonal" @click="imprimir">
+        <v-row class="mt-4 ga-1 ps-2">
+            <v-btn color="primary" variant="tonal" @click="imprimir" v-if="venta.estado!='pendiente'">
                 Imprimir
             </v-btn>
-            <v-btn color="red" variant="tonal" @click="$router.push('/ventas')">
+            <v-btn color="red" variant="tonal" @click="regresar()">
                 Regresar
             </v-btn>
         </v-row>
@@ -43,6 +43,14 @@ export default {
     methods: {
         imprimir() {
             window.open(`/venta/${this.venta.id}/imprimir`, '_blank')
+        },
+        regresar(){
+            console.log(this.venta.estado);
+            if(this.venta.estado == 'pendiente'){
+                this.$router.push('/ecommerce')
+            }else{
+                this.$router.push('/ventas')
+            }
         }
     }
 }

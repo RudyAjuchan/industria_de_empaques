@@ -42,4 +42,9 @@ class Producto extends Model
     {
         return $this->belongsTo(Pagina::class, 'paginas_id');
     }
+
+    public function detalles()
+    {
+        return $this->hasMany(DetalleVenta::class, 'productos_id');
+    }
 }

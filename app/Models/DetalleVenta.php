@@ -17,6 +17,7 @@ class DetalleVenta extends Model
         'color_agarrador',
         'detalle_impresion',
         'nombre_logo',
+        'logo_path',
         'precio',
         'cantidad',
         'total',

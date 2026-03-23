@@ -75,6 +75,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'produccion.editar',
             'produccion.borrar',
             'produccion.reporte',
+            /* PERMISOS PARA LAS COTIZACIONES DEL ECOMMERCE */
+            'ecommerce.ver',
+            'ecommerce.crear',
+            'ecommerce.editar',
+            'ecommerce.borrar',
+            'ecommerce.reporte',
             /* PERMISO PARA VER LAS VENTAS ACTIVAS SIN FINALIZAR */
             'produccion.activa',
             /* PERMISOS PARA SIDEBAR */
@@ -90,6 +96,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'menu.venta',
             'menu.produccion',
             'menu.produccion-activa',
+            'menu.ecommerce',
         ];
 
         foreach ($permisos as $p) {

@@ -22,6 +22,13 @@ return new class extends Migration
             $table->text('ciudad_pais')->nullable();
             $table->text('direccion')->nullable();
             $table->string('nit')->nullable();
+
+            /* PARA AUTENTICACIÓN DE ECOMMERCE */
+            $table->string('email')->unique()->nullable();
+            $table->string('password')->nullable();
+            $table->rememberToken();
+            $table->timestamp('email_verified_at')->nullable();
+            
             $table->integer('estado')->default(1);
             $table->timestamps();
         });

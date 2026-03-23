@@ -49,6 +49,23 @@
                 <th>DETALLE IMPRESIÓN</th>
                 <td colspan="3">{{ item.detalle_impresion }}</td>
             </tr>
+
+            <tr v-if="item.logo_path">
+                <th colspan="3">LOGOTIPO</th>
+                <td colspan="3">
+                    <img :src="getLogoUrl(item.logo_path)"
+                        style="max-height: 80px; max-width: 150px; object-fit: contain;" />
+
+                    <v-tooltip text="Descargar">
+                        <template #activator="{ props }">
+                            <v-btn v-bind="props" icon size="small" color="primary"
+                                @click="descargarLogo(item.logo_path)">
+                                <v-icon>mdi-download</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-tooltip>
+                </td>
+            </tr>
         </tbody>
     </table>
 </template>
@@ -61,19 +78,34 @@ export default {
             type: Object,
             required: true
         }
+    },
+    methods: {
+        getLogoUrl(path) {
+            return `${import.meta.env.VITE_API_URL}/storage/${path}`
+        },
+        descargarLogo(path) {
+            const url = this.getLogoUrl(path)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = path.split('/').pop()
+            link.click()
+        }
     }
 }
 </script>
 
 <style>
-table{
+table {
     border-collapse: collapse;
     width: 100%;
 }
-table td{
+
+table td {
     padding: 2px 5px;
 }
-table th{
+
+table th {
     text-align: start;
     padding: 2px 3px;
 }

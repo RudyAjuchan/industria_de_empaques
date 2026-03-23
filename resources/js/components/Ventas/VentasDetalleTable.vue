@@ -26,6 +26,7 @@
                     <th style="min-width: 100px">Precio</th>
                     <th style="min-width: 75px">Cantidad</th>
                     <th style="min-width: 120px">Total</th>
+                    <th style="min-width: 200px">Logo</th>
                     <th></th>
                 </tr>
             </thead>
@@ -94,6 +95,42 @@
                     </td>
 
                     <td>
+                        <div v-if="item.logo_path" class="d-flex align-center" style="gap:8px">
+
+                            <!-- Imagen preview -->
+                            <v-img :src="getLogoUrl(item.logo_path)" width="40" height="40" cover
+                                style="border-radius:6px; border:1px solid #ddd" />
+
+                            <!-- Descargar -->
+                            <v-tooltip text="Descargar">
+                                <template #activator="{ props }">
+                                    <v-btn v-bind="props" icon size="small" color="primary"
+                                        @click="descargarLogo(item.logo_path)">
+                                        <v-icon>mdi-download</v-icon>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
+
+                            <!-- Cambiar -->
+                            <v-tooltip text="Cambiar logo">
+                                <template #activator="{ props }">
+                                    <v-btn v-bind="props" icon size="small" color="warning" @click="subirLogo(index)">
+                                        <v-icon>mdi-pencil</v-icon>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
+
+                        </div>
+
+                        <!-- Si NO tiene logo -->
+                        <div v-else>
+                            <v-btn size="small" color="primary" variant="outlined" @click="subirLogo(index)">
+                                Subir
+                            </v-btn>
+                        </div>
+                    </td>
+
+                    <td>
                         <v-btn icon size="small" color="red" @click="eliminarFila(index)">
                             <v-icon>mdi-delete</v-icon>
                         </v-btn>
@@ -108,6 +145,21 @@
     <PapelDialog v-model="dialogPapel" @saved="onPapelSave"></PapelDialog>
     <AgarradorDialog v-model="dialogAgarrador" @saved="onAgarradorSave"></AgarradorDialog>
     <ProductoDialog v-model="dialogProducto" @saved="onProductoSave" @cancel="dialogProducto = false"></ProductoDialog>
+    <v-dialog v-model="dialogLogo" max-width="500">
+        <v-card>
+            <v-card-title>Subir Logo</v-card-title>
+
+            <v-card-text>
+                <FilePond name="logo" allow-multiple="false" accepted-file-types="image/jpeg, image/png, image/webp"
+                    @addfile="onFileUpload" />
+            </v-card-text>
+
+            <v-card-actions>
+                <v-spacer />
+                <v-btn text @click="dialogLogo = false">Cerrar</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 
@@ -116,6 +168,7 @@ import AgarradorDialog from '../Agarradores/AgarradorDialog.vue'
 import PapelDialog from '../TipoPapel/TipoPapelDialog.vue'
 import ProductoDialog from '../Productos/ProductosDialog.vue'
 import { toast } from 'vue3-toastify'
+import { FilePond } from '../../plugins/filepond'
 export default {
     props: {
         modelValue: Array,
@@ -128,6 +181,7 @@ export default {
         AgarradorDialog,
         PapelDialog,
         ProductoDialog,
+        FilePond,
     },
 
     emits: ['update:modelValue', 'producto-saved', 'agarrador-saved', 'papel-saved'],
@@ -141,6 +195,8 @@ export default {
             filaPapelIndex: null,
             dialogProducto: false,
             filaProductoIndex: null,
+            dialogLogo: false,
+            filaLogoIndex: null
         }
     },
 
@@ -260,7 +316,50 @@ export default {
 
         fieldError(index, field) {
             return this.errors?.[`detalle.${index}.${field}`] ?? []
-        }
+        },
+        getLogoUrl(path) {
+            console.log(path);
+            console.log(import.meta.env.VITE_API_URL)
+            return `${import.meta.env.VITE_API_URL}/storage/${path}`
+        },
+        descargarLogo(path) {
+            const url = this.getLogoUrl(path)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = path.split('/').pop()
+            link.click()
+        },
+
+        subirLogo(index) {
+            this.filaLogoIndex = index
+            this.dialogLogo = true
+        },
+        async onFileUpload(error, file) {
+            if (error) return
+
+            try {
+
+                const formData = new FormData()
+                formData.append('logo', file.file)
+
+                const res = await axios.post('/api/ecommerce/upload-logo', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+
+                // Lógica para la imagen
+                if (this.filaLogoIndex !== null) {
+                    this.detalle[this.filaLogoIndex].logo_path = res.data.path
+                }
+
+                this.dialogLogo = false
+
+            } catch (err) {
+                console.error(err)
+            }
+}
 
     },
 

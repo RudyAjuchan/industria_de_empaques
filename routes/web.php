@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\ClienteAuthController;
+use App\Http\Controllers\Api\Ecommerce\CatalogoController;
+use App\Http\Controllers\Api\Ecommerce\CheckoutController;
+use App\Http\Controllers\Api\Ecommerce\ProductoController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EstadisticasProduccionController;
@@ -164,6 +168,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA VENTAS */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/venta', [VentaController::class, 'index'])->middleware('permission:venta.ver|produccion.activa');
+    Route::put('/venta/{venta}', [VentaController::class, 'update'])->middleware('permission:ecommerce.editar');
+    Route::get('/ventas/cotizaciones', [VentaController::class, 'cotizaciones'])->middleware('permission:ecommerce.ver');
+    Route::get('/ecommerce/{id}', [VentaController::class, 'getVenta'])->middleware('permission:ecommerce.editar');
     Route::get('/produccionActiva', [VentaController::class, 'ventas_activas'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
     Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa');
@@ -241,3 +248,37 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel']);
 });
 require __DIR__.'/auth.php';
+
+
+
+
+/* PARA EL ECOMMERCE */
+Route::prefix('api')->group(function () {
+
+    Route::post('/cliente/login', [ClienteAuthController::class, 'login']);
+    Route::post('/cliente/logout', [ClienteAuthController::class, 'logout']);
+    Route::post('/cliente/register', [ClienteAuthController::class, 'register']);
+
+    Route::get('/cliente/me', function () {
+        return response()->json(auth('cliente')->user());
+    })->middleware('auth:cliente');
+
+    Route::get('/departamentos', [UbicacionController::class, 'departamentos']);
+    Route::get('/municipios/{departamento}', [UbicacionController::class, 'municipios']);
+
+    Route::prefix('ecommerce')->group(function () {
+
+        Route::get('/home', [CatalogoController::class, 'home']);
+        Route::get('/paginas', [PaginaController::class, 'index']);
+        Route::get('/productos', [ProductoController::class, 'index']);
+        Route::get('/productos/{id}', [ProductoController::class, 'show']);
+
+        Route::post('/upload-logo', [CheckoutController::class, 'uploadLogo']);
+        Route::post('/delete-logo', [CheckoutController::class, 'deleteLogo']);
+
+        // CHECKOUT
+        Route::post('/checkout', [CheckoutController::class, 'store'])
+            ->middleware('auth:cliente');
+    });
+
+});

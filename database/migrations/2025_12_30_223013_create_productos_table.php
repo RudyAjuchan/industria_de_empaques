@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('productos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->float('alto');
-            $table->float('ancho');
-            $table->float('fuelle');
-            $table->string('tipo');
+            $table->float('alto')->nullable();
+            $table->float('ancho')->nullable();
+            $table->float('fuelle')->nullable();
+            $table->string('tipo')->nullable();
             $table->foreignId('paginas_id')->constrained('paginas');
             $table->integer('estado')->default(1);
             $table->timestamps();

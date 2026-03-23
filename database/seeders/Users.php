@@ -37,37 +37,58 @@ class Users extends Seeder
         ]);
 
         $userId3 = DB::table('users')->insertGetId([
-            'name' => 'Jonathan',
-            'email' => 'jonathan@jeple.com',
-            'password' => Hash::make('jonathan123'),
+            'name' => 'User1',
+            'email' => 'user1@jeple.com',
+            'password' => Hash::make('user123'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $userId4 = DB::table('users')->insertGetId([
-            'name' => 'Mario',
-            'email' => 'mario@jeple.com',
-            'password' => Hash::make('mario123'),
+            'name' => 'User2',
+            'email' => 'user2@jeple.com',
+            'password' => Hash::make('user123'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $userId5 = DB::table('users')->insertGetId([
-            'name' => 'Edwin',
-            'email' => 'edwin@jeple.com',
-            'password' => Hash::make('edwin123'),
+            'name' => 'User3',
+            'email' => 'user3@jeple.com',
+            'password' => Hash::make('user123'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $userId6 = DB::table('users')->insertGetId([
-            'name' => 'Irma Pérez',
-            'email' => 'irma@jeple.com',
-            'password' => Hash::make('irma123'),
+            'name' => 'User4',
+            'email' => 'user4@jeple.com',
+            'password' => Hash::make('user123'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $userId7 = DB::table('users')->insertGetId([
-            'name' => 'José',
-            'email' => 'jose@jeple.com',
-            'password' => Hash::make('jose123'),
+            'name' => 'User5',
+            'email' => 'user5@jeple.com',
+            'password' => Hash::make('user123'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $userId8 = DB::table('users')->insertGetId([
+            'name' => 'User6',
+            'email' => 'user6@jeple.com',
+            'password' => Hash::make('user123'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $userId9 = DB::table('users')->insertGetId([
+            'name' => 'User7',
+            'email' => 'user7@jeple.com',
+            'password' => Hash::make('user123'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $userId10 = DB::table('users')->insertGetId([
+            'name' => 'User8',
+            'email' => 'user8@jeple.com',
+            'password' => Hash::make('user123'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -84,6 +105,12 @@ class Users extends Seeder
         $user6->assignRole('Producción');
         $user7 = User::find($userId7);
         $user7->assignRole('Producción');
+        $user8 = User::find($userId8);
+        $user8->assignRole('Producción');
+        $user9 = User::find($userId9);
+        $user9->assignRole('Producción');
+        $user10 = User::find($userId10);
+        $user10->assignRole('Producción');
         
     }
 }

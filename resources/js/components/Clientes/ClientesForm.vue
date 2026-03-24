@@ -363,7 +363,7 @@ export default {
             })
 
             this.form.telefono_numero = ''
-            console.log(this.form.telefonos)
+            //console.log(this.form.telefonos)
         },
 
         removeTelefono(index) {

@@ -144,6 +144,14 @@
                         <div class="label">Ecommerce</div>
                     </a>
                 @endcan
+                @can('menu.promocion')
+                    <a href="#" data-route="/promociones" data-title="Promociones">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-cart-percent"></i>
+                        </div>
+                        <div class="label">Promociones</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

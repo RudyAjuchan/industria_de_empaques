@@ -45,7 +45,7 @@ export default {
             window.open(`/venta/${this.venta.id}/imprimir`, '_blank')
         },
         regresar(){
-            console.log(this.venta.estado);
+            //console.log(this.venta.estado);
             if(this.venta.estado == 'pendiente'){
                 this.$router.push('/ecommerce')
             }else{

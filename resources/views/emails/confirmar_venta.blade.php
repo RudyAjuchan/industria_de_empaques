@@ -48,23 +48,26 @@
                                 <thead>
                                     <tr style="background:#7DBA19; color:white;">
                                         <th align="left">Producto</th>
+                                        <th align="center">Precio</th>
                                         <th align="center">Cantidad</th>
+                                        <th align="center">Total</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     @foreach ($venta->detalles as $item)
+                                        @php
+                                            $promo = $item->promocion_aplicada;
+                                        @endphp
+
                                         <tr style="border-bottom:1px solid #eee;">
 
-                                            <!-- PRODUCTO -->
                                             <td>
-                                                <table width="100%" cellpadding="0" cellspacing="0">
+                                                <table width="100%">
                                                     <tr>
-
                                                         <td width="70">
                                                             <img src="{{ $item->producto->imagen_principal_url }}"
-                                                                width="60"
-                                                                style="border-radius:6px; display:block;">
+                                                                width="60" style="border-radius:6px;">
                                                         </td>
 
                                                         <td style="padding-left:10px;">
@@ -79,31 +82,104 @@
                                                                 <br><small>Color: {{ $item->color_agarrador }}</small>
                                                             @endif
 
-                                                            @if ($item->nombre_logo)
-                                                                <br><small>Nombre Logo: {{ $item->nombre_logo }}</small>
-                                                            @endif
-                                                            
                                                             @if ($item->tipoAgarrador)
-                                                                <br><small>Agarrador: {{ $item->tipoAgarrador->nombre }}</small>
+                                                                <br><small>Agarrador:
+                                                                    {{ $item->tipoAgarrador->nombre }}</small>
                                                             @endif
+
                                                             @if ($item->tipoPapel)
                                                                 <br><small>Papel: {{ $item->tipoPapel->nombre }}</small>
                                                             @endif
-                                                        </td>
 
+                                                            {{-- PROMO PRODUCTO --}}
+                                                            @if ($promo)
+                                                                <br>
+                                                                <small style="color:#d32f2f;">
+                                                                    {{ $promo['nombre'] ?? 'Promoción' }}
+                                                                    @if ($promo['tipo'] === 'porcentaje')
+                                                                        ({{ $promo['valor'] }}%)
+                                                                    @else
+                                                                        (Q{{ number_format($promo['valor'], 2) }})
+                                                                    @endif
+                                                                </small>
+                                                            @endif
+
+                                                        </td>
                                                     </tr>
                                                 </table>
                                             </td>
 
-                                            <!-- CANTIDAD -->
+                                            <td align="center">
+                                                Q{{ number_format($item->precio, 2) }}
+                                            </td>
+
                                             <td align="center">
                                                 {{ $item->cantidad }}
+                                            </td>
+
+                                            <td align="center">
+                                                <strong>Q{{ number_format($item->total, 2) }}</strong>
                                             </td>
 
                                         </tr>
                                     @endforeach
                                 </tbody>
 
+                            </table>
+
+                            <br>
+
+                            <table width="100%" cellpadding="6">
+                                <tr>
+                                    <td align="right">Subtotal:</td>
+                                    <td align="right"><strong>Q{{ number_format($venta->subtotal, 2) }}</strong></td>
+                                </tr>
+
+                                @if ($venta->descuento > 0)
+                                    <tr>
+                                        <td align="right">Descuento:</td>
+                                        <td align="right">- Q{{ number_format($venta->descuento, 2) }}</td>
+                                    </tr>
+                                @endif
+
+                                {{-- PROMO CARRITO --}}
+                                @if ($venta->promociones)
+                                    @php
+                                        $promo = $venta->promociones;
+                                        $promoMonto = 0;
+
+                                        if ($promo['tipo'] === 'porcentaje') {
+                                            $promoMonto = $venta->subtotal * ($promo['valor'] / 100);
+                                        } else {
+                                            $promoMonto = $promo['valor'];
+                                        }
+                                    @endphp
+
+                                    <tr>
+                                        <td align="right">
+                                            {{ $promo['nombre'] ?? 'Promoción' }}
+                                        </td>
+                                        <td align="right">
+                                            - Q{{ number_format($promoMonto, 2) }}
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                @if ($venta->costo_envio > 0)
+                                    <tr>
+                                        <td align="right">Envío:</td>
+                                        <td align="right">Q{{ number_format($venta->costo_envio, 2) }}</td>
+                                    </tr>
+                                @endif
+
+                                <tr>
+                                    <td align="right"><strong>Total:</strong></td>
+                                    <td align="right">
+                                        <strong style="color:#00432C;">
+                                            Q{{ number_format($venta->total, 2) }}
+                                        </strong>
+                                    </td>
+                                </tr>
                             </table>
 
                             <br>

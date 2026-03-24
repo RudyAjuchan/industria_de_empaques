@@ -71,19 +71,44 @@ class VentaController extends Controller
 
             $numero = ($ultimoNumero ?? 0) + 1;
 
-            $subtotal = collect($data['detalle'])->sum(
-                fn($item) =>
-                $item['precio'] * $item['cantidad']
-            );
+            // SUBTOTAL (con promociones por producto)
+            $subtotal = collect($data['detalle'])->sum(function ($item) {
+
+                $total = $item['precio'] * $item['cantidad'];
+
+                if (!empty($item['promocion_aplicada'])) {
+                    $promo = $item['promocion_aplicada'];
+
+                    if ($promo['tipo'] === 'porcentaje') {
+                        $total -= $total * ($promo['valor'] / 100);
+                    } else {
+                        $total -= $promo['valor'];
+                    }
+                }
+
+                return $total;
+            });
 
             $costoLogo   = $data['costo_logo'] ?? 0;
             $costoEnvio  = $data['costo_envio'] ?? 0;
             $descuento   = $data['descuento'] ?? 0;
-            $promociones = $data['promociones'] ?? 0;
             $deposito    = $data['cantidad_deposito'] ?? 0;
 
-            $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promociones;
+            // PROMOCIÓN CARRITO
+            $promoData = $data['promociones'] ?? null;
+            $promocionMonto = 0;
+
+            if ($promoData) {
+                if ($promoData['tipo'] === 'porcentaje') {
+                    $promocionMonto = $subtotal * ($promoData['valor'] / 100);
+                } else {
+                    $promocionMonto = $promoData['valor'];
+                }
+            }
+
+            $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promocionMonto;
             $pendiente = $total - $deposito;
+
             $venta = Venta::create([
                 'serie' => $serie,
                 'numero' => $numero,
@@ -100,27 +125,33 @@ class VentaController extends Controller
                 'costo_logo' => $costoLogo,
                 'subtotal' => $subtotal,
                 'descuento' => $descuento,
-                'promociones' => $promociones,
+                'promociones' => $promoData,
                 'costo_envio' => $costoEnvio,
                 'total' => $total,
 
                 'estado' => 'emitida',
             ]);
 
-            // Obtener estado y proceso inicial UNA SOLA VEZ
+            // ESTADO INICIAL
             $estadoInicial = EstadoProduccion::orderBy('orden')->first();
 
             if (!$estadoInicial) {
                 throw new \Exception('No existe un estado de producción inicial');
             }
 
-            $procesoInicial = ProcesoEstadoProduccion::where(
-                'estado_produccions_id',
-                $estadoInicial->id
-            )->orderBy('id')->first();
-
-            // Crear detalles y el historial inicial
             foreach ($data['detalle'] as $item) {
+
+                $totalItem = $item['precio'] * $item['cantidad'];
+
+                if (!empty($item['promocion_aplicada'])) {
+                    $promo = $item['promocion_aplicada'];
+
+                    if ($promo['tipo'] === 'porcentaje') {
+                        $totalItem -= $totalItem * ($promo['valor'] / 100);
+                    } else {
+                        $totalItem -= $promo['valor'];
+                    }
+                }
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
@@ -130,13 +161,15 @@ class VentaController extends Controller
                     'detalle_impresion' => $item['detalle_impresion'] ?? '',
                     'nombre_logo' => $item['nombre_logo'] ?? '',
                     'logo_path' => $item['logo_path'] ?? null,
+
+                    'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
+
                     'precio' => $item['precio'],
                     'cantidad' => $item['cantidad'],
-                    'total' => $item['precio'] * $item['cantidad'],
+                    'total' => $totalItem,
                     'proceso_estado_produccions_id' => 1,
                 ]);
 
-                // TRACKING
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
@@ -147,12 +180,10 @@ class VentaController extends Controller
                 ]);
             }
 
-            // CARGAR DETALLES
             $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
 
-            // Cargar cliente
-            $cliente = Cliente::where('id', $data['clientes_id']);
-            // ENVIAR CORREO
+            $cliente = Cliente::find($data['clientes_id']);
+
             Mail::to($cliente->email)
                 ->send(new ConfirmarVentaMail($cliente, $venta));
 
@@ -314,6 +345,7 @@ class VentaController extends Controller
                 'logo_path' => $d->logo_path,
                 'precio' => $d->precio,
                 'cantidad' => $d->cantidad,
+                'promocion_aplicada' => $d->promocion_aplicada,
                 'total' => $d->total,
 
                 // extras para mostrar
@@ -333,21 +365,44 @@ class VentaController extends Controller
             $venta = Venta::with('detalles')->findOrFail($id);
             $data = $request->all();
 
-            // CALCULOS
-            $subtotal = collect($data['detalle'])->sum(
-                fn($item) => $item['precio'] * $item['cantidad']
-            );
+            // SUBTOTAL
+            $subtotal = collect($data['detalle'])->sum(function ($item) {
+
+                $total = $item['precio'] * $item['cantidad'];
+
+                if (!empty($item['promocion_aplicada'])) {
+                    $promo = $item['promocion_aplicada'];
+
+                    if ($promo['tipo'] === 'porcentaje') {
+                        $total -= $total * ($promo['valor'] / 100);
+                    } else {
+                        $total -= $promo['valor'];
+                    }
+                }
+
+                return $total;
+            });
 
             $costoLogo   = $data['costo_logo'] ?? 0;
             $costoEnvio  = $data['costo_envio'] ?? 0;
             $descuento   = $data['descuento'] ?? 0;
-            $promociones = $data['promociones'] ?? 0;
             $deposito    = $data['cantidad_deposito'] ?? 0;
 
-            $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promociones;
+            // 🧠 PROMO CARRITO
+            $promoData = $data['promociones'] ?? null;
+            $promocionMonto = 0;
+
+            if ($promoData) {
+                if ($promoData['tipo'] === 'porcentaje') {
+                    $promocionMonto = $subtotal * ($promoData['valor'] / 100);
+                } else {
+                    $promocionMonto = $promoData['valor'];
+                }
+            }
+
+            $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promocionMonto;
             $pendiente = $total - $deposito;
 
-            // UPDATE CABECERA
             $venta->update([
                 'clientes_id' => $data['clientes_id'],
                 'bancos_id' => $data['bancos_id'],
@@ -361,7 +416,7 @@ class VentaController extends Controller
                 'costo_logo' => $costoLogo,
                 'subtotal' => $subtotal,
                 'descuento' => $descuento,
-                'promociones' => $promociones,
+                'promociones' => $promoData,
                 'costo_envio' => $costoEnvio,
                 'total' => $total,
 
@@ -371,15 +426,25 @@ class VentaController extends Controller
             // ELIMINAR DETALLE
             $venta->detalles()->delete();
 
-            // ESTADO INICIAL
             $estadoInicial = EstadoProduccion::orderBy('orden')->first();
 
             if (!$estadoInicial) {
                 throw new \Exception('No existe un estado de producción inicial');
             }
 
-            // CREAR NUEVO DETALLE + HISTORIAL
             foreach ($data['detalle'] as $item) {
+
+                $totalItem = $item['precio'] * $item['cantidad'];
+
+                if (!empty($item['promocion_aplicada'])) {
+                    $promo = $item['promocion_aplicada'];
+
+                    if ($promo['tipo'] === 'porcentaje') {
+                        $totalItem -= $totalItem * ($promo['valor'] / 100);
+                    } else {
+                        $totalItem -= $promo['valor'];
+                    }
+                }
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
@@ -388,14 +453,16 @@ class VentaController extends Controller
                     'color_agarrador' => $item['color_agarrador'] ?? '',
                     'detalle_impresion' => $item['detalle_impresion'] ?? '',
                     'nombre_logo' => $item['nombre_logo'] ?? '',
-                    'logo_path' => $item['logo_path'] ?? '',
+                    'logo_path' => $item['logo_path'] ?? null,
+
+                    'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
+
                     'precio' => $item['precio'],
                     'cantidad' => $item['cantidad'],
-                    'total' => $item['precio'] * $item['cantidad'],
+                    'total' => $totalItem,
                     'proceso_estado_produccions_id' => 1,
                 ]);
 
-                // HISTORIAL
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
@@ -406,13 +473,10 @@ class VentaController extends Controller
                 ]);
             }
 
-            // CARGAR DETALLES
             $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
 
-            // Cargar cliente
-            $cliente = Cliente::where('id', $data['clientes_id'])->first();
-            Log::info($cliente);
-            // ENVIAR CORREO
+            $cliente = Cliente::find($data['clientes_id']);
+
             Mail::to($cliente->email)
                 ->send(new ConfirmarVentaMail($cliente, $venta));
 

@@ -40,6 +40,9 @@ const produccionActivaComponent = () => import('../components/Produccion/Producc
 const cotizacionesComponent = () => import('../components/Ecommerce/EcommerceIndex.vue');
 const editarCotizacionComponent = () => import('../components/Ventas/VentasForm.vue');
 
+/* RUTAS PARA PROMOCIONES */
+const promocionesComponent = () => import('../components/Promociones/PromocionesIndex.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -234,7 +237,16 @@ const routes = [
         meta: { 
             permission: 'ecommerce.editar' 
         }
-    }
+    },
+    /* RUTAS PARA PROMOCIONES */
+    {
+        path: '/promociones',
+        name: 'promociones.index',
+        component: promocionesComponent,
+        meta: { 
+            permission: 'promocion.ver' 
+        }
+    },
 ];
 const router = createRouter({
     history: createWebHashHistory(import.meta.env.BASE_URL),

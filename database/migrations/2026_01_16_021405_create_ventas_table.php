@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('costo_logo', 12, 2)->nullable();
             $table->decimal('subtotal', 12, 2);
             $table->decimal('descuento', 12, 2);
-            $table->decimal('promociones', 12, 2);
+            $table->json('promociones')->nullable();
             $table->decimal('costo_envio', 12, 2);
             $table->decimal('total', 12, 2);
             $table->enum('estado', [

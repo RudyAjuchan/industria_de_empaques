@@ -29,7 +29,7 @@ class StoreVentaRequest extends FormRequest
             'cantidad_deposito' => ['nullable', 'numeric'],
             'costo_logo' => ['nullable', 'numeric'],
             'descuento' => ['nullable', 'numeric'],
-            'promociones' => ['nullable', 'numeric'],
+            'promociones' => ['array'],
             'costo_envio' => ['nullable', 'numeric'],
 
             'detalle' => ['required', 'array', 'min:1'],

@@ -17,6 +17,7 @@ use App\Http\Controllers\Produccion\ProduccionController;
 use App\Http\Controllers\ProduccionOperativaController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PromocionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\TipoAgarradorController;
@@ -154,6 +155,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA PRODUCTOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.ver');
+    Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.ver');
     Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.ver');
     Route::get('/producto/{producto}', [ProductosController::class, 'show'])->middleware('permission:producto.editar');
     Route::post('/producto', [ProductosController::class, 'store'])->middleware('permission:producto.crear|venta.crear');
@@ -240,6 +242,15 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 });
 
+/* RUTAS PARA LAS PROMOCIONES U OFERTAS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::get('/promocion',[PromocionController::class, 'index'])->middleware('permission:promocion.ver');
+    Route::get('/promocion/{promocion}',[PromocionController::class, 'show'])->middleware('permission:promocion.ver');
+    Route::post('/promocion',[PromocionController::class, 'store'])->middleware('permission:promocion.crear');
+    Route::put('/promocion/{promocion}',[PromocionController::class, 'update'])->middleware('permission:promocion.editar');
+    Route::delete('/promocion/{id}',[PromocionController::class, 'destroy'])->middleware('permission:promocion.borrar');
+});
+
 /* ESTADÍSTICAS PARA DASHBOARD */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/estadisticas-produccion', [EstadisticasProduccionController::class, 'estadisticasProduccion']);
@@ -279,6 +290,9 @@ Route::prefix('api')->group(function () {
         // CHECKOUT
         Route::post('/checkout', [CheckoutController::class, 'store'])
             ->middleware('auth:cliente');
+
+        Route::get('/promociones-carrito', [ProductoController::class, 'getPromos']);
+        Route::post('/validar-promociones', [ProductoController::class, 'validarPromos']);
     });
 
 });

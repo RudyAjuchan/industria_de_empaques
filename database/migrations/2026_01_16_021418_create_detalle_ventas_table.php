@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('precio', 12, 2);
             $table->integer('cantidad');
             $table->decimal('total', 12, 2);
+            $table->json('promocion_aplicada')->nullable();
             $table->timestamps();
         });
     }

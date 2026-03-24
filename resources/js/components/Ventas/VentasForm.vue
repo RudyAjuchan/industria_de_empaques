@@ -78,7 +78,7 @@
 
         <VentasDetalleTable v-if="ready && form.detalle" :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
             v-model="form.detalle" @producto-saved="onProductoSaved" @agarrador-saved="onAgarradorSaved"
-            @papel-saved="onPapelSaved" :errors="errors" />
+            @papel-saved="onPapelSaved" :errors="errors" :modo="modo"/>
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
                 <v-btn color="green" variant="tonal" @click="guardarVenta" :loading="loading">
@@ -97,8 +97,19 @@
                     density="compact" />
                 <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact"
                     :error-messages="errors.descuento" />
-                <v-text-field label="Promociones" v-model.number="form.promociones" variant="outlined" density="compact"
-                    :error-messages="errors.promociones" />
+                <v-text-field label="Promociones" :model-value="form.promociones_monto" :readonly="!!form.promociones"
+                    :disabled="!!form.promociones" variant="outlined" density="compact" hide-details="auto"/>
+
+                    <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
+                    Promoción aplicada: {{ form.promociones.nombre }}
+
+                    <span v-if="form.promociones.tipo === 'porcentaje'">
+                        ({{ form.promociones.valor }}% de descuento)
+                    </span>
+                    <span v-else>
+                        (Q{{ form.promociones.valor }} de descuento)
+                    </span>
+                </div>
                 <v-text-field label="Costo Envío" v-model.number="form.costo_envio" variant="outlined" density="compact"
                     :error-messages="errors.costo_envio" />
                 <v-text-field label="Total" :model-value="totalCalculado" readonly variant="outlined" density="compact"
@@ -158,11 +169,12 @@ export default {
                 cantidad_deposito: 0,
                 costo_logo: 0,
                 descuento: 0,
-                promociones: 0,
                 costo_envio: 0,
                 proceso_estado_produccions_id: 1,
                 detalle: [],
                 tipo_pago: null,
+                promociones: null,
+                promociones_monto: 0,
             },
             fecha: '',
             hora: '',
@@ -190,16 +202,32 @@ export default {
 
         async guardarVenta() {
             this.loading = true
-            console.log(this.form);
+
             try {
                 this.form.subtotal = this.subtotalCalculado
                 this.form.total = this.totalCalculado
                 this.form.pendiente_pagar = this.pendientePagar
 
+                const payload = { ...this.form }
+
+                delete payload.promociones_monto
+
+                // limpiar detalle
+                payload.detalle = payload.detalle.map(item => {
+                    const clean = { ...item }
+
+                    delete clean.alto
+                    delete clean.ancho
+                    delete clean.fuelle
+                    delete clean.tipo
+
+                    return clean
+                })
+
                 if (this.modo === 'editar') {
-                    await axios.put(`/venta/${this.form.id}`, this.form)
+                    await axios.put(`/venta/${this.form.id}`, payload)
                 } else {
-                    await axios.post('/venta', this.form)
+                    await axios.post('/venta', payload)
                 }
 
                 toast.success(
@@ -401,11 +429,37 @@ export default {
             } else {
                 this.$emit('cancel')
             }
+        },
+
+        calcularPromocionCarrito() {
+            if (!this.form.promociones) {
+                this.form.promociones_monto = 0
+                return
+            }
+
+            const promo = this.form.promociones
+            const subtotal = this.subtotalCalculado
+
+            if (promo.tipo === 'porcentaje') {
+                this.form.promociones_monto = subtotal * (promo.valor / 100)
+            } else {
+                this.form.promociones_monto = promo.valor
+            }
         }
 
     },
 
     watch: {
+        subtotalCalculado() {
+            this.calcularPromocionCarrito()
+        },
+        'form.promociones': {
+            handler() {
+                this.calcularPromocionCarrito()
+            },
+            deep: true
+        },
+
         searchCliente(val) {
 
             if (!val || val.length < 2) {
@@ -431,7 +485,7 @@ export default {
             const sub = this.subtotalCalculado;
             const logo = parseFloat(this.form.costo_logo || 0);
             const descuento = parseFloat(this.form.descuento || 0);
-            const promo = parseFloat(this.form.promociones || 0);
+            const promo = parseFloat(this.form.promociones_monto || 0);
             const envio = parseFloat(this.form.costo_envio || 0);
 
             return (sub + logo + envio) - (descuento + promo);
@@ -448,7 +502,7 @@ export default {
         const id = this.$route.params.id
         if (id) {
             this.modo = 'editar'
-            await this.getVenta(id) // 🔥 esperar
+            await this.getVenta(id) // esperar
         }
         this.ready = true
         // PARA HORA
@@ -456,6 +510,18 @@ export default {
         this.timer = setInterval(() => {
             this.actualizarReloj();
         }, 1000);
+
+        //para promociones
+        if (this.modo !== 'editar') {
+            const { data } = await axios.get('/api/ecommerce/promociones-carrito')
+
+            const promo = data[0] || null
+
+            if (promo) {
+                this.form.promociones = promo
+                this.calcularPromocionCarrito()
+            }
+        }
     },
 
     beforeUnmount() {//SOLO PARA HORA

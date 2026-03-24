@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Ecommerce;
 
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
+use App\Models\Promocion;
 use App\Models\TipoAgarrador;
 use App\Models\TipoPapel;
 use Illuminate\Http\Request;
@@ -27,18 +28,103 @@ class ProductoController extends Controller
             $query->where('nombre', 'like', '%' . $request->search . '%');
         }
 
-        return $query->paginate(12);
+        $productos = $query->paginate(12);
+
+        // APLICAR PROMOCIONES
+        $productos->getCollection()->transform(function ($producto) {
+
+            $promo = Promocion::vigente()
+                ->where('aplica_a', 'producto')
+                ->whereHas('productos', function ($q) use ($producto) {
+                    $q->where('productos.id', $producto->id);
+                })
+                ->first();
+
+            if ($promo) {
+                $producto->tiene_promocion = true;
+                $producto->promocion = [
+                    'tipo' => $promo->tipo,
+                    'valor' => $promo->valor
+                ];
+            } else {
+                $producto->tiene_promocion = false;
+                $producto->promocion = null;
+            }
+
+            return $producto;
+        });
+
+        return $productos;
     }
 
     public function show($id)
     {
-        return response()->json([
-            'producto' => Producto::with(['imagenes', 'paginas'])->findOrFail($id),
+        $producto = Producto::with(['imagenes', 'paginas'])->findOrFail($id);
 
+        // APLICAR PROMOCIÓN
+        $promo = Promocion::vigente()
+            ->where('aplica_a', 'producto')
+            ->whereHas('productos', function ($q) use ($producto) {
+                $q->where('productos.id', $producto->id);
+            })
+            ->first();
+
+        if ($promo) {
+            $producto->tiene_promocion = true;
+            $producto->promocion = [
+                'tipo' => $promo->tipo,
+                'valor' => $promo->valor
+            ];
+        } else {
+            $producto->tiene_promocion = false;
+            $producto->promocion = null;
+        }
+
+        return response()->json([
+            'producto' => $producto,
             'configuracion' => [
                 'tipo_agarradores' => TipoAgarrador::where('estado', 1)->get(),
                 'tipo_papeles' => TipoPapel::where('estado', 1)->get(),
             ]
         ]);
+    }
+
+    public function getPromos()
+    {
+        return Promocion::vigente()
+            ->where('aplica_a', 'carrito')
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'nombre' => $p->nombre,
+                'tipo' => $p->tipo,
+                'valor' => $p->valor
+            ]);
+    }
+
+    public function validarPromos(Request $request)
+    {
+        $items = $request->items;
+
+        return collect($items)->map(function ($item) {
+
+            $promo = Promocion::vigente()
+                ->where('aplica_a', 'producto')
+                ->whereHas('productos', function ($q) use ($item) {
+                    $q->where('productos.id', $item['productos_id']);
+                })
+                ->first();
+
+            return [
+                'uuid' => $item['uuid'],
+                'tiene_promocion' => $promo ? true : false,
+                'promocion' => $promo ? [
+                    'id' => $promo->id,
+                    'nombre' => $promo->nombre,
+                    'tipo' => $promo->tipo,
+                    'valor' => $promo->valor
+                ] : null
+            ];
+        });
     }
 }

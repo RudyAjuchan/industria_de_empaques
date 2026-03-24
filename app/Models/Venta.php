@@ -36,6 +36,7 @@ class Venta extends Model
     protected $casts = [
         'sat_fecha' => 'datetime',
         'sat_respuesta' => 'array',
+        'promociones' => 'array',
     ];
 
     protected $appends = ['numero_completo'];

@@ -20,7 +20,12 @@ class DetalleVenta extends Model
         'logo_path',
         'precio',
         'cantidad',
+        'promocion_aplicada',
         'total',
+    ];
+
+    protected $casts = [
+        'promocion_aplicada' => 'array',
     ];
 
     // Venta

@@ -38,6 +38,13 @@ class ProductosController extends Controller
         return $query->paginate($perPage);
     }
 
+    public function productosProm(Request $request)
+    {
+        $productos = Producto::where('estado', 1)->get();
+
+        return $productos;
+    }
+
     public function getPaginas()
     {
         return Pagina::where('estado', 1)

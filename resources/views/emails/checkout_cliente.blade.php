@@ -54,6 +54,21 @@
 
                                 <tbody>
                                     @foreach ($venta->detalles as $item)
+                                        @php
+                                            $promo = $item->promocion_aplicada;
+                                        @endphp
+
+                                        @if ($promo)
+                                            <br>
+                                            <small style="color:#d32f2f;">
+                                                Promo: {{ $promo['nombre'] }}
+                                                @if ($promo['tipo'] === 'porcentaje')
+                                                    ({{ $promo['valor'] }}% de descuento)
+                                                @else
+                                                    (Q{{ $promo['valor'] }} de descuento)
+                                                @endif
+                                            </small>
+                                        @endif
                                         <tr style="border-bottom:1px solid #eee;">
 
                                             <!-- PRODUCTO -->
@@ -80,14 +95,17 @@
                                                             @endif
 
                                                             @if ($item->nombre_logo)
-                                                                <br><small>Nombre Logo: {{ $item->nombre_logo }}</small>
+                                                                <br><small>Nombre Logo:
+                                                                    {{ $item->nombre_logo }}</small>
                                                             @endif
-                                                            
+
                                                             @if ($item->tipoAgarrador)
-                                                                <br><small>Agarrador: {{ $item->tipoAgarrador->nombre }}</small>
+                                                                <br><small>Agarrador:
+                                                                    {{ $item->tipoAgarrador->nombre }}</small>
                                                             @endif
                                                             @if ($item->tipoPapel)
-                                                                <br><small>Papel: {{ $item->tipoPapel->nombre }}</small>
+                                                                <br><small>Papel:
+                                                                    {{ $item->tipoPapel->nombre }}</small>
                                                             @endif
                                                         </td>
 
@@ -105,6 +123,28 @@
                                 </tbody>
 
                             </table>
+
+                            <br>
+                            @php
+                                $promoCarrito = $venta->promociones;
+                            @endphp
+
+                            @if ($promoCarrito)
+                                <div style="margin-top:15px; padding:10px; background:#fff3cd; border-radius:6px;">
+                                    <strong style="color:#856404;">
+                                        Promoción aplicada al pedido:
+                                    </strong>
+                                    <br>
+                                    <span style="color:#856404;">
+                                        {{ $promoCarrito['nombre'] }}
+                                        @if ($promoCarrito['tipo'] === 'porcentaje')
+                                            ({{ $promoCarrito['valor'] }}% de descuento)
+                                        @else
+                                            (Q{{ $promoCarrito['valor'] }} de descuento)
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
 
                             <br>
 

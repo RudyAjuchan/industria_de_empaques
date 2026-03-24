@@ -23,6 +23,7 @@
                     <th style="min-width: 180px">Agarrador</th>
                     <th style="min-width: 180px">Papel</th>
                     <th style="min-width: 160px">Nom.Log</th>
+                    <th style="min-width: 75px">Promoción aplicada</th>
                     <th style="min-width: 100px">Precio</th>
                     <th style="min-width: 75px">Cantidad</th>
                     <th style="min-width: 120px">Total</th>
@@ -79,14 +80,19 @@
 
 
                     <td><v-text-field v-model="item.nombre_logo" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'nombre_logo')"/></td>
-
                     <td>
-                        <v-text-field v-model="item.precio" @input="calcularFila(item)" dense
+                        <div v-if="item.promocion_aplicada">
+                            <span style="color:red; font-size:11px">{{ item.promocion_aplicada.nombre }}</span><br>
+                            -<span>{{ formatQuetzales(item.promocion_aplicada.valor) }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <v-text-field v-model="item.precio" @input="onChangeItem(item)" dense
                             hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'precio')"/>
                     </td>
 
                     <td>
-                        <v-text-field v-model="item.cantidad" @input="calcularFila(item)" dense
+                        <v-text-field v-model="item.cantidad" @input="onChangeItem(item)" dense
                             hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'cantidad')"/>
                     </td>
 
@@ -175,7 +181,8 @@ export default {
         productos: Array,
         tiposAgarrador: Array,
         tiposPapel: Array,
-        errors: Object
+        errors: Object,
+        modo: String
     },
     components:{
         AgarradorDialog,
@@ -213,6 +220,7 @@ export default {
 
         agregarFila() {
             this.detalle.push({
+                uuid: crypto.randomUUID(),
                 productos_id: null,
                 tipo_agarradors_id: null,
                 tipo_papels_id: null,
@@ -233,7 +241,8 @@ export default {
             this.detalle.splice(index, 1)
         },
 
-        actualizarProducto(item) {
+        async actualizarProducto(item) {
+
             const producto = this.productos.find(p => p.id === item.productos_id)
 
             if (producto) {
@@ -243,11 +252,37 @@ export default {
                 item.tipo = producto.tipo
             }
 
+            if (this.modo === 'editar') {
+                this.calcularFila(item)
+                return
+            }
+
+            if (!item.productos_id) {
+                item.promocion_aplicada = null
+                this.calcularFila(item)
+                return
+            }
+
+            item.promocion_aplicada = await this.obtenerPromocion(item)
+
             this.calcularFila(item)
         },
 
         calcularFila(item) {
-            item.total = (parseFloat(item.precio || 0) * parseFloat(item.cantidad || 0)).toFixed(2)
+            const precio = parseFloat(item.precio || 0)
+            const cantidad = parseFloat(item.cantidad || 0)
+
+            let total = precio * cantidad
+
+            if (item.promocion_aplicada) {
+                if (item.promocion_aplicada.tipo === 'porcentaje') {
+                    total -= total * (item.promocion_aplicada.valor / 100)
+                } else {
+                    total -= item.promocion_aplicada.valor
+                }
+            }
+
+            item.total = total.toFixed(2)
         },
 
         openAgarradorDialog(index) {
@@ -298,7 +333,7 @@ export default {
         },
 
         onProductoSave(producto) {
-            console.log('pasa aquí');
+            //console.log('pasa aquí');
             const existe = this.productos.find(p => p.id === producto.id)
             if (!existe) {
                 this.$emit('producto-saved', producto)
@@ -318,8 +353,8 @@ export default {
             return this.errors?.[`detalle.${index}.${field}`] ?? []
         },
         getLogoUrl(path) {
-            console.log(path);
-            console.log(import.meta.env.VITE_API_URL)
+            //console.log(path);
+            //console.log(import.meta.env.VITE_API_URL)
             return `${import.meta.env.VITE_API_URL}/storage/${path}`
         },
         descargarLogo(path) {
@@ -359,11 +394,68 @@ export default {
             } catch (err) {
                 console.error(err)
             }
-}
+        },
+
+        async onChangeItem(item) {
+
+            if (this.modo === 'editar') {
+                this.calcularFila(item)
+                return
+            }
+
+            if (!item.productos_id) {
+                item.promocion_aplicada = null
+                this.calcularFila(item)
+                return
+            }
+
+            item.promocion_aplicada = await this.obtenerPromocion(item)
+
+            this.calcularFila(item)
+        },
+
+        formatQuetzales(value){
+            if (value === null || value === undefined || isNaN(value)) {
+                return 'Q 0.00';
+            }
+
+            return new Intl.NumberFormat('es-GT', {
+                style: 'currency',
+                currency: 'GTQ',
+                minimumFractionDigits: 2
+            }).format(value);
+        },
+
+        async obtenerPromocion(item) {
+            try {
+                const { data } = await axios.post('/api/ecommerce/validar-promociones', {
+                    items: [
+                        {
+                            uuid: item.uuid,
+                            productos_id: item.productos_id
+                        }
+                    ]
+                })
+
+                const res = data.find(r => r.uuid === item.uuid)
+
+                return res?.promocion || null
+
+            } catch (e) {
+                console.error(e)
+                return null
+            }
+        }
 
     },
 
     mounted() {
+        this.detalle.forEach(item => {
+            if (!item.uuid) {
+                item.uuid = crypto.randomUUID()
+            }
+        })
+
         if (!this.detalle.length) this.agregarFila()
     }
 }

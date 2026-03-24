@@ -71,7 +71,7 @@ class ClienteAuthController extends Controller
 
         return DB::transaction(function () use ($data, $request) {
 
-            // 🔥 CREAR CLIENTE
+            // CREAR CLIENTE
             $cliente = Cliente::create([
                 'nombre' => $data['nombre'],
                 'genero' => $data['genero'],

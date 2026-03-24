@@ -258,7 +258,7 @@ export default {
             this.form.id = item.id
             this.form.name = item.name
             this.form.email = item.email
-            console.log(item);
+            //console.log(item);
             this.form.role = item.roles[0].id ? item.roles[0].id : null
             this.form.active = item.status === 'active'
             this.drawer = true

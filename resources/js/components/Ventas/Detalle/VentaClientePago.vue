@@ -23,7 +23,27 @@
         <v-col cols="4">
             <div><strong>SUB-TOTAL:</strong> <v-chip color="primary">Q {{ venta.subtotal }}</v-chip></div>
             <div><strong>DESCUENTO:</strong> <v-chip color="red">Q {{ venta.descuento }}</v-chip></div>
-            <div><strong>PROMOCIONES:</strong> <v-chip color="red">Q {{ venta.promociones }}</v-chip></div>
+            <div>
+                <strong>PROMOCIONES:</strong>
+
+                <v-chip v-if="venta.promociones" color="red">
+                    - Q {{ promocionMonto.toFixed(2) }}
+                </v-chip>
+
+                <span v-else>-</span>
+
+                <!-- TEXTO EXTRA -->
+                <div v-if="venta.promociones" style="font-size:12px; color:#2e7d32;">
+                    {{ venta.promociones.nombre || 'Promoción aplicada' }}
+
+                    <span v-if="venta.promociones.tipo === 'porcentaje'">
+                        ({{ venta.promociones.valor }}%)
+                    </span>
+                    <span v-else>
+                        (Q {{ venta.promociones.valor }})
+                    </span>
+                </div>
+            </div>
             <div><strong>COSTO DE LOGO:</strong> <v-chip color="green">Q {{ venta.costo_logo }}</v-chip></div>
             <div><strong>COSTO DE ENVÍO:</strong> <v-chip color="green">Q {{ venta.costo_envio }}</v-chip></div>
 
@@ -62,6 +82,19 @@ export default {
                 return `${c.direccion}, ${c.municipio.nombre}, ${c.municipio.departamento.nombre}`
             }
             return `${c.direccion}, ${c.ciudad_pais}, ${c.estado_pais}`
+        },
+
+        promocionMonto() {
+            if (!this.venta.promociones) return 0
+
+            const promo = this.venta.promociones
+            const subtotal = parseFloat(this.venta.subtotal || 0)
+
+            if (promo.tipo === 'porcentaje') {
+                return subtotal * (promo.valor / 100)
+            }
+
+            return promo.valor
         }
     }
 }

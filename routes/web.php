@@ -293,6 +293,8 @@ Route::prefix('api')->group(function () {
 
         Route::get('/promociones-carrito', [ProductoController::class, 'getPromos']);
         Route::post('/validar-promociones', [ProductoController::class, 'validarPromos']);
+
+        Route::get('/promociones', [ProductoController::class, 'promociones']);
     });
 
 });

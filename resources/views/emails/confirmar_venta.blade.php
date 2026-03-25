@@ -180,6 +180,22 @@
                                         </strong>
                                     </td>
                                 </tr>
+
+                                <tr>
+                                    <td align="right">Depósito:</td>
+                                    <td align="right">
+                                        Q{{ number_format($venta->cantidad_deposito, 2) }}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td align="right">Pendiente a pagar:</td>
+                                    <td align="right">
+                                        <strong style="color:#d32f2f;">
+                                            Q{{ number_format($venta->pendiente_pagar, 2) }}
+                                        </strong>
+                                    </td>
+                                </tr>
                             </table>
 
                             <br>

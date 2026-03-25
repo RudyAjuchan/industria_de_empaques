@@ -83,7 +83,7 @@
                     <td>
                         <div v-if="item.promocion_aplicada">
                             <span style="color:red; font-size:11px">{{ item.promocion_aplicada.nombre }}</span><br>
-                            -<span>{{ formatQuetzales(item.promocion_aplicada.valor) }}</span>
+                            -<span>{{ item.promocion_aplicada.tipo == 'porcentaje' ?  `${item.promocion_aplicada.valor}%` : formatQuetzales(item.promocion_aplicada.valor) }}</span>
                         </div>
                     </td>
                     <td>

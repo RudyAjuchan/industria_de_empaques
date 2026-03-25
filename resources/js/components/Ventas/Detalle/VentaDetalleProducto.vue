@@ -41,7 +41,38 @@
                 <th>TIPO PAPEL</th>
                 <td>{{ item.tipo_papel.nombre }}</td>
                 <th>TOTAL</th>
-                <td>{{ item.total }}</td>
+                <td>
+                    <div v-if="item.promocion_aplicada">
+                        <span style="text-decoration:line-through; color:#999;">
+                            Q {{ Number(item.precio * item.cantidad).toFixed(2) }}
+                        </span>
+                        <br>
+                        <strong>Q {{ Number(item.total).toFixed(2) }}</strong>
+                    </div>
+
+                    <div v-else>
+                        Q {{ Number(item.total).toFixed(2) }}
+                    </div>
+                </td>
+            </tr>
+            <tr v-if="item.promocion_aplicada">
+                <td colspan="6" style="
+                        color:#d32f2f;
+                        font-weight:bold;
+                        background:#fff3f3;
+                        border-top:2px solid #d32f2f;
+                        text-align:center;
+                        padding:8px;
+                    ">
+                    {{ item.promocion_aplicada.nombre || 'Promoción aplicada' }}
+
+                    <span v-if="item.promocion_aplicada.tipo === 'porcentaje'">
+                        ({{ item.promocion_aplicada.valor }}%)
+                    </span>
+                    <span v-else>
+                        (Q {{ Number(item.promocion_aplicada.valor).toFixed(2) }})
+                    </span>
+                </td>
             </tr>
             <tr>
                 <th>TIPO</th>

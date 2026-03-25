@@ -60,8 +60,10 @@
 
         <v-col cols="5">
             <!-- FILEPOND -->
-            <file-pond name="imagenes" ref="pond" label-idle="Arrastra tus imágenes..." :allow-multiple="true" :server="server"
-                accepted-file-types="image/jpeg, image/png, image/webp" :files="files" @updatefiles="handleFilePond" />
+            <file-pond name="imagenes" ref="pond" label-idle="Arrastra tus imágenes..." :allow-multiple="true"
+                :server="server" accepted-file-types="image/jpeg, image/png, image/webp" :files="files"
+                @updatefiles="handleFilePond" label-max-file-size-exceeded="El archivo es demasiado grande"
+                label-max-file-size="Máximo permitido: {filesize}" max-file-size="2MB" />
         </v-col>
     </v-row>
 

@@ -2,6 +2,7 @@
     <tr>
         <td>
             <strong>INDUSTRIAS DE EMPAQUES, S.A.</strong><br>
+            <strong>No. VENTA:</strong> {{ $venta->serie }}-{{ $venta->numero }}<br>
             Fecha emisión: {{ now()->format('d-m-Y') }}<br>
             Hora: {{ now()->format('H:i:s') }}<br>
             Fecha entrega: {{ $venta->fecha_entrega }}

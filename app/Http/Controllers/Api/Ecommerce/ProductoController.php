@@ -127,4 +127,27 @@ class ProductoController extends Controller
             ];
         });
     }
+
+    public function promociones()
+    {
+        return Promocion::vigente()
+            ->where('aplica_a', 'producto') // o quitar si quieres todas
+            ->with('productos')
+            ->get()
+            ->map(function ($promo) {
+                return [
+                    'id' => $promo->id,
+                    'nombre' => $promo->nombre,
+                    'tipo' => $promo->tipo,
+                    'valor' => $promo->valor,
+                    'productos' => $promo->productos->map(function ($p) {
+                        return [
+                            'id' => $p->id,
+                            'nombre' => $p->nombre,
+                            'imagen' => $p->imagen_principal_url
+                        ];
+                    })
+                ];
+            });
+    }
 }

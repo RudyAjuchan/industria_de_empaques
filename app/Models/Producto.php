@@ -16,6 +16,9 @@ class Producto extends Model
         'tipo',
         'paginas_id',
         'estado',
+        'tipo_producto',
+        'precio_base',
+        'descripcion'
     ];
 
     public function imagenes()

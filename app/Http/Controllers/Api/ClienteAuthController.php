@@ -37,54 +37,101 @@ class ClienteAuthController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'genero' => 'required|string|max:20',
-            'email' => 'required|email|unique:clientes,email',
+            'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
 
-            // DIRECCIÓN
             'pais' => 'required|string',
             'municipios_id' => 'nullable|exists:municipios,id',
             'estado_pais' => 'nullable|string|max:255',
             'ciudad_pais' => 'nullable|string|max:255',
             'direccion' => 'required|string',
 
-            // TELÉFONO
             'telefono_codigo_pais' => 'required|string|max:5',
             'telefono_numero' => 'required|digits_between:8,20',
         ]);
 
         return DB::transaction(function () use ($data, $request) {
 
-            // CREAR CLIENTE
-            $cliente = Cliente::create([
-                'nombre' => $data['nombre'],
-                'genero' => $data['genero'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
+            // BUSCAR CLIENTE
+            $cliente = Cliente::where('email', $data['email'])->first();
 
-                // ubicación
-                'pais' => $data['pais'],
-                'municipios_id' => $data['municipios_id'] ?? null,
-                'estado_pais' => $data['estado_pais'] ?? null,
-                'ciudad_pais' => $data['ciudad_pais'] ?? null,
-                'direccion' => $data['direccion'],
-            ]);
+            // ===============================
+            // SI NO EXISTE, CREAR
+            // ===============================
+            if (!$cliente) {
 
-            // TELÉFONO (como backoffice)
-            $cliente->telefonos()->create([
-                'telefono_codigo_pais' => $data['telefono_codigo_pais'],
-                'telefono_numero' => $data['telefono_numero'],
-            ]);
+                $cliente = Cliente::create([
+                    'nombre' => $data['nombre'],
+                    'genero' => $data['genero'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
 
-            // EMAIL
-            $cliente->emails()->create([
-                'email' => $data['email']
-            ]);
+                    'pais' => $data['pais'],
+                    'municipios_id' => $data['municipios_id'] ?? null,
+                    'estado_pais' => $data['estado_pais'] ?? null,
+                    'ciudad_pais' => $data['ciudad_pais'] ?? null,
+                    'direccion' => $data['direccion'],
+                ]);
 
+                // teléfono
+                $cliente->telefonos()->create([
+                    'telefono_codigo_pais' => $data['telefono_codigo_pais'],
+                    'telefono_numero' => $data['telefono_numero'],
+                ]);
+
+                // email
+                $cliente->emails()->create([
+                    'email' => $data['email']
+                ]);
+            }
+
+            // ===============================
+            // SI EXISTE SIN PASSWORD → COMPLETAR
+            // ===============================
+            elseif (!$cliente->password) {
+
+                $cliente->update([
+                    'nombre' => $data['nombre'],
+                    'genero' => $data['genero'],
+                    'password' => Hash::make($data['password']),
+
+                    'pais' => $data['pais'],
+                    'municipios_id' => $data['municipios_id'] ?? null,
+                    'estado_pais' => $data['estado_pais'] ?? null,
+                    'ciudad_pais' => $data['ciudad_pais'] ?? null,
+                    'direccion' => $data['direccion'],
+                ]);
+
+                // actualizar o crear teléfono
+                $cliente->telefonos()->updateOrCreate(
+                    [],
+                    [
+                        'telefono_codigo_pais' => $data['telefono_codigo_pais'],
+                        'telefono_numero' => $data['telefono_numero'],
+                    ]
+                );
+
+                // asegurar email en tabla relacionada
+                $cliente->emails()->firstOrCreate([
+                    'email' => $data['email']
+                ]);
+            }
+
+            // ===============================
+            // YA TIENE PASSWORD, ERROR
+            // ===============================
+            else {
+                return response()->json([
+                    'message' => 'Este correo ya está registrado. Inicia sesión.'
+                ], 422);
+            }
+
+            // ===============================
             // LOGIN AUTOMÁTICO
+            // ===============================
             Auth::guard('cliente')->login($cliente);
             $request->session()->regenerate();
 
-            // RELACIONES
             $cliente->load([
                 'telefonos',
                 'emails',

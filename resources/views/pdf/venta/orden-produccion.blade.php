@@ -21,6 +21,10 @@
                 <td colspan="4">{{ $item->producto->nombre }}</td>
             </tr>
             <tr>
+                <th>DESCRIPCIÓN</th>
+                <td colspan="4">{{ $item->producto->descripcion }}</td>
+            </tr>
+            <tr>
                 <th>CANTIDAD DE BOLSAS</th>
                 <td colspan="4">{{ $item->cantidad }}</td>
             </tr>
@@ -64,7 +68,7 @@
             <tr>
                 <th>TIPO DE AGARRADOR Y COLOR</th>
                 <td colspan="4">
-                    {{ $item->tipoAgarrador->nombre }} / {{ $item->color_agarrador }}
+                    {{ $item->tipoAgarrador->nombre ?? '-' }} / {{ $item->color_agarrador }}
                 </td>
             </tr>
 

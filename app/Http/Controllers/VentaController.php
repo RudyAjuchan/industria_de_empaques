@@ -11,6 +11,7 @@ use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
 use App\Models\Pagina;
 use App\Models\ProcesoEstadoProduccion;
+use App\Models\Producto;
 use App\Models\Venta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -44,6 +45,8 @@ class VentaController extends Controller
     public function ventas_activas(){
         return Venta::with(['cliente', 'vendedor', 'banco'])
             ->where('estado_produccion','<>', 'finalizada')
+            ->where('estado', '<>', 'pendiente')
+            ->where('estado', '<>', 'anulada')
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -71,10 +74,16 @@ class VentaController extends Controller
 
             $numero = ($ultimoNumero ?? 0) + 1;
 
-            // SUBTOTAL (con promociones por producto)
+            // SUBTOTAL CORRECTO (según tipo de producto)
             $subtotal = collect($data['detalle'])->sum(function ($item) {
 
-                $total = $item['precio'] * $item['cantidad'];
+                $producto = Producto::find($item['productos_id']);
+
+                $precio = $producto->tipo_producto === 'simple'
+                    ? $producto->precio_base
+                    : $item['precio'];
+
+                $total = $precio * $item['cantidad'];
 
                 if (!empty($item['promocion_aplicada'])) {
                     $promo = $item['promocion_aplicada'];
@@ -141,7 +150,13 @@ class VentaController extends Controller
 
             foreach ($data['detalle'] as $item) {
 
-                $totalItem = $item['precio'] * $item['cantidad'];
+                $producto = Producto::find($item['productos_id']);
+
+                $precio = $producto->tipo_producto === 'simple'
+                    ? $producto->precio_base
+                    : $item['precio'];
+
+                $totalItem = $precio * $item['cantidad'];
 
                 if (!empty($item['promocion_aplicada'])) {
                     $promo = $item['promocion_aplicada'];
@@ -155,18 +170,22 @@ class VentaController extends Controller
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
-                    'tipo_agarradors_id' => $item['tipo_agarradors_id'],
-                    'tipo_papels_id' => $item['tipo_papels_id'],
-                    'color_agarrador' => $item['color_agarrador'] ?? '',
-                    'detalle_impresion' => $item['detalle_impresion'] ?? '',
-                    'nombre_logo' => $item['nombre_logo'] ?? '',
+
+                    'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
+                    'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
+
+                    'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ($item['color_agarrador'] ?? ''),
+                    'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ($item['detalle_impresion'] ?? ''),
+                    'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
+
                     'logo_path' => $item['logo_path'] ?? null,
 
                     'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
 
-                    'precio' => $item['precio'],
+                    'precio' => $precio,
                     'cantidad' => $item['cantidad'],
                     'total' => $totalItem,
+
                     'proceso_estado_produccions_id' => 1,
                 ]);
 
@@ -270,6 +289,7 @@ class VentaController extends Controller
                     });
                 });
             })
+            ->where('estado', 'emitida')
             ->orderByDesc('created_at')
             ->get();
 

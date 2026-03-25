@@ -56,29 +56,50 @@ class ProductosController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string',
-            'alto' => 'numeric',
-            'ancho' => 'numeric',
-            'fuelle' => 'numeric',
-            'tipo' => 'string',
+            'alto' => 'nullable|numeric',
+            'ancho' => 'nullable|numeric',
+            'fuelle' => 'nullable|numeric',
+            'tipo' => 'nullable|string',
             'paginas_id' => 'required|exists:paginas,id',
-            //'imagenes_ordenadas' => 'required|array',
+
+            'tipo_producto' => 'required|in:personalizado,simple',
+            'precio_base' => 'nullable|numeric',
+            'descripcion' => 'nullable|string',
+
             'main_index' => 'required|integer',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $producto = Producto::create($request->only([
+
+            $data = $request->only([
                 'nombre',
                 'alto',
                 'ancho',
                 'fuelle',
                 'tipo',
                 'paginas_id',
-            ]));
-            if($request->imagenes_ordenadas ){
+                'tipo_producto',
+                'precio_base',
+                'descripcion'
+            ]);
+
+            // lógica clave
+            if ($data['tipo_producto'] === 'simple') {
+                $data['alto'] = null;
+                $data['ancho'] = null;
+                $data['fuelle'] = null;
+            } else {
+                $data['precio_base'] = null;
+            }
+
+            // USAR $data
+            $producto = Producto::create($data);
+
+            if ($request->imagenes_ordenadas) {
                 foreach ($request->imagenes_ordenadas as $index => $imgData) {
-    
+
                     if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
                         $producto->imagenes()->create([
                             'path' => $imgData['file']->store('productos', 'public'),
@@ -117,48 +138,68 @@ class ProductosController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string',
-            'alto' => 'numeric',
-            'ancho' => 'numeric',
-            'fuelle' => 'numeric',
-            'tipo' => 'string',
+            'alto' => 'nullable|numeric',
+            'ancho' => 'nullable|numeric',
+            'fuelle' => 'nullable|numeric',
+            'tipo' => 'nullable|string',
             'paginas_id' => 'required|exists:paginas,id',
+
+            'tipo_producto' => 'required|in:personalizado,simple',
+            'precio_base' => 'nullable|numeric',
+            'descripcion' => 'nullable|string',
+
             'main_index' => 'required|integer',
-            //'imagenes_ordenadas' => 'required|array',
         ]);
 
-        $producto->update($request->only([
+        $data = $request->only([
             'nombre',
             'alto',
             'ancho',
             'fuelle',
             'tipo',
-            'paginas_id'
-        ]));
+            'paginas_id',
+            'tipo_producto',
+            'precio_base',
+            'descripcion'
+        ]);
 
-        if($request->imagenes_ordenadas ){
+        // lógica
+        if ($data['tipo_producto'] === 'simple') {
+            $data['alto'] = null;
+            $data['ancho'] = null;
+            $data['fuelle'] = null;
+        } else {
+            $data['precio_base'] = null;
+        }
+
+        // SOLO UNA VEZ
+        $producto->update($data);
+
+        // ================= IMÁGENES =================
+
+        if ($request->imagenes_ordenadas) {
+
             $idsExistentes = collect($request->imagenes_ordenadas)
                 ->where('tipo', 'existente')
                 ->pluck('id')
                 ->toArray();
-    
+
             $producto->imagenes()
                 ->whereNotIn('id', $idsExistentes)
                 ->each(function ($img) {
                     Storage::disk('public')->delete($img->path);
                     $img->delete();
                 });
-    
+
             foreach ($request->imagenes_ordenadas as $index => $imgData) {
-    
-                // EXISTENTE
+
                 if ($imgData['tipo'] === 'existente') {
                     ProductoImagen::where('id', $imgData['id'])->update([
                         'orden' => $index,
                         'is_main' => ($index == $request->main_index),
                     ]);
                 }
-    
-                // NUEVA
+
                 if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
                     $producto->imagenes()->create([
                         'path' => $imgData['file']->store('productos', 'public'),
@@ -168,7 +209,6 @@ class ProductosController extends Controller
                 }
             }
         }
-
 
         return response()->json(['ok' => true]);
     }

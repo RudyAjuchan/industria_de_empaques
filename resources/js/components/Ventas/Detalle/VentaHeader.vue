@@ -1,5 +1,5 @@
 <template>
-    <v-row class="mb-4">
+    <v-row class="mb-4 pa-4">
         <v-col cols="12">
             <h2 class="text-uppercase font-weight-bold text-center">
                 INDUSTRIAS DE EMPAQUES, SOCIEDAD ANÓNIMA
@@ -22,7 +22,7 @@
     
                 <div class="mt-4">
                     <div class="font-weight-bold">{{ venta.nombres_paginas_productos }}</div>
-                    <div class="text-caption">PÁGINA</div>
+                    <div class="text-caption">PÁGINA(S)</div>
                 </div>
             </v-col>
         </v-row>

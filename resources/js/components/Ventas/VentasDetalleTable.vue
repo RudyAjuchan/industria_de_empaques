@@ -47,14 +47,18 @@
                         </v-autocomplete>
                     </td>
 
-                    <td><v-text-field v-model="item.alto" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
-                    <td><v-text-field v-model="item.ancho" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
-                    <td><v-text-field v-model="item.fuelle" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'"><v-text-field v-model="item.alto" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
+                    <td v-else>-</td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'"><v-text-field v-model="item.ancho" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
+                    <td v-else>-</td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'"><v-text-field v-model="item.fuelle" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
+                    <td v-else>-</td>
                     <td><v-text-field v-model="item.tipo" readonly dense hide-details disabled density="compact" variant="outlined"/></td>
 
-                    <td><v-text-field v-model="item.color_agarrador" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'color_agarrador')"/></td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'"><v-text-field v-model="item.color_agarrador" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'color_agarrador')"/></td>
+                    <td v-else>-</td>
                     <td><v-text-field v-model="item.detalle_impresion" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'detalle_impresion')"/></td>
-                    <td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'">
                         <v-select :items="tiposAgarrador" item-title="nombre" item-value="id"
                             v-model="item.tipo_agarradors_id" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'tipo_agarradors_id')">
                             <template #append-inner>
@@ -64,8 +68,9 @@
                             </template>
                         </v-select>
                     </td>
+                    <td v-else>-</td>
 
-                    <td>
+                    <td v-if="item.producto?.tipo_producto === 'personalizado'">
                         <v-select :items="tiposPapel" item-title="nombre" item-value="id" v-model="item.tipo_papels_id"
                             dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'tipo_papels_id')">
                             <template #append-inner>
@@ -76,6 +81,7 @@
                         </v-select>
 
                     </td>
+                    <td v-else>-</td>
 
 
 
@@ -88,7 +94,7 @@
                     </td>
                     <td>
                         <v-text-field v-model="item.precio" @input="onChangeItem(item)" dense
-                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'precio')"/>
+                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'precio')" :disabled="item.producto?.tipo_producto === 'simple'"/>
                     </td>
 
                     <td>
@@ -233,7 +239,8 @@ export default {
                 alto: '',
                 ancho: '',
                 fuelle: '',
-                tipo: ''
+                tipo: '',
+                producto: null,
             })
         },
 
@@ -245,26 +252,62 @@ export default {
 
             const producto = this.productos.find(p => p.id === item.productos_id)
 
-            if (producto) {
-                item.alto = producto.alto
-                item.ancho = producto.ancho
-                item.fuelle = producto.fuelle
-                item.tipo = producto.tipo
-            }
-
-            if (this.modo === 'editar') {
-                this.calcularFila(item)
-                return
-            }
-
-            if (!item.productos_id) {
+            if (!producto) {
                 item.promocion_aplicada = null
                 this.calcularFila(item)
                 return
             }
 
+            // Guardamos referencia completa
+            item.producto = producto
+
+            // ===============================
+            // DATOS GENERALES DEL PRODUCTO
+            // ===============================
+            item.alto = producto.alto
+            item.ancho = producto.ancho
+            item.fuelle = producto.fuelle
+            item.tipo = producto.tipo
+
+            // ===============================
+            // LÓGICA POR TIPO DE PRODUCTO
+            // ===============================
+            if (producto.tipo_producto === 'simple') {
+
+                // limpiar campos que no aplican
+                item.tipo_agarradors_id = null
+                item.tipo_papels_id = null
+                item.color_agarrador = null
+                item.detalle_impresion = null
+                item.nombre_logo = null
+
+                // precio automático
+                item.precio = producto.precio_base
+
+            } else {
+
+                // si cambia a personalizado, permitir edición
+                if (!item.precio || item.precio === producto.precio_base) {
+                    item.precio = 0
+                }
+            }
+
+            // ===============================
+            // MODO EDICIÓN
+            // ===============================
+            if (this.modo === 'editar') {
+                this.calcularFila(item)
+                return
+            }
+
+            // ===============================
+            // PROMOCIONES
+            // ===============================
             item.promocion_aplicada = await this.obtenerPromocion(item)
 
+            // ===============================
+            // RECALCULAR
+            // ===============================
             this.calcularFila(item)
         },
 

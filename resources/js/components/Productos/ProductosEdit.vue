@@ -1,5 +1,8 @@
 <template>
+    <v-container>
+        <h2 class="mb-4">Editar producto</h2>
     <ProductosForm v-if="producto" :producto="producto" @saved="onSaved" @cancel="$router.push('/productos')" />
+    </v-container>
 </template>
 
 <script>

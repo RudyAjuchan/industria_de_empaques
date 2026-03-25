@@ -58,6 +58,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                     });
                 });
             })
+            ->where('estado', 'emitida')
             ->orderByDesc('created_at')
             ->get();
     }

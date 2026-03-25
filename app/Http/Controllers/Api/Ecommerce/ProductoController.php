@@ -144,7 +144,9 @@ class ProductoController extends Controller
                         return [
                             'id' => $p->id,
                             'nombre' => $p->nombre,
-                            'imagen' => $p->imagen_principal_url
+                            'imagen' => $p->imagen_principal_url,
+                            'tipo_producto' => $p->tipo_producto,
+                            'precio_base' => $p->precio_base,
                         ];
                     })
                 ];

@@ -14,7 +14,7 @@
 
         <td width="48%">
             <strong>TIPO DE PAGO:</strong> {{ $venta->tipo_pago }}<br>
-            <strong>BANCO:</strong> {{ $venta->banco->nombre }}<br>
+            <strong>BANCO:</strong> {{ $venta->banco->nombre ?? '-' }}<br>
             <strong>NO. DEPÓSITO:</strong> {{ $venta->no_deposito ?? '-' }}<br>
             <strong>CANTIDAD DEPÓSITO:</strong> Q {{ number_format($venta->cantidad_deposito, 2) }}<br>
             <strong>PENDIENTE A PAGAR:</strong>

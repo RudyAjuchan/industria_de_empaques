@@ -127,6 +127,8 @@ export default {
                 { title: 'Fuelle', key: 'fuelle' },
                 { title: 'Tipo', key: 'tipo' },
                 { title: 'Página', key: 'paginas.nombre' },
+                { title: 'Tipo producto', key: 'tipo_producto' },
+                { title: 'Precio', key: 'precio_base' },
                 { title: 'Creado', key: 'created_at' },
                 { title: 'Actualizado', key: 'updated_at' },
                 { title: 'Acciones', key: 'actions', sortable: false }

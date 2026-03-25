@@ -19,6 +19,11 @@ return new class extends Migration
             $table->float('fuelle')->nullable();
             $table->string('tipo')->nullable();
             $table->foreignId('paginas_id')->constrained('paginas');
+            // tipo de producto
+            $table->enum('tipo_producto', ['personalizado', 'simple'])->default('personalizado');
+            // precio base para productos simples
+            $table->decimal('precio_base', 12, 2)->nullable();
+            $table->text('descripcion')->nullable();
             $table->integer('estado')->default(1);
             $table->timestamps();
         });

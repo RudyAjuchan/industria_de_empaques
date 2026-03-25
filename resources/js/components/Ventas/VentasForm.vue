@@ -98,9 +98,9 @@
                 <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact"
                     :error-messages="errors.descuento" />
                 <v-text-field label="Promociones" :model-value="form.promociones_monto" :readonly="!!form.promociones"
-                    :disabled="!!form.promociones" variant="outlined" density="compact" hide-details="auto"/>
+                    :disabled="!!form.promociones" variant="outlined" density="compact" />
 
-                    <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
+                <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
                     Promoción aplicada: {{ form.promociones.nombre }}
 
                     <span v-if="form.promociones.tipo === 'porcentaje'">

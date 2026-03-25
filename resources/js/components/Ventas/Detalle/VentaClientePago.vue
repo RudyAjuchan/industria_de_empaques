@@ -1,5 +1,5 @@
 <template>
-    <v-row class="mt-4">
+    <v-row class="mt-4 pa-4">
         <!-- CLIENTE -->
         <v-col cols="4">
             <strong>TIPO DE CLIENTE:</strong> Nuevo<br>

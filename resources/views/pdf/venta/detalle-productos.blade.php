@@ -32,7 +32,7 @@
             <th>ANCHO</th>
             <td>{{ $item->producto->ancho }}</td>
             <th>TIPO AGARRADOR</th>
-            <td>{{ $item->tipoAgarrador->nombre }}</td>
+            <td>{{ $item->tipoAgarrador->nombre ?? '-' }}</td>
             <th>CANTIDAD</th>
             <td>{{ $item->cantidad }}</td>
         </tr>
@@ -41,7 +41,7 @@
             <th>FUELLE</th>
             <td>{{ $item->producto->fuelle }}</td>
             <th>TIPO PAPEL</th>
-            <td>{{ $item->tipoPapel->nombre }}</td>
+            <td>{{ $item->tipoPapel->nombre ?? '-' }}</td>
             <th>TOTAL</th>
             <td>
                 @if (!empty($item->promocion_aplicada))

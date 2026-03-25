@@ -7,19 +7,38 @@
                         :error-messages="errors.nombre" />
                 </v-col>
 
-                <v-col cols="12" md="4">
-                    <v-text-field v-model="form.alto" variant="outlined" density="compact" label="Alto" type="number"
-                        :error-messages="errors.alto" />
+                <v-col cols="12">
+                    <v-select v-model="form.tipo_producto" :items="[
+                        { title: 'Personalizado', value: 'personalizado' },
+                        { title: 'Simple', value: 'simple' }
+                    ]" label="Tipo de producto" variant="outlined" density="compact" />
                 </v-col>
 
-                <v-col cols="12" md="4">
-                    <v-text-field v-model="form.ancho" variant="outlined" density="compact" label="Ancho" type="number"
-                        :error-messages="errors.ancho" />
+                <template v-if="form.tipo_producto === 'personalizado'">
+                    <v-col cols="12" md="4">
+                        <v-text-field v-model="form.alto" variant="outlined" density="compact" label="Alto" type="number"
+                            :error-messages="errors.alto" />
+                    </v-col>
+    
+                    <v-col cols="12" md="4">
+                        <v-text-field v-model="form.ancho" variant="outlined" density="compact" label="Ancho" type="number"
+                            :error-messages="errors.ancho" />
+                    </v-col>
+    
+                    <v-col cols="12" md="4">
+                        <v-text-field v-model="form.fuelle" variant="outlined" density="compact" label="Fuelle"
+                            type="number" :error-messages="errors.fuelle" />
+                    </v-col>
+                </template>
+
+                <v-col cols="12" v-if="form.tipo_producto === 'simple'">
+                    <v-text-field v-model="form.precio_base" label="Precio" type="number" step="0.01" lang="es-GT"
+                        inputmode="decimal" variant="outlined" density="compact" />
                 </v-col>
 
-                <v-col cols="12" md="4">
-                    <v-text-field v-model="form.fuelle" variant="outlined" density="compact" label="Fuelle"
-                        type="number" :error-messages="errors.fuelle" />
+                <v-col cols="12">
+                    <v-textarea v-model="form.descripcion" rows="2" variant="outlined" density="compact" :error-messages="errors.descripcion"
+                        label="Descripción" />
                 </v-col>
 
                 <v-col cols="12">
@@ -115,6 +134,10 @@ export default {
                 fuelle: '',
                 tipo: '',
                 paginas_id: null,
+                // NUEVOS
+                tipo_producto: 'personalizado',
+                precio_base: null,
+                descripcion: '',
             },
             errors: {},
             paginas: [],
@@ -154,10 +177,15 @@ export default {
             const formData = new FormData()
 
             Object.entries(this.form).forEach(([key, value]) => {
-                if (value !== null) {
+
+                if (key === 'precio_base' && value !== null) {
+                    value = value.toString().replace(',', '.')
+                }
+
+                if (value !== null && value !== '') {
                     formData.append(key, value)
                 }
-            })
+})
 
             this.files.forEach((item, index) => {
                 if (item.getMetadata?.('id')) {
@@ -253,6 +281,10 @@ export default {
                     fuelle: producto.fuelle,
                     tipo: producto.tipo,
                     paginas_id: producto.paginas_id,
+
+                    tipo_producto: producto.tipo_producto || 'personalizado',
+                    precio_base: producto.precio_base,
+                    descripcion: producto.descripcion,
                 }
 
                 this.files = producto.imagenes.map(img => ({

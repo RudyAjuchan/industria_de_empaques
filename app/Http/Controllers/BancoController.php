@@ -6,6 +6,7 @@ use App\Exports\BancoExport;
 use App\Models\Banco;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BancoController extends Controller
@@ -20,7 +21,7 @@ class BancoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:bancos,nombre',
         ]);
 
         return Banco::create([
@@ -31,7 +32,12 @@ class BancoController extends Controller
     public function update(Request $request, Banco $banco)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => [
+            'required',
+            'string',
+                'max:255',
+                Rule::unique('bancos', 'nombre')->ignore($banco->id),
+            ],
         ]);
 
         $banco->update([

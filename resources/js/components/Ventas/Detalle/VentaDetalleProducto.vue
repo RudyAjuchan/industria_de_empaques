@@ -108,6 +108,7 @@
 </template>
 
 <script>
+import { toast } from 'vue3-toastify'
 export default {
     name: 'VentaDetalleProductos',
     props: {
@@ -118,15 +119,34 @@ export default {
     },
     methods: {
         getLogoUrl(path) {
-            return `${import.meta.env.VITE_API_URL}/storage/${path}`
+            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
         },
-        descargarLogo(path) {
-            const url = this.getLogoUrl(path)
+        async descargarLogo(path) {
+            try {
+                const url = `${this.getLogoUrl(path)}?t=${new Date().getTime()}`;
 
-            const link = document.createElement('a')
-            link.href = url
-            link.download = path.split('/').pop()
-            link.click()
+                // 1. Obtener la imagen como un objeto Blob
+                const response = await fetch(url)
+                const blob = await response.blob()
+
+                // 2. Crear una URL local para ese Blob
+                const blobUrl = window.URL.createObjectURL(blob)
+
+                // 3. Crear el link de descarga
+                const link = document.createElement('a')
+                link.href = blobUrl
+                link.download = path.split('/').pop() // El nombre del archivo
+
+                document.body.appendChild(link)
+                link.click()
+
+                // 4. Limpieza
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(blobUrl)
+            } catch (error) {
+                console.error('Error al descargar el logo:', error)
+                toast.error('No se pudo descargar el archivo')
+            }
         }
     }
 }

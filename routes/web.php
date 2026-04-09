@@ -49,7 +49,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/usuarios', [UsuarioController::class, 'index'])->middleware('permission:usuario.ver');
     Route::post('/usuarios', [UsuarioController::class, 'store'])->middleware('permission:usuario.crear');
     Route::put('/usuarios/{user}', [UsuarioController::class, 'update'])->middleware('permission:usuario.editar');
-    Route::delete('/usuarios/{user}', [UsuarioController::class, 'destroy'])->middleware('permission:usuario.eliminar');
+    Route::delete('/usuarios/{user}', [UsuarioController::class, 'destroy'])->middleware('permission:usuario.borrar');
     Route::get('/usuario/roles', [UsuarioController::class, 'roles'])->middleware('permission:usuario.ver');
     Route::get('/usuarios/export/pdf', [UsuarioController::class, 'exportPdf'])
     ->middleware(['auth', 'permission:usuario.reporte']);
@@ -187,6 +187,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
         ->middleware('permission:venta.crear');
     Route::post('/product/search', [ProductosController::class, 'search'])
         ->middleware('permission:venta.crear');
+
+    Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:venta.reporte');
+    Route::get('/ventas/contabilidad', [VentaController::class, 'contabilidad'])->middleware('permission:venta.reporte');
 });
 
 /* RUTAS DE TRACKING DE PRODUCCIÓN */
@@ -269,9 +272,18 @@ Route::prefix('api')->group(function () {
     Route::post('/cliente/login', [ClienteAuthController::class, 'login']);
     Route::post('/cliente/logout', [ClienteAuthController::class, 'logout']);
     Route::post('/cliente/register', [ClienteAuthController::class, 'register']);
+    Route::post('/contacto', [ClienteAuthController::class, 'enviarContacto']);
+
+    Route::put('/cliente/update', [ClienteAuthController::class, 'update'])
+    ->middleware('auth:cliente');
 
     Route::get('/cliente/me', function () {
-        return response()->json(auth('cliente')->user());
+        /** @var \App\Models\Cliente $user */
+        $user = auth('cliente')->user();
+
+        $user->load('municipio.departamento', 'telefonos');
+
+        return response()->json($user);
     })->middleware('auth:cliente');
 
     Route::get('/departamentos', [UbicacionController::class, 'departamentos']);

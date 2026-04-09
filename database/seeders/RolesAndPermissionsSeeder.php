@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -24,7 +24,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'rol.ver',
             'rol.crear',
             'rol.editar',
-            'rol.eliminar',
+            'rol.borrar',
             'rol.permisos',
             'rol.reporte',
             /* PERMISOS PARA TIPO DE PAPELES */

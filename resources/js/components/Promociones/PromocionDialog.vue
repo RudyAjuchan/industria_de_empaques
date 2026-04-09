@@ -11,7 +11,7 @@
             <v-card-text>
 
                 <!-- NOMBRE -->
-                <v-text-field v-model="form.nombre" label="Nombre" density="compact" variant="outlined" />
+                <v-text-field v-model="form.nombre" label="Nombre" density="compact" variant="outlined" :error-messages="errors.nombre"/>
 
                 <!-- TIPO -->
                 <v-select v-model="form.tipo" :items="tipos" label="Tipo" density="compact" variant="outlined" />
@@ -26,12 +26,12 @@
                 <v-row>
                     <v-col>
                         <v-text-field v-model="form.fecha_inicio" type="date" label="Fecha inicio" density="compact"
-                            variant="outlined" />
+                            variant="outlined" :error-messages="errors.fecha_inicio" />
                     </v-col>
 
                     <v-col>
                         <v-text-field v-model="form.fecha_fin" type="date" label="Fecha fin" density="compact"
-                            variant="outlined" />
+                            variant="outlined" :error-messages="errors.fecha_fin"/>
                     </v-col>
                 </v-row>
 
@@ -42,10 +42,10 @@
                 <!-- PRODUCTOS -->
                 <v-autocomplete v-if="form.aplica_a === 'producto'" v-model="form.productos" :items="productos"
                     item-title="nombre" item-value="id" label="Productos" multiple chips density="compact"
-                    variant="outlined" />
+                    variant="outlined" :error-messages="errors.productos"/>
 
                 <!-- ACTIVO -->
-                <v-switch v-model="form.activo" label="Activo" color="green" inset />
+                <!-- <v-switch v-model="form.activo" label="Activo" color="green" inset /> -->
 
             </v-card-text>
 
@@ -88,7 +88,8 @@ export default {
             tipos: ['porcentaje', 'monto'],
             aplicaOptions: ['producto', 'carrito'],
 
-            productos: []
+            productos: [],
+            errors: {},
         }
     },
 
@@ -143,7 +144,8 @@ export default {
                 fecha_fin: '',
                 aplica_a: 'producto',
                 productos: [],
-                activo: true
+                activo: true,
+                errors: {},
             }
         },
 
@@ -189,7 +191,7 @@ export default {
                 this.close()
 
             } catch (err) {
-                console.error(err)
+                this.errors = err.response?.data?.errors || {}
             } finally {
                 this.loading = false
             }

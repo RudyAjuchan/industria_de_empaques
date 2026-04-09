@@ -22,7 +22,7 @@ class ProductosController extends Controller
         $sortBy = $request->input('sort_by', 'id');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Producto::with(['paginas']);
+        $query = Producto::with(['paginas'])->where('estado', 1);
 
         if ($search) {
             $query->where('nombre', 'like', "%{$search}%");
@@ -59,7 +59,7 @@ class ProductosController extends Controller
             'alto' => 'nullable|numeric',
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
-            'tipo' => 'nullable|string',
+            'tipo' => 'required|string',
             'paginas_id' => 'required|exists:paginas,id',
 
             'tipo_producto' => 'required|in:personalizado,simple',
@@ -70,39 +70,28 @@ class ProductosController extends Controller
         ]);
 
         DB::beginTransaction();
-
         try {
+            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion']);
 
-            $data = $request->only([
-                'nombre',
-                'alto',
-                'ancho',
-                'fuelle',
-                'tipo',
-                'paginas_id',
-                'tipo_producto',
-                'precio_base',
-                'descripcion'
-            ]);
-
-            // lógica clave
             if ($data['tipo_producto'] === 'simple') {
-                $data['alto'] = null;
-                $data['ancho'] = null;
-                $data['fuelle'] = null;
+                $data['alto'] = $data['ancho'] = $data['fuelle'] = null;
             } else {
                 $data['precio_base'] = null;
             }
 
-            // USAR $data
             $producto = Producto::create($data);
 
-            if ($request->imagenes_ordenadas) {
+            if ($request->has('imagenes_ordenadas')) {
                 foreach ($request->imagenes_ordenadas as $index => $imgData) {
+                    // Forma correcta de obtener el archivo en un array de inputs
+                    $file = $request->file("imagenes_ordenadas.{$index}.file");
 
-                    if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
+                    if ($imgData['tipo'] === 'nueva' && $file) {
+                        // Quitamos 'public' porque el bucket es privado
+                        $path = Storage::disk('s3')->putFile('productos', $file);
+
                         $producto->imagenes()->create([
-                            'path' => $imgData['file']->store('productos', 'public'),
+                            'path' => $path,
                             'orden' => $index,
                             'is_main' => ($index == $request->main_index),
                         ]);
@@ -111,17 +100,12 @@ class ProductosController extends Controller
             }
 
             DB::commit();
-
-            return response()->json(
-                $producto->load('imagenes'),
-                201
-            );
+            return response()->json($producto->load('imagenes'), 201);
         } catch (\Throwable $e) {
             DB::rollBack();
-
             return response()->json([
                 'message' => 'Error al crear producto',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage(), // Esto te dirá exactamente qué falla
             ], 500);
         }
     }
@@ -143,74 +127,90 @@ class ProductosController extends Controller
             'fuelle' => 'nullable|numeric',
             'tipo' => 'nullable|string',
             'paginas_id' => 'required|exists:paginas,id',
-
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
             'descripcion' => 'nullable|string',
-
             'main_index' => 'required|integer',
         ]);
 
-        $data = $request->only([
-            'nombre',
-            'alto',
-            'ancho',
-            'fuelle',
-            'tipo',
-            'paginas_id',
-            'tipo_producto',
-            'precio_base',
-            'descripcion'
-        ]);
+        DB::beginTransaction();
+        try {
+            $data = $request->only([
+                'nombre',
+                'alto',
+                'ancho',
+                'fuelle',
+                'tipo',
+                'paginas_id',
+                'tipo_producto',
+                'precio_base',
+                'descripcion'
+            ]);
 
-        // lógica
-        if ($data['tipo_producto'] === 'simple') {
-            $data['alto'] = null;
-            $data['ancho'] = null;
-            $data['fuelle'] = null;
-        } else {
-            $data['precio_base'] = null;
-        }
+            // Lógica de tipo de producto
+            if ($data['tipo_producto'] === 'simple') {
+                $data['alto'] = $data['ancho'] = $data['fuelle'] = null;
+            } else {
+                $data['precio_base'] = null;
+            }
 
-        // SOLO UNA VEZ
-        $producto->update($data);
+            $producto->update($data);
 
-        // ================= IMÁGENES =================
+            // ================= IMÁGENES =================
+            if ($request->has('imagenes_ordenadas')) {
 
-        if ($request->imagenes_ordenadas) {
+                // 1. Identificar y eliminar las que ya no están en el request
+                $idsExistentes = collect($request->imagenes_ordenadas)
+                    ->where('tipo', 'existente')
+                    ->pluck('id')
+                    ->filter()
+                    ->toArray();
 
-            $idsExistentes = collect($request->imagenes_ordenadas)
-                ->where('tipo', 'existente')
-                ->pluck('id')
-                ->toArray();
+                $imagenesABorrar = $producto->imagenes()->whereNotIn('id', $idsExistentes)->get();
 
-            $producto->imagenes()
-                ->whereNotIn('id', $idsExistentes)
-                ->each(function ($img) {
-                    Storage::disk('public')->delete($img->path);
+                foreach ($imagenesABorrar as $img) {
+                    Storage::disk('s3')->delete($img->path);
                     $img->delete();
-                });
-
-            foreach ($request->imagenes_ordenadas as $index => $imgData) {
-
-                if ($imgData['tipo'] === 'existente') {
-                    ProductoImagen::where('id', $imgData['id'])->update([
-                        'orden' => $index,
-                        'is_main' => ($index == $request->main_index),
-                    ]);
                 }
 
-                if ($imgData['tipo'] === 'nueva' && isset($imgData['file'])) {
-                    $producto->imagenes()->create([
-                        'path' => $imgData['file']->store('productos', 'public'),
-                        'orden' => $index,
-                        'is_main' => ($index == $request->main_index),
-                    ]);
+                // 2. Procesar el orden y las nuevas subidas
+                foreach ($request->imagenes_ordenadas as $index => $imgData) {
+
+                    $esMain = ($index == $request->main_index);
+
+                    if ($imgData['tipo'] === 'existente') {
+                        ProductoImagen::where('id', $imgData['id'])->update([
+                            'orden' => $index,
+                            'is_main' => $esMain,
+                        ]);
+                    }
+
+                    if ($imgData['tipo'] === 'nueva') {
+                        // Acceso correcto al archivo dentro del array
+                        $file = $request->file("imagenes_ordenadas.{$index}.file");
+
+                        if ($file) {
+                            $path = Storage::disk('s3')->putFile('productos', $file);
+
+                            $producto->imagenes()->create([
+                                'path' => $path,
+                                'orden' => $index,
+                                'is_main' => $esMain,
+                            ]);
+                        }
+                    }
                 }
             }
-        }
 
-        return response()->json(['ok' => true]);
+            DB::commit();
+            return response()->json(['ok' => true]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar producto',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 
@@ -268,7 +268,8 @@ class ProductosController extends Controller
         );
     }
 
-    public function search(Request $request){
+    public function search(Request $request)
+    {
         return Producto::where('estado', 1)->where('paginas_id', $request->id)->get();
     }
 }

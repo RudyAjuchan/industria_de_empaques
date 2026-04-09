@@ -43,6 +43,9 @@ const editarCotizacionComponent = () => import('../components/Ventas/VentasForm.
 /* RUTAS PARA PROMOCIONES */
 const promocionesComponent = () => import('../components/Promociones/PromocionesIndex.vue');
 
+/* RUTAS PARA VENTAS CONTABILIDAD */
+const ventasContabilidadComponent = () => import('../components/Contabilidad/ContabilidadIndex.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -243,6 +246,14 @@ const routes = [
         path: '/promociones',
         name: 'promociones.index',
         component: promocionesComponent,
+        meta: { 
+            permission: 'promocion.ver' 
+        }
+    },
+    {
+        path: '/ventas_contabilidad',
+        name: 'ContabilidadVue',
+        component: ventasContabilidadComponent,
         meta: { 
             permission: 'promocion.ver' 
         }

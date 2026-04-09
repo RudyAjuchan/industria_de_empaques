@@ -112,10 +112,10 @@
                 <v-switch v-model="form.active" inset color="success" label="Activo" class="mt-2" />
                 <v-row>
                     <v-col cols="12" class="d-flex ga-2 mt-4 justify-center">
-                        <v-btn variant="tonal" @click="drawer = false">
+                        <v-btn variant="tonal" color="red" @click="drawer = false">
                             Cancelar
                         </v-btn>
-                        <v-btn :loading="saving" color="primary" type="submit">
+                        <v-btn :loading="saving" color="green" type="submit" variant="tonal">
                             Guardar
                         </v-btn>
                     </v-col>
@@ -162,7 +162,7 @@
 </template>
 
 <script>
-
+import { toast } from 'vue3-toastify'
 export default {
     name: 'UsuariosPage',
 
@@ -259,7 +259,7 @@ export default {
             this.form.name = item.name
             this.form.email = item.email
             //console.log(item);
-            this.form.role = item.roles[0].id ? item.roles[0].id : null
+            this.form.role = item.roles[0]?.id ? item.roles[0].id : null
             this.form.active = item.status === 'active'
             this.drawer = true
         },
@@ -304,13 +304,16 @@ export default {
 
                 if (this.form.id) {
                     await axios.put(`/usuarios/${this.form.id}`, payload)
+                    toast.success('Usuario actualizado')
                 } else {
                     await axios.post('/usuarios', payload)
+                    toast.success('Usuario creado')
                 }
 
                 this.drawer = false
                 await this.fetchUsers()
             } catch (err) {
+                toast.error('Hubo un inconveniente al guardar')
                 const e = err?.response?.data?.errors
                 if (e) {
                     this.errors.name = e.name?.[0] ?? null
@@ -333,6 +336,7 @@ export default {
                 await axios.delete(`/usuarios/${this.toDelete.id}`)
                 this.deleteDialog = false
                 this.toDelete = null
+                toast.success('Usuario eliminado')
                 await this.fetchUsers()
             } catch (err) {
                 this.deleteDialog = false;

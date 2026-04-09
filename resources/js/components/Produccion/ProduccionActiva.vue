@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <!-- <v-menu>
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -30,7 +30,7 @@
                     <v-btn color="primary" prepend-icon="mdi-plus" variant="tonal" :loading="loading" @click="$router.push('/venta/create')"
                         v-if="can('produccion.activa')">
                         Nuevo
-                    </v-btn>
+                    </v-btn> -->
                 </v-col>
             </v-row>
         </div>

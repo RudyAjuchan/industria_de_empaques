@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\VentaExport;
+use App\Exports\VentasContabilidadExport;
 use App\Http\Requests\StoreVentaRequest;
 use App\Mail\ConfirmarVentaMail;
 use App\Models\Cliente;
@@ -503,6 +504,48 @@ class VentaController extends Controller
             return response()->json([
                 'message' => 'Venta actualizada correctamente'
             ]);
+        });
+    }
+
+    public function exportContabilidad(Request $request)
+    {
+        return Excel::download(
+            new VentasContabilidadExport(
+                $request->fecha_inicio,
+                $request->fecha_fin
+            ),
+            'ventas_contabilidad.xlsx'
+        );
+    }
+
+    public function contabilidad(Request $request)
+    {
+        $query = DetalleVenta::with([
+            'venta.cliente',
+            'producto'
+        ])
+            ->whereHas('venta', function ($q) use ($request) {
+
+                $q->where('estado', 'emitida');
+
+                if ($request->fecha_inicio) {
+                    $q->whereDate('created_at', '>=', $request->fecha_inicio);
+                }
+
+                if ($request->fecha_fin) {
+                    $q->whereDate('created_at', '<=', $request->fecha_fin);
+                }
+            });
+
+        return $query->get()->map(function ($d) {
+            return [
+                'fecha' => $d->venta->created_at->format('Y-m-d'),
+                'cliente' => $d->venta->cliente->nombre,
+                'producto' => $d->producto->nombre,
+                'cantidad' => $d->cantidad,
+                'total' => $d->total,
+                'estado' => $d->venta->estado,
+            ];
         });
     }
 }

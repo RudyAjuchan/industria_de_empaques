@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Produccion;
 
+use App\Exports\TrackingVentaExport;
 use App\Http\Controllers\Controller;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 class HistorialProduccionController extends Controller
 {
@@ -57,5 +59,22 @@ class HistorialProduccionController extends Controller
         ])
             ->setPaper('letter', 'landscape')
             ->stream("tracking-{$venta->numero_completo}.pdf");
+    }
+
+    public function exportTrackingExcel(Venta $venta)
+    {
+        $venta->load([
+            'detalles.producto',
+            'detalles.historialEstados.estadoProduccion',
+            'detalles.historialEstados.procesoEstado',
+            'detalles.historialEstados.usuario',
+        ]);
+
+        //return $venta;
+
+        return Excel::download(
+            new TrackingVentaExport($venta),
+            "tracking-{$venta->numero_completo}.xlsx"
+        );
     }
 }

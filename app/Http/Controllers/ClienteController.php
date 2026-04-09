@@ -73,10 +73,10 @@ class ClienteController extends Controller
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
 
-            'emails' => 'required|array',
-            'emails.*' => 'required|email|max:255',
+            'emails' => 'nullable|array',
+            'emails.*' => 'nullable|email|max:255',
 
-            'telefonos' => 'nullable|array',
+            'telefonos' => 'required|array',
             'telefonos.*.telefono_pais' => 'nullable|string',
             'telefonos.*.telefono_pais_nombre' => 'nullable|string',
             'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
@@ -141,7 +141,7 @@ class ClienteController extends Controller
             'emails' => 'nullable|array',
             'emails.*' => 'required|email|max:255',
 
-            'telefonos' => 'nullable|array',
+            'telefonos' => 'required|array',
             'telefonos.*.telefono_pais' => 'nullable|string',
             'telefonos.*.telefono_pais_nombre' => 'nullable|string',
             'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',

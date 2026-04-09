@@ -6,6 +6,7 @@ use App\Exports\PaginaExport;
 use App\Models\Pagina;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PaginaController extends Controller
@@ -20,7 +21,7 @@ class PaginaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:paginas,nombre',
         ]);
 
         return Pagina::create([
@@ -31,7 +32,12 @@ class PaginaController extends Controller
     public function update(Request $request, Pagina $pagina)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('paginas', 'nombre')->ignore($pagina->id),
+            ],
         ]);
 
         $pagina->update([

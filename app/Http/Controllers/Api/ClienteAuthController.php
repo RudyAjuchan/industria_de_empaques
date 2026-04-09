@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ContactoMail;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class ClienteAuthController extends Controller
 {
@@ -18,7 +20,11 @@ class ClienteAuthController extends Controller
             'password' => 'required'
         ]);
 
-        if (!Auth::guard('cliente')->attempt($credentials)) {
+        if (!Auth::guard('cliente')->attempt([
+            'email' => $request->email,
+            'password' => $request->password,
+            'estado' => 1,
+        ])) {
             return response()->json([
                 'message' => 'Credenciales incorrectas'
             ], 401);
@@ -52,11 +58,10 @@ class ClienteAuthController extends Controller
 
         return DB::transaction(function () use ($data, $request) {
 
-            // BUSCAR CLIENTE
             $cliente = Cliente::where('email', $data['email'])->first();
 
             // ===============================
-            // SI NO EXISTE, CREAR
+            // NO EXISTE → CREAR
             // ===============================
             if (!$cliente) {
 
@@ -71,22 +76,54 @@ class ClienteAuthController extends Controller
                     'estado_pais' => $data['estado_pais'] ?? null,
                     'ciudad_pais' => $data['ciudad_pais'] ?? null,
                     'direccion' => $data['direccion'],
+                    'estado' => 1,
                 ]);
 
-                // teléfono
                 $cliente->telefonos()->create([
-                    'telefono_codigo_pais' => $data['telefono_codigo_pais'],
-                    'telefono_numero' => $data['telefono_numero'],
+                    'codigo_pais' => $data['telefono_codigo_pais'],
+                    'numero' => $data['telefono_numero'],
                 ]);
 
-                // email
                 $cliente->emails()->create([
                     'email' => $data['email']
                 ]);
             }
 
             // ===============================
-            // SI EXISTE SIN PASSWORD → COMPLETAR
+            // EXISTE PERO INACTIVO → REACTIVAR
+            // ===============================
+            elseif ($cliente->estado == 0) {
+
+                $cliente->update([
+                    'nombre' => $data['nombre'],
+                    'genero' => $data['genero'],
+                    'password' => Hash::make($data['password']),
+
+                    'pais' => $data['pais'],
+                    'municipios_id' => $data['municipios_id'] ?? null,
+                    'estado_pais' => $data['estado_pais'] ?? null,
+                    'ciudad_pais' => $data['ciudad_pais'] ?? null,
+                    'direccion' => $data['direccion'],
+                    'estado' => 1, // 🔥 REACTIVAR
+                ]);
+
+                // actualizar o crear teléfono
+                $cliente->telefonos()->updateOrCreate(
+                    [], // primer registro
+                    [
+                        'codigo_pais' => $data['telefono_codigo_pais'],
+                        'numero' => $data['telefono_numero'],
+                    ]
+                );
+
+                // asegurar email
+                $cliente->emails()->firstOrCreate([
+                    'email' => $data['email']
+                ]);
+            }
+
+            // ===============================
+            // EXISTE SIN PASSWORD → COMPLETAR
             // ===============================
             elseif (!$cliente->password) {
 
@@ -100,25 +137,24 @@ class ClienteAuthController extends Controller
                     'estado_pais' => $data['estado_pais'] ?? null,
                     'ciudad_pais' => $data['ciudad_pais'] ?? null,
                     'direccion' => $data['direccion'],
+                    'estado' => 1,
                 ]);
 
-                // actualizar o crear teléfono
                 $cliente->telefonos()->updateOrCreate(
                     [],
                     [
-                        'telefono_codigo_pais' => $data['telefono_codigo_pais'],
-                        'telefono_numero' => $data['telefono_numero'],
+                        'codigo_pais' => $data['telefono_codigo_pais'],
+                        'numero' => $data['telefono_numero'],
                     ]
                 );
 
-                // asegurar email en tabla relacionada
                 $cliente->emails()->firstOrCreate([
                     'email' => $data['email']
                 ]);
             }
 
             // ===============================
-            // YA TIENE PASSWORD, ERROR
+            // YA EXISTE ACTIVO → ERROR
             // ===============================
             else {
                 return response()->json([
@@ -160,5 +196,61 @@ class ClienteAuthController extends Controller
         return response()->json([
             'message' => 'Logout exitoso'
         ]);
+    }
+
+    public function update(Request $request)
+    {
+        $user = auth('cliente')->user();
+
+        // UPDATE CLIENTE
+        /** @var \App\Models\Cliente $user */
+        $user->update($request->only([
+            'nombre',
+            'genero',
+            'email',
+            'pais',
+            'municipios_id',
+            'estado_pais',
+            'ciudad_pais',
+            'direccion',
+            'nit',
+            'dpi',
+        ]));
+
+        // TELÉFONO
+        /** @var \App\Models\Cliente $user */
+        if ($request->telefono_numero) {
+            $telefono = $user->telefonos()->first();
+            if ($telefono) {
+                $telefono->update([
+                    'telefono_codigo_pais' => $request->telefono_codigo_pais,
+                    'telefono_numero' => $request->telefono_numero,
+                ]);
+            } else {
+                $user->telefonos()->create([
+                    'telefono_codigo_pais' => $request->telefono_codigo_pais,
+                    'telefono_numero' => $request->telefono_numero,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Perfil actualizado',
+            'user' => $user->load('municipio.departamento', 'telefonos')
+        ]);
+    }
+
+    public function enviarContacto(Request $request)
+    {
+        $data = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email',
+            'mensaje' => 'required|string',
+        ]);
+
+        // Ejemplo: enviar correo
+        Mail::to('rudyajuchansec44@gmail.com')->send(new ContactoMail($data));
+
+        return response()->json(['message' => 'Mensaje enviado']);
     }
 }

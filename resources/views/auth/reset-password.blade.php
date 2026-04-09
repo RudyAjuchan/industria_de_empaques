@@ -1,39 +1,109 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('password.store') }}">
-        @csrf
+<!DOCTYPE html>
+<html lang="es">
 
-        <!-- Password Reset Token -->
-        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer contraseña</title>
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="font-body min-h-screen bg-gray-100">
+
+    <!-- CONTENEDOR -->
+    <div class="min-h-screen flex items-center justify-center bg-cover bg-center md:bg-[url('/img/Curvas.svg')] bg-none">
+
+        <!-- CARD -->
+        <div class="w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-8">
+
+            <!-- TITULO -->
+            <h1 class="text-3xl font-title text-primary text-center mb-2">
+                Restablecer contraseña
+            </h1>
+
+            <!-- LOGO -->
+            <div class="flex justify-center mb-2">
+                <img src="/img/jeple_logo.png" class="h-20 object-contain">
+            </div>
+
+            <!-- TEXTO -->
+            <p class="text-center text-gray-600 mb-6 text-sm">
+                Ingresa tu nueva contraseña para continuar.
+            </p>
+
+            <!-- FORM -->
+            <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
+                @csrf
+
+                <!-- TOKEN -->
+                <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
+                <!-- EMAIL -->
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Correo electrónico</label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        value="{{ old('email', $request->email) }}"
+                        required autofocus
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+
+                    @error('email')
+                        <p class="text-sm text-red-500 mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- PASSWORD -->
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Nueva contraseña</label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        required
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+
+                    @error('password')
+                        <p class="text-sm text-red-500 mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- CONFIRM PASSWORD -->
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Confirmar contraseña</label>
+                    <input 
+                        type="password" 
+                        name="password_confirmation" 
+                        required
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+
+                    @error('password_confirmation')
+                        <p class="text-sm text-red-500 mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- BOTÓN -->
+                <button type="submit"
+                    class="w-full text-gray-600 py-2 rounded-lg transition-all font-semibold shadow-md bg-gradient-to-r from-teal-200 to-lime-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200">
+                    Restablecer contraseña
+                </button>
+
+                <!-- VOLVER -->
+                <div class="text-center text-sm mt-3">
+                    <a href="{{ route('login') }}" class="text-primary hover:underline">
+                        ← Volver al login
+                    </a>
+                </div>
+
+            </form>
         </div>
+    </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+</body>
+</html>

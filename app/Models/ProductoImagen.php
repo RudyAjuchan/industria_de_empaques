@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProductoImagen extends Model
 {
@@ -15,8 +16,17 @@ class ProductoImagen extends Model
         'orden',
     ];
 
+    // IMPORTANTE
+    protected $appends = ['url'];
+
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'productos_id');
+    }
+
+    // ESTE ES EL CAMBIO CLAVE
+    public function getUrlAttribute()
+    {
+        return Storage::disk('s3')->url($this->path);
     }
 }

@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\UsersExport;
@@ -48,7 +48,7 @@ class UsuarioController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['nullable', 'exists:roles,id'],
+            'role' => ['required', 'exists:roles,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -79,7 +79,7 @@ class UsuarioController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:8'],
-            'role' => ['nullable', 'exists:roles,id'],
+            'role' => ['required', 'exists:roles,id'],
             'active' => ['nullable', 'boolean'],
         ]);
 

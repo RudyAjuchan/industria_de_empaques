@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\{
     FromCollection,

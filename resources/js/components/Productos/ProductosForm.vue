@@ -11,7 +11,7 @@
                     <v-select v-model="form.tipo_producto" :items="[
                         { title: 'Personalizado', value: 'personalizado' },
                         { title: 'Simple', value: 'simple' }
-                    ]" label="Tipo de producto" variant="outlined" density="compact" />
+                    ]" label="Tipo de producto" variant="outlined" density="compact" :error-messages="errors.tipo_producto" />
                 </v-col>
 
                 <template v-if="form.tipo_producto === 'personalizado'">
@@ -32,7 +32,7 @@
                 </template>
 
                 <v-col cols="12" v-if="form.tipo_producto === 'simple'">
-                    <v-text-field v-model="form.precio_base" label="Precio" type="number" step="0.01" lang="es-GT"
+                    <v-text-field v-model="form.precio_base" label="Precio unidad" type="number" step="0.01" lang="es-GT"
                         inputmode="decimal" variant="outlined" density="compact" />
                 </v-col>
 
@@ -185,7 +185,7 @@ export default {
                 if (value !== null && value !== '') {
                     formData.append(key, value)
                 }
-})
+            })
 
             this.files.forEach((item, index) => {
                 if (item.getMetadata?.('id')) {
@@ -216,6 +216,7 @@ export default {
                 this.$emit('saved', response.data)
 
             } catch (err) {
+                toast.error('Hubo un inconveniente al realizar la petición')
                 this.errors = err.response?.data?.errors || {}
             } finally {
                 this.loading = false
@@ -288,7 +289,7 @@ export default {
                 }
 
                 this.files = producto.imagenes.map(img => ({
-                    source: `/storage/${img.path}`,
+                    source: img.url,
                     options: {
                         type: 'local',
                         metadata: {

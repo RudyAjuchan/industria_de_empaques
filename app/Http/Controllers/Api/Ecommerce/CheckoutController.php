@@ -158,11 +158,14 @@ class CheckoutController extends Controller
     public function uploadLogo(Request $request)
     {
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('logos', 'public');
+            // 1. Cambiamos el disco a 's3' 
+            // 2. Eliminamos el parámetro 'public' (ya que el bucket es privado)
+            $path = $request->file('logo')->store('logos', 's3');
 
             return response()->json([
                 'path' => $path,
-                'url' => asset('storage/' . $path)
+                // 3. La URL ahora debe ser de tu CloudFront
+                'url' => 'https://d2r0bm90jl3wk0.cloudfront.net/' . $path
             ]);
         }
 
@@ -173,8 +176,9 @@ class CheckoutController extends Controller
     {
         $path = $request->path;
 
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        // Cambiamos el disco a 's3' para que busque y elimine allá
+        if ($path && Storage::disk('s3')->exists($path)) {
+            Storage::disk('s3')->delete($path);
         }
 
         return response()->json(['message' => 'Eliminado']);

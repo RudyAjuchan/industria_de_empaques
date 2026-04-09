@@ -4,10 +4,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Sidebar</title>
+    <title>Jeple Guatemala</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite('resources/js/app.js')
+    <link rel="icon" type="image/x-icon" href="{{ asset('img/jeple_logo.png') }}">
 </head>
 
 <body>
@@ -150,6 +151,14 @@
                             <i class="mdi mdi-cart-percent"></i>
                         </div>
                         <div class="label">Promociones</div>
+                    </a>
+                @endcan
+                @can('venta.reporte')
+                    <a href="#" data-route="/ventas_contabilidad" data-title="Ventas Contabilidad">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-calculator"></i>
+                        </div>
+                        <div class="label">Ventas Contabilidad</div>
                     </a>
                 @endcan
             </nav>

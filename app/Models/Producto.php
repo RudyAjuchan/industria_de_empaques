@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Producto extends Model
 {
@@ -37,7 +38,7 @@ class Producto extends Model
     public function getImagenPrincipalUrlAttribute()
     {
         return $this->imagenPrincipal
-            ? asset('storage/' . $this->imagenPrincipal->path)
+            ? Storage::disk('s3')->url($this->imagenPrincipal->path)
             : null;
     }
 

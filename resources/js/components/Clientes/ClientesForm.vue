@@ -119,7 +119,7 @@
 
                     <v-col cols="8">
                         <v-text-field variant="outlined" density="compact" v-model="form.telefono_numero"
-                            label="Teléfono" append-inner-icon="mdi-plus" @click:append-inner="addTelefono" />
+                            label="Teléfono" append-inner-icon="mdi-plus" @click:append-inner="addTelefono" :error-messages="errors.telefonos"/>
                     </v-col>
 
                     <v-col cols="12" v-if="form.telefonos.length">

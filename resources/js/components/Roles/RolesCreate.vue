@@ -17,6 +17,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     data() {
@@ -34,6 +35,9 @@ export default {
             axios.post('/roles', this.form)
                 .then(() => {
                     this.$router.push('/roles')
+                })
+                .catch(e => {
+                    toast.error(e.response.data.message)
                 })
                 .finally(() => this.loading = false)
         }

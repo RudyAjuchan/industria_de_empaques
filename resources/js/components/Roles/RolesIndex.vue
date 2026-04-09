@@ -48,19 +48,43 @@
                         v-if="can('rol.permisos')">
                         <v-icon>mdi-shield-key</v-icon>
                     </v-btn>
+
+                    <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
+                        v-if="can('rol.eliminar')">
+                        <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                 </v-row>
             </template>
         </v-data-table>
 
         <!-- DIALOG -->
         <RolePermissions v-if="selectedRole" v-model="showPermissions" :role="selectedRole" />
+
+        <!-- Delete confirm -->
+        <v-dialog v-model="deleteDialog" max-width="420">
+            <v-card rounded="xl">
+                <v-card-title class="text-subtitle-1 font-weight-bold">
+                    Eliminar usuario
+                </v-card-title>
+
+                <v-card-text class="text-body-2 text-medium-emphasis">
+                    ¿Seguro que quieres eliminar a <b>{{ toDelete?.name }}</b>? Esta acción no se puede deshacer.
+                </v-card-text>
+
+                <v-card-actions class="px-4 pb-4">
+                    <v-spacer />
+                    <v-btn variant="tonal" @click="deleteDialog = false">Cancelar</v-btn>
+                    <v-btn color="error" @click="eliminar">Eliminar</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
 <script>
 import axios from 'axios'
 import RolePermissions from './RolesPermission.vue'
-
+import { toast } from 'vue3-toastify'
 export default {
     components: { RolePermissions },
 
@@ -76,6 +100,8 @@ export default {
                 { title: 'Acciones', key: 'actions', sortable: false }
             ],
             search: null,
+            deleteDialog: false,
+            toDelete: null,
         }
     },
 
@@ -114,6 +140,21 @@ export default {
             })
             window.open(`/roles/export/pdf?${params.toString()}`, '_blank')
         },
+        openDelete(item) {
+            this.toDelete = item
+            this.deleteDialog = true
+        },
+        eliminar() {
+            axios.delete(`/roles/${this.toDelete.id}`)
+                .then(() => {
+                    this.fetchRoles()
+                    toast.success("Rol eliminado")
+                })
+                .catch(e => {
+                    toast.error(e.response.data.message)
+                })
+                .finally(() => this.deleteDialog = false)
+        }
     }
 }
 </script>

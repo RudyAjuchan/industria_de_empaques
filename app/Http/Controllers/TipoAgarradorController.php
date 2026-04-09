@@ -6,6 +6,7 @@ use App\Exports\TipoAgarradorExport;
 use App\Models\TipoAgarrador;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TipoAgarradorController extends Controller
@@ -20,7 +21,7 @@ class TipoAgarradorController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:tipo_agarradors,nombre',
         ]);
 
         return TipoAgarrador::create([
@@ -31,7 +32,12 @@ class TipoAgarradorController extends Controller
     public function update(Request $request, TipoAgarrador $tipoAgarrador)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('tipo_agarradors', 'nombre')->ignore($tipoAgarrador->id),
+            ],
         ]);
 
         $tipoAgarrador->update([

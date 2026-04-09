@@ -7,6 +7,8 @@ use App\Models\TipoPapel;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
+
 
 class TipoPapelController extends Controller
 {
@@ -20,7 +22,7 @@ class TipoPapelController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:tipo_papels,nombre',
         ]);
 
         return TipoPapel::create([
@@ -31,7 +33,12 @@ class TipoPapelController extends Controller
     public function update(Request $request, TipoPapel $tipoPapel)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255' . $tipoPapel->id,
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('tipo_papels', 'nombre')->ignore($tipoPapel->id),
+            ],
         ]);
 
         $tipoPapel->update([

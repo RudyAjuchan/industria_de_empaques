@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use App\Exports\RoleExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -21,10 +22,15 @@ class RoleController extends Controller
             'name' => 'required|string|unique:roles,name'
         ]);
 
-        return Role::create([
+        $role = Role::create([
             'name' => $data['name'],
             'guard_name' => 'web'
         ]);
+
+        // Asignar permiso automáticamente
+        $role->givePermissionTo('menu.inicio');
+
+        return $role;
     }
 
     public function show(Role $role)
@@ -43,7 +49,7 @@ class RoleController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function destroy(Role $role)
+    /* public function destroy(Role $role)
     {
         if ($role->users()->count() > 0) {
             return response()->json([
@@ -54,7 +60,7 @@ class RoleController extends Controller
         $role->delete();
 
         return response()->json(['success' => true]);
-    }
+    } */
 
     public function exportPdf(Request $request)
     {
@@ -83,5 +89,21 @@ class RoleController extends Controller
             new RoleExport($search),
             'roles.xlsx'
         );
+    }
+
+    public function destroy($id)
+    {
+        $role = Role::findOrFail($id);
+
+        // Solo validar usuarios activos
+        if ($role->users()->where('estado', 1)->exists()) {
+            return response()->json([
+                'message' => 'No puedes eliminar este rol porque tiene usuarios activos asignados'
+            ], 422);
+        }
+
+        $role->delete();
+
+        return response()->json(['message' => 'Rol eliminado']);
     }
 }

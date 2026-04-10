@@ -148,6 +148,10 @@ class ClienteController extends Controller
             'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
 
+        if(!empty($data['emails'])){
+            $data['email'] = $data['emails'][0];
+        }
+
         $cliente->update($data);
 
         $cliente->emails()->delete();

@@ -4,7 +4,7 @@
         <v-card-title>
             Detalle de Venta
             <v-spacer />
-            <v-btn size="small" color="primary" @click="agregarFila">
+            <v-btn size="small" color="primary" @click="agregarFila" :loading="loading">
                 Agregar Producto
             </v-btn>
         </v-card-title>
@@ -28,6 +28,7 @@
                     <th style="min-width: 75px">Cantidad</th>
                     <th style="min-width: 120px">Total</th>
                     <th style="min-width: 200px">Logo</th>
+                    <th style="min-width: 100px">Archivo</th>
                     <th></th>
                 </tr>
             </thead>
@@ -107,43 +108,88 @@
                     </td>
 
                     <td>
-                        <div v-if="item.logo_path" class="d-flex align-center" style="gap:8px">
+                        <div class="d-flex flex-wrap" style="gap:6px">
 
-                            <!-- Imagen preview -->
-                            <v-img :src="getLogoUrl(item.logo_path)" width="40" height="40" cover
-                                style="border-radius:6px; border:1px solid #ddd" />
+                            <!-- PREVIEWS -->
+                            <div v-for="(img, i) in item.imagenes" :key="i" style="position:relative">
 
-                            <!-- Descargar -->
-                            <v-tooltip text="Descargar">
-                                <template #activator="{ props }">
-                                    <v-btn v-bind="props" icon size="small" color="primary"
-                                        @click="descargarLogo(item.logo_path)">
-                                        <v-icon>mdi-download</v-icon>
-                                    </v-btn>
-                                </template>
-                            </v-tooltip>
+                                <v-img :src="img.preview" width="60" height="60" cover class="rounded" />
 
-                            <!-- Cambiar -->
-                            <v-tooltip text="Cambiar logo">
-                                <template #activator="{ props }">
-                                    <v-btn v-bind="props" icon size="small" color="warning" @click="subirLogo(index)">
-                                        <v-icon>mdi-pencil</v-icon>
-                                    </v-btn>
-                                </template>
-                            </v-tooltip>
+                                <v-btn icon size="x-small" color="red" style="position:absolute; top:-6px; right:-6px"
+                                    @click="removeImagen(index, i)" :loading="loading">
+                                    <v-icon size="12">mdi-close</v-icon>
+                                </v-btn>
+                            </div>
 
-                        </div>
-
-                        <!-- Si NO tiene logo -->
-                        <div v-else>
-                            <v-btn size="small" color="primary" variant="outlined" @click="subirLogo(index)">
+                            <!-- botón subir -->
+                            <v-btn size="small" color="primary" variant="outlined" @click="abrirImagenes(index)" :loading="loading">
                                 Subir
                             </v-btn>
+
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column" style="gap:6px">
+
+                            <!-- Si ya hay archivo -->
+                            <div v-if="item.archivo_diseno_file" class="d-flex align-center" style="gap:6px">
+
+                                <span style="font-size:12px; max-width:120px; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ item.archivo_diseno_file.name }}
+                                </span>
+                            </div>
+
+                            <div v-if="item.archivo_diseno_file">
+
+                                <!-- nombre -->
+                                <div style="font-size:12px">
+                                    {{ item.archivo_diseno_file.name }}
+                                </div>
+
+                                <!-- progreso -->
+                                <v-progress-linear v-if="item.upload_status === 'subiendo'"
+                                    :model-value="item.upload_progress" height="6" color="blue" striped class="mt-1" />
+
+                                <!-- estado -->
+                                <div style="font-size:11px">
+
+                                    <span v-if="item.upload_status === 'subiendo'">
+                                        Subiendo... {{ item.upload_progress }}%
+                                    </span>
+
+                                    <span v-if="item.upload_status === 'completado'" style="color:green">
+                                        ✔ Subido
+                                    </span>
+
+                                    <span v-if="item.upload_status === 'error'" style="color:red">
+                                        ✖ Error
+                                    </span>
+
+                                </div>
+                                
+                                <v-btn icon size="x-small" color="red" @click="removeDiseno(index)" :loading="loading">
+                                    <v-icon size="12">mdi-close</v-icon>
+                                </v-btn>
+                                <!-- acciones -->
+                                <div v-if="item.upload_status === 'error'">
+                                    <!-- eliminar -->
+                                    <v-btn size="x-small" color="orange" @click="$emit('retry-upload', index)" :loading="loading">
+                                        Reintentar
+                                    </v-btn>
+                                </div>
+
+                            </div>
+
+                            <!-- botón subir -->
+                            <v-btn size="small" color="purple" prepend-icon="mdi-paperclip" @click="abrirDiseno(index)" :loading="loading">
+                                Subir
+                            </v-btn>
+
                         </div>
                     </td>
 
                     <td>
-                        <v-btn icon size="small" color="red" @click="eliminarFila(index)">
+                        <v-btn icon size="small" color="red" @click="eliminarFila(index)" :loading="loading">
                             <v-icon>mdi-delete</v-icon>
                         </v-btn>
                     </td>
@@ -157,21 +203,22 @@
     <PapelDialog v-model="dialogPapel" @saved="onPapelSave"></PapelDialog>
     <AgarradorDialog v-model="dialogAgarrador" @saved="onAgarradorSave"></AgarradorDialog>
     <ProductoDialog v-model="dialogProducto" @saved="onProductoSave" @cancel="dialogProducto = false"></ProductoDialog>
-    <v-dialog v-model="dialogLogo" max-width="500">
+    <v-dialog v-model="dialogImagenes" max-width="500">
         <v-card>
-            <v-card-title>Subir Logo</v-card-title>
+            <v-card-title>Subir Imágenes</v-card-title>
 
             <v-card-text>
-                <FilePond name="logo" allow-multiple="false" accepted-file-types="image/jpeg, image/png, image/webp"
-                    @addfile="onFileUpload" />
+                <FilePond name="imagenes" allow-multiple="true" accepted-file-types="image/jpeg, image/png, image/webp"
+                    @addfile="onAddImagen" />
             </v-card-text>
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn text @click="dialogLogo = false">Cerrar</v-btn>
+                <v-btn text @click="dialogImagenes = false">Cerrar</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
+    <input type="file" ref="inputDiseno" style="display:none" accept=".psd,.zip,.rar" @change="onSelectDiseno" />
 </template>
 
 
@@ -188,7 +235,8 @@ export default {
         tiposAgarrador: Array,
         tiposPapel: Array,
         errors: Object,
-        modo: String
+        modo: String,
+        loading: Boolean,
     },
     components:{
         AgarradorDialog,
@@ -197,7 +245,7 @@ export default {
         FilePond,
     },
 
-    emits: ['update:modelValue', 'producto-saved', 'agarrador-saved', 'papel-saved'],
+    emits: ['update:modelValue', 'producto-saved', 'agarrador-saved', 'papel-saved', 'retry-upload'],
 
     data() {
         return {
@@ -209,7 +257,10 @@ export default {
             dialogProducto: false,
             filaProductoIndex: null,
             dialogLogo: false,
-            filaLogoIndex: null
+            filaLogoIndex: null,
+            dialogImagenes: false,
+            filaImagenIndex: null,
+            filaDisenoIndex: null,
         }
     },
 
@@ -241,6 +292,8 @@ export default {
                 fuelle: '',
                 tipo: '',
                 producto: null,
+                imagenes: [],
+                archivo_diseno_file: null,
             })
         },
 
@@ -421,11 +474,7 @@ export default {
                 const formData = new FormData()
                 formData.append('logo', file.file)
 
-                const res = await axios.post('/api/ecommerce/upload-logo', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                })
+                const res = await axios.post('/api/ecommerce/upload-logo', formData)
 
                 // Lógica para la imagen
                 if (this.filaLogoIndex !== null) {
@@ -488,8 +537,67 @@ export default {
                 console.error(e)
                 return null
             }
+        },
+
+        abrirImagenes(index) {
+            this.filaImagenIndex = index
+            this.dialogImagenes = true
+        },
+
+        onAddImagen(error, fileItem) {
+            if (error) return;
+
+            const file = fileItem.file
+
+            const previewUrl = URL.createObjectURL(file)
+
+            this.detalle[this.filaImagenIndex].imagenes.push({
+                file: file,
+                preview: previewUrl
+            });
+        },
+
+        removeImagen(index, i) {
+            // Liberamos la memoria del objeto URL
+            URL.revokeObjectURL(this.detalle[index].imagenes[i].preview);
+
+            // Eliminamos del array
+            this.detalle[index].imagenes.splice(i, 1);
+        },
+
+        getPreview(img) {
+            return img.preview || ''
+        },
+
+        abrirDiseno(index) {
+            this.filaDisenoIndex = index
+            this.$refs.inputDiseno.click()
+        },
+
+        onSelectDiseno(e) {
+            const file = e.target.files[0]
+
+            if (!file) return
+
+            // guardar archivo en el item
+            this.detalle[this.filaDisenoIndex].archivo_diseno_file = file
+
+            // limpiar input (importante)
+            e.target.value = null
+        },
+
+        removeDiseno(index) {
+            this.detalle[index].archivo_diseno_file = null
         }
 
+    },
+
+    beforeUnmount() {
+        this.detalle.forEach(item => {
+            item.imagenes.forEach(img => {
+                if (img.preview) URL.revokeObjectURL(img.preview);
+            });
+        });
     },
 
     mounted() {

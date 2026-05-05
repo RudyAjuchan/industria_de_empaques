@@ -21,18 +21,44 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class VentaController extends Controller
 {
     /**
      * Listar ventas
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Venta::with(['cliente', 'vendedor', 'banco'])
-            ->where('estado', 'emitida')
-            ->orderBy('id', 'desc')
-            ->get();
+        // Comenzamos la consulta con las relaciones necesarias
+        $query = Venta::with(['cliente', 'vendedor', 'banco'])
+            ->orderBy('id', 'desc');
+
+        // Filtro por Rango de Fechas
+        if ($request->filled(['fecha_inicio', 'fecha_fin'])) {
+            $query->whereBetween('created_at', [
+                $request->fecha_inicio . ' 00:00:00',
+                $request->fecha_fin . ' 23:59:59'
+            ]);
+        }
+
+        // Filtro por Estado
+        $estado = $request->estado;
+
+        if ($estado === 'Emitidas') {
+            $query->where('estado', 'emitida');
+        } elseif ($estado === 'Anuladas') {
+            $query->where('estado', 'anulada');
+        } elseif ($estado === 'En Produccion') {
+            $query->where('estado_produccion', 'en_produccion');
+        } elseif ($estado === 'Sin Iniciar') {
+            $query->where('estado_produccion', 'sin_iniciar');
+        } elseif ($estado === 'Finalizadas') {
+            $query->where('estado_produccion', 'finalizada');
+        }
+        // Si $estado es 'todos', simplemente no filtramos por estado, los traemos todos
+
+        return $query->get();
     }
 
     public function cotizaciones()
@@ -75,7 +101,9 @@ class VentaController extends Controller
 
             $numero = ($ultimoNumero ?? 0) + 1;
 
-            // SUBTOTAL CORRECTO (según tipo de producto)
+            // =========================
+            // SUBTOTAL
+            // =========================
             $subtotal = collect($data['detalle'])->sum(function ($item) {
 
                 $producto = Producto::find($item['productos_id']);
@@ -104,7 +132,9 @@ class VentaController extends Controller
             $descuento   = $data['descuento'] ?? 0;
             $deposito    = $data['cantidad_deposito'] ?? 0;
 
-            // PROMOCIÓN CARRITO
+            // =========================
+            // PROMO CARRITO
+            // =========================
             $promoData = $data['promociones'] ?? null;
             $promocionMonto = 0;
 
@@ -119,6 +149,12 @@ class VentaController extends Controller
             $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promocionMonto;
             $pendiente = $total - $deposito;
 
+            // =========================
+            // CREAR VENTA
+            // =========================
+            $esNuevoCliente = !Venta::where('clientes_id', $data['clientes_id'])
+                ->lockForUpdate()
+                ->exists();
             $venta = Venta::create([
                 'serie' => $serie,
                 'numero' => $numero,
@@ -139,17 +175,24 @@ class VentaController extends Controller
                 'costo_envio' => $costoEnvio,
                 'total' => $total,
 
+                'es_cliente_nuevo' => $esNuevoCliente,
+
                 'estado' => 'emitida',
             ]);
 
+            // =========================
             // ESTADO INICIAL
+            // =========================
             $estadoInicial = EstadoProduccion::orderBy('orden')->first();
 
             if (!$estadoInicial) {
                 throw new \Exception('No existe un estado de producción inicial');
             }
 
-            foreach ($data['detalle'] as $item) {
+            // =========================
+            // DETALLES
+            // =========================
+            foreach ($data['detalle'] as $index => $item) {
 
                 $producto = Producto::find($item['productos_id']);
 
@@ -180,7 +223,6 @@ class VentaController extends Controller
                     'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
 
                     'logo_path' => $item['logo_path'] ?? null,
-
                     'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
 
                     'precio' => $precio,
@@ -190,6 +232,25 @@ class VentaController extends Controller
                     'proceso_estado_produccions_id' => 1,
                 ]);
 
+                // =========================
+                // IMÁGENES POR DETALLE
+                // =========================
+                if ($request->hasFile("detalle.$index.imagenes")) {
+
+                    foreach ($request->file("detalle.$index.imagenes") as $file) {
+
+                        $path = $file->store('ventas/detalles', 's3');
+
+                        $detalle->imagenes()->create([
+                            'path' => $path,
+                            'estado' => 1
+                        ]);
+                    }
+                }
+
+                // =========================
+                // HISTORIAL
+                // =========================
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
@@ -200,8 +261,20 @@ class VentaController extends Controller
                 ]);
             }
 
-            $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
+            // =========================
+            // RELACIONES
+            // =========================
+            $venta->load(
+                'detalles.producto',
+                'detalles.tipoAgarrador',
+                'detalles.tipoPapel',
+                'detalles.imagenes',
+                'pagos'
+            );
 
+            // =========================
+            // EMAIL
+            // =========================
             $cliente = Cliente::find($data['clientes_id']);
 
             Mail::to($cliente->email)
@@ -227,10 +300,12 @@ class VentaController extends Controller
             'cliente.emails',
             'cliente.municipio.departamento',
             'banco',
+            'pagos',
             'detalles.producto.paginas',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
             'vendedor',
+            'detalles.imagenes'
         ]);
         $nombresPaginas = $venta->detalles
             ->map(function ($detalle) {
@@ -260,55 +335,71 @@ class VentaController extends Controller
 
     public function exportPdf(Request $request)
     {
+        // Inicializamos la consulta
+        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos'])
+            ->orderBy('id', 'desc');
+
+        // Filtro por Rango de Fechas
+        if ($request->filled(['fecha_inicio', 'fecha_fin'])) {
+            $query->whereBetween('created_at', [
+                $request->fecha_inicio . ' 00:00:00',
+                $request->fecha_fin . ' 23:59:59'
+            ]);
+        }
+
+        // Filtro por Estado
+        $estado = $request->estado;
+        if ($estado === 'Emitidas') {
+            $query->where('estado', 'emitida');
+        } elseif ($estado === 'Anuladas') {
+            $query->where('estado', 'anulada');
+        } elseif ($estado === 'En Produccion') {
+            $query->where('estado_produccion', 'en_produccion');
+        } elseif ($estado === 'Sin Iniciar') {
+            $query->where('estado_produccion', 'sin_iniciar');
+        } elseif ($estado === 'Finalizadas') {
+            $query->where('estado_produccion', 'finalizada');
+        }
+
+        // Búsqueda 
         $search = trim($request->query('search', ''));
-        $search = ($search === 'null' || $search === '') ? null : $search;
+        if (!empty($search) && $search !== 'null') {
+            $query->where(function ($sub) use ($search) {
+                if (str_contains($search, '-')) {
+                    [$serie, $numero] = explode('-', $search);
+                    $numero = ltrim($numero, '0');
+                    $sub->where('serie', 'like', "%{$serie}%")
+                        ->where('numero', $numero);
+                } else {
+                    $sub->where('serie', 'like', "%{$search}%")
+                        ->orWhere('numero', 'like', "%{$search}%");
+                }
 
-        $ventas = Venta::with(['cliente', 'vendedor'])
-            ->when($search, function ($q) use ($search) {
-
-                $q->where(function ($sub) use ($search) {
-
-                    if (str_contains($search, '-')) {
-
-                        [$serie, $numero] = explode('-', $search);
-                        $numero = ltrim($numero, '0');
-
-                        $sub->where('serie', 'like', "%{$serie}%")
-                            ->where('numero', $numero);
-                    } else {
-
-                        $sub->where('serie', 'like', "%{$search}%")
-                            ->orWhere('numero', 'like', "%{$search}%");
-                    }
-
-                    $sub->orWhereHas('cliente', function ($c) use ($search) {
-                        $c->where('nombre', 'like', "%{$search}%");
-                    });
-
-                    $sub->orWhereHas('vendedor', function ($v) use ($search) {
-                        $v->where('name', 'like', "%{$search}%");
-                    });
+                $sub->orWhereHas('cliente', function ($c) use ($search) {
+                    $c->where('nombre', 'like', "%{$search}%");
                 });
-            })
-            ->where('estado', 'emitida')
-            ->orderByDesc('created_at')
-            ->get();
+                $sub->orWhereHas('vendedor', function ($v) use ($search) {
+                    $v->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $ventas = $query->get();
 
         return Pdf::loadView('pdf.venta.venta-lista', [
             'ventas' => $ventas,
             'search' => $search
         ])
             ->setPaper('letter', 'landscape')
-            ->stream('venta.venta-lista.pdf');
+            ->stream('venta-lista.pdf');
     }
 
 
     public function exportExcel(Request $request)
     {
-        $search = $request->query('search');
-
+        // Pasamos todo el request para tener acceso a fechas, estado y búsqueda
         return Excel::download(
-            new VentaExport($search),
+            new VentaExport($request->all()),
             'ventas.xlsx'
         );
     }
@@ -325,6 +416,7 @@ class VentaController extends Controller
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
             'vendedor',
+            'pagos'
         ]);
         $nombresPaginas = $venta->detalles
             ->map(function ($detalle) {
@@ -383,10 +475,12 @@ class VentaController extends Controller
     {
         return DB::transaction(function () use ($request, $id) {
 
-            $venta = Venta::with('detalles')->findOrFail($id);
+            $venta = Venta::with('detalles.imagenes')->findOrFail($id);
             $data = $request->all();
 
+            // =========================
             // SUBTOTAL
+            // =========================
             $subtotal = collect($data['detalle'])->sum(function ($item) {
 
                 $total = $item['precio'] * $item['cantidad'];
@@ -409,7 +503,9 @@ class VentaController extends Controller
             $descuento   = $data['descuento'] ?? 0;
             $deposito    = $data['cantidad_deposito'] ?? 0;
 
-            // 🧠 PROMO CARRITO
+            // =========================
+            // PROMO CARRITO
+            // =========================
             $promoData = $data['promociones'] ?? null;
             $promocionMonto = 0;
 
@@ -424,6 +520,9 @@ class VentaController extends Controller
             $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promocionMonto;
             $pendiente = $total - $deposito;
 
+            // =========================
+            // UPDATE VENTA
+            // =========================
             $venta->update([
                 'clientes_id' => $data['clientes_id'],
                 'bancos_id' => $data['bancos_id'],
@@ -444,16 +543,32 @@ class VentaController extends Controller
                 'estado' => 'emitida',
             ]);
 
-            // ELIMINAR DETALLE
-            $venta->detalles()->delete();
+            // =========================
+            // ELIMINAR DETALLES + IMÁGENES
+            // =========================
+            foreach ($venta->detalles as $detalle) {
 
+                foreach ($detalle->imagenes as $img) {
+                    Storage::disk('s3')->delete($img->path);
+                    $img->delete();
+                }
+
+                $detalle->delete();
+            }
+
+            // =========================
+            // ESTADO INICIAL
+            // =========================
             $estadoInicial = EstadoProduccion::orderBy('orden')->first();
 
             if (!$estadoInicial) {
                 throw new \Exception('No existe un estado de producción inicial');
             }
 
-            foreach ($data['detalle'] as $item) {
+            // =========================
+            // CREAR NUEVOS DETALLES
+            // =========================
+            foreach ($data['detalle'] as $index => $item) {
 
                 $totalItem = $item['precio'] * $item['cantidad'];
 
@@ -475,15 +590,32 @@ class VentaController extends Controller
                     'detalle_impresion' => $item['detalle_impresion'] ?? '',
                     'nombre_logo' => $item['nombre_logo'] ?? '',
                     'logo_path' => $item['logo_path'] ?? null,
-
                     'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
-
                     'precio' => $item['precio'],
                     'cantidad' => $item['cantidad'],
                     'total' => $totalItem,
                     'proceso_estado_produccions_id' => 1,
                 ]);
 
+                // =========================
+                // NUEVAS IMÁGENES
+                // =========================
+                if ($request->hasFile("detalle.$index.imagenes")) {
+
+                    foreach ($request->file("detalle.$index.imagenes") as $file) {
+
+                        $path = $file->store('ventas/detalles', 's3');
+
+                        $detalle->imagenes()->create([
+                            'path' => $path,
+                            'estado' => 1
+                        ]);
+                    }
+                }
+
+                // =========================
+                // HISTORIAL
+                // =========================
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
@@ -494,8 +626,20 @@ class VentaController extends Controller
                 ]);
             }
 
-            $venta->load('detalles.producto', 'detalles.tipoAgarrador', 'detalles.tipoPapel');
+            // =========================
+            // RELACIONES
+            // =========================
+            $venta->load(
+                'detalles.producto',
+                'detalles.tipoAgarrador',
+                'detalles.tipoPapel',
+                'detalles.imagenes',
+                'pagos'
+            );
 
+            // =========================
+            // EMAIL
+            // =========================
             $cliente = Cliente::find($data['clientes_id']);
 
             Mail::to($cliente->email)
@@ -547,5 +691,50 @@ class VentaController extends Controller
                 'estado' => $d->venta->estado,
             ];
         });
+    }
+
+    public function generatePresignedUrl(Request $request)
+    {
+        $request->validate([
+            'filename' => 'required|string',
+            'content_type' => 'required|string',
+        ]);
+
+        $path = 'disenos/' . uniqid() . '_' . $request->filename;
+
+        $disk = Storage::disk('s3');
+
+        // OBTENER CLIENTE CORRECTAMENTE
+        $client = $disk->getClient();
+
+        $command = $client->getCommand('PutObject', [
+            'Bucket' => config('filesystems.disks.s3.bucket'),
+            'Key' => $path,
+            'ContentType' => $request->content_type,
+        ]);
+
+        $requestPresigned = $client->createPresignedRequest($command, '+10 minutes');
+
+        return response()->json([
+            'url' => (string) $requestPresigned->getUri(),
+            'path' => $path,
+        ]);
+    }
+
+    public function guardarDiseno(Request $request, $id)
+    {
+        $request->validate([
+            'path' => 'required|string'
+        ]);
+
+        $detalle = DetalleVenta::findOrFail($id);
+
+        $detalle->update([
+            'archivo_diseno_path' => $request->path
+        ]);
+
+        return response()->json([
+            'message' => 'Archivo asociado correctamente'
+        ]);
     }
 }

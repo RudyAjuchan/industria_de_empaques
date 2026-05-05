@@ -78,7 +78,7 @@
 
         <VentasDetalleTable v-if="ready && form.detalle" :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
             v-model="form.detalle" @producto-saved="onProductoSaved" @agarrador-saved="onAgarradorSaved"
-            @papel-saved="onPapelSaved" :errors="errors" :modo="modo"/>
+            @papel-saved="onPapelSaved" :errors="errors" :modo="modo" @retry-upload="retryUpload" :loading="loading"/>
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
                 <v-btn color="green" variant="tonal" @click="guardarVenta" :loading="loading">
@@ -154,6 +154,8 @@ export default {
                 { nombre: 'Pago con tarjeta' },
                 { nombre: 'Depósito' },
                 { nombre: 'Transferencia' },
+                { nombre: 'Cheque' },
+                { nombre: 'Transferencia Internacional' },
             ],
 
             form: {
@@ -204,32 +206,91 @@ export default {
             this.loading = true
 
             try {
+
                 this.form.subtotal = this.subtotalCalculado
                 this.form.total = this.totalCalculado
                 this.form.pendiente_pagar = this.pendientePagar
 
-                const payload = { ...this.form }
+                const formData = new FormData()
 
-                delete payload.promociones_monto
+                Object.entries(this.form).forEach(([key, value]) => {
+                    if (['detalle', 'promociones'].includes(key)) return;
 
-                // limpiar detalle
-                payload.detalle = payload.detalle.map(item => {
-                    const clean = { ...item }
+                    if (value !== null && value !== undefined) {
+                        formData.append(key, value);
+                    }
+                });
 
-                    delete clean.alto
-                    delete clean.ancho
-                    delete clean.fuelle
-                    delete clean.tipo
-
-                    return clean
-                })
-
-                if (this.modo === 'editar') {
-                    await axios.put(`/venta/${this.form.id}`, payload)
-                } else {
-                    await axios.post('/venta', payload)
+                if (this.form.promociones?.id) {
+                    formData.append('promociones_id', this.form.promociones.id);
                 }
 
+                this.form.detalle.forEach((item, index) => {
+
+                    Object.entries(item).forEach(([key, value]) => {
+
+                        if ([
+                            'producto',
+                            'imagenes',
+                            'archivo_diseno_file',
+                            'upload_progress',
+                            'upload_status',
+                            'upload_error',
+                            'alto',
+                            'ancho',
+                            'fuelle',
+                            'tipo'
+                        ].includes(key)) return
+
+                        if (value !== null && value !== undefined) {
+                            formData.append(`detalle[${index}][${key}]`, value)
+                        }
+                    })
+
+                    // IMÁGENES (esto sigue igual)
+                    if (item.imagenes?.length) {
+                        item.imagenes.forEach((img, i) => {
+                            if (img.file) {
+                                formData.append(
+                                    `detalle[${index}][imagenes][${i}]`,
+                                    img.file,
+                                    img.file.name
+                                )
+                            }
+                        })
+                    }
+                })
+
+                // GUARDAR VENTA
+                let response
+
+                if (this.modo === 'editar') {
+                    response = await axios.post(`/venta/${this.form.id}?_method=PUT`, formData)
+                } else {
+                    response = await axios.post('/venta', formData)
+                }
+
+                const venta = response.data.venta
+                venta.detalles.forEach((detalleBackend, i) => {
+                    this.form.detalle[i].id = detalleBackend.id
+                })
+                // LOGICA PARA GUARDAR PSD
+                for (let i = 0; i < venta.detalles.length; i++) {
+
+                    const detalleBackend = venta.detalles[i]
+                    const detalleFront = this.form.detalle[i]
+
+                    if (detalleFront.archivo_diseno_file) {
+
+                        await this.subirDiseno(
+                            detalleBackend.id,
+                            detalleFront.archivo_diseno_file,
+                            detalleFront // PASAMOS EL ITEM
+                        )
+                    }
+                }
+
+                // SUCCESS
                 toast.success(
                     this.modo === 'editar'
                         ? 'Cotización actualizada'
@@ -239,12 +300,15 @@ export default {
                 this.$router.push('/ventas')
 
             } catch (e) {
+
                 if (e.response?.status === 422) {
                     this.errors = e.response.data.errors
                     toast.error('Revisa los campos marcados')
                 } else {
+                    console.error(e)
                     toast.error('Error inesperado')
                 }
+
             } finally {
                 this.loading = false
             }
@@ -445,8 +509,79 @@ export default {
             } else {
                 this.form.promociones_monto = promo.valor
             }
-        }
+        },
+        async retryUpload(index) {
+            console.log("si pasa reintentar");
+            const item = this.form.detalle[index]
 
+            if (!item.archivo_diseno_file || !item.id) return
+
+            await this.subirDiseno(
+                item.id,
+                item.archivo_diseno_file,
+                item
+            )
+        },
+
+        async subirDiseno(detalleId, file, item) {
+
+            try {
+
+                item.upload_status = 'subiendo'
+                item.upload_progress = 0
+                item.upload_error = null
+
+                // 1. pedir URL firmada
+                const { data } = await axios.post('/s3/presigned-url', {
+                    filename: file.name,
+                    content_type: file.type
+                })
+
+                // 2. subir con progreso
+                await new Promise((resolve, reject) => {
+
+                    const xhr = new XMLHttpRequest()
+
+                    xhr.open('PUT', data.url)
+
+                    xhr.setRequestHeader('Content-Type', file.type)
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            item.upload_progress = Math.round((e.loaded / e.total) * 100)
+                        }
+                    }
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            resolve()
+                        } else {
+                            reject('Error al subir a S3')
+                        }
+                    }
+
+                    xhr.onerror = () => reject('Error de red')
+
+                    xhr.send(file)
+                })
+
+                // 3. guardar path
+                await axios.post(`/detalle/${detalleId}/guardar-diseno`, {
+                    path: data.path
+                })
+
+                item.upload_status = 'completado'
+
+            } catch (err) {
+
+                console.error(err)
+
+                item.upload_status = 'error'
+                item.upload_error = err
+
+                throw err
+            }
+        },
     },
 
     watch: {
@@ -462,7 +597,7 @@ export default {
 
         searchCliente(val) {
 
-            if (!val || val.length < 2) {
+            if (!val || val.length < 1) {
                 this.clientes = []
                 return
             }
@@ -472,7 +607,7 @@ export default {
             this.debounceCliente = setTimeout(() => {
                 this.buscarClientes(val)
             }, 800)
-        }
+        },
     },
 
     computed: {

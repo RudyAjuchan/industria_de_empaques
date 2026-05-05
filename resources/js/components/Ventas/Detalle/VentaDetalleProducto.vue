@@ -86,20 +86,55 @@
                     <td colspan="3">{{ item.detalle_impresion }}</td>
                 </tr>
     
-                <tr v-if="item.logo_path">
-                    <th colspan="3">LOGOTIPO</th>
+                <tr v-if="item.imagenes && item.imagenes.length">
+                    <th colspan="3">LOGO</th>
                     <td colspan="3">
-                        <img :src="getLogoUrl(item.logo_path)"
-                            style="max-height: 80px; max-width: 150px; object-fit: contain;" />
-    
-                        <v-tooltip text="Descargar">
-                            <template #activator="{ props }">
-                                <v-btn v-bind="props" icon size="small" color="primary"
-                                    @click="descargarLogo(item.logo_path)">
-                                    <v-icon>mdi-download</v-icon>
-                                </v-btn>
-                            </template>
-                        </v-tooltip>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap">
+
+                            <div v-for="(img, i) in item.imagenes" :key="i">
+
+                                <img :src="getImagenUrl(img.path)"
+                                    style="max-height: 80px; max-width: 120px; object-fit: contain; border:1px solid #ddd; border-radius:6px;" />
+
+                                <!-- Descargar -->
+                                <v-tooltip text="Descargar">
+                                    <template #activator="{ props }">
+                                        <v-btn v-bind="props" icon size="x-small" color="primary"
+                                            @click="descargarImagen(img.path)">
+                                            <v-icon size="14">mdi-download</v-icon>
+                                        </v-btn>
+                                    </template>
+                                </v-tooltip>
+
+                            </div>
+
+                        </div>
+                    </td>
+                </tr>
+
+                <tr v-if="item.archivo_diseno_path">
+                    <th colspan="3">DISEÑO PHOTOSHOP</th>
+                    <td colspan="3">
+
+                        <div class="d-flex align-center" style="gap:10px">
+
+                            <!-- Nombre archivo -->
+                            <span style="font-size:12px">
+                                {{ getNombreArchivo(item.archivo_diseno_path) }}
+                            </span>
+
+                            <!-- Descargar -->
+                            <v-tooltip text="Descargar diseño">
+                                <template #activator="{ props }">
+                                    <v-btn v-bind="props" icon size="small" color="purple"
+                                        @click="descargarDiseno(item.archivo_diseno_path)">
+                                        <v-icon>mdi-download</v-icon>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
+
+                        </div>
+
                     </td>
                 </tr>
             </tbody>
@@ -121,32 +156,52 @@ export default {
         getLogoUrl(path) {
             return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
         },
-        async descargarLogo(path) {
+        getImagenUrl(path) {
+            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+        },
+        async descargarImagen(path) {
             try {
-                const url = `${this.getLogoUrl(path)}?t=${new Date().getTime()}`;
+                const url = `${this.getImagenUrl(path)}?t=${new Date().getTime()}`
 
-                // 1. Obtener la imagen como un objeto Blob
                 const response = await fetch(url)
                 const blob = await response.blob()
 
-                // 2. Crear una URL local para ese Blob
                 const blobUrl = window.URL.createObjectURL(blob)
 
-                // 3. Crear el link de descarga
                 const link = document.createElement('a')
                 link.href = blobUrl
-                link.download = path.split('/').pop() // El nombre del archivo
+                link.download = path.split('/').pop()
 
                 document.body.appendChild(link)
                 link.click()
 
-                // 4. Limpieza
                 document.body.removeChild(link)
                 window.URL.revokeObjectURL(blobUrl)
+
             } catch (error) {
-                console.error('Error al descargar el logo:', error)
-                toast.error('No se pudo descargar el archivo')
+                console.error(error)
+                toast.error('No se pudo descargar la imagen')
             }
+        },
+
+        getNombreArchivo(path) {
+            return path.split('/').pop()
+        },
+
+        getDisenoUrl(path) {
+            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+        },
+
+        descargarDiseno(path) {
+            const url = this.getDisenoUrl(path)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = this.getNombreArchivo(path)
+
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
         }
     }
 }

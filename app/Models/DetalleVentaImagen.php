@@ -5,26 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-class ProductoImagen extends Model
+class DetalleVentaImagen extends Model
 {
-    protected $table = 'producto_imagens';
+    protected $table = 'detalle_venta_imagens';
 
-    protected $fillable = [
-        'productos_id',
-        'path',
-        'is_main',
-        'orden',
-    ];
-
-    // IMPORTANTE
     protected $appends = ['url'];
 
-    public function producto()
+    protected $fillable = [
+        'detalle_ventas_id',
+        'path',
+        'estado',
+    ];
+
+    public function DetalleVenta()
     {
-        return $this->belongsTo(Producto::class, 'productos_id');
+        return $this->belongsTo(DetalleVenta::class, 'detalle_ventas_id');
     }
 
-    // ESTE ES EL CAMBIO CLAVE
     public function getUrlAttribute()
     {
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */

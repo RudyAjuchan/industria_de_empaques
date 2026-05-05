@@ -157,8 +157,45 @@
 
                     <!-- FOOTER -->
                     <tr>
-                        <td style="background:#0C2A00; color:white; text-align:center; padding:15px;">
-                            © {{ date('Y') }} Jeple Store
+                        <td style="background:#0C2A00; color:white; text-align:center; padding:20px 15px;">
+
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                style="margin-bottom: 15px;">
+                                <tr>
+                                    <td style="padding: 0 10px;">
+                                        <a href="https://www.facebook.com/jeple.guatemala" target="_blank"
+                                            style="text-decoration: none;">
+                                            <img src="{{ config('app.url') }}/img/icons/facebook.png" width="30"
+                                                height="30" alt="Facebook" style="display:block;">
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 10px;">
+                                        <a href="https://www.instagram.com/jeple.embalajes" target="_blank"
+                                            style="text-decoration: none;">
+                                            <img src="{{ config('app.url') }}/img/icons/instagram.png" width="30"
+                                                height="30" alt="Instagram" style="display:block;">
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 10px;">
+                                        <a href="https://wa.me/50232500812" target="_blank"
+                                            style="text-decoration: none;">
+                                            <img src="{{ config('app.url') }}/img/icons/whatsapp.png" width="30"
+                                                height="30" alt="WhatsApp" style="display:block;">
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 10px;">
+                                        <a href="https://www.tiktok.com/@jeple.embalajes" target="_blank"
+                                            style="text-decoration: none;">
+                                            <img src="{{ config('app.url') }}/img/icons/tiktok.png" width="30"
+                                                height="30" alt="Tiktok" style="display:block;">
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="font-size: 12px; opacity: 0.8;">
+                                © {{ date('Y') }} Jeple Store
+                            </div>
                         </td>
                     </tr>
 

@@ -19,7 +19,8 @@ class Producto extends Model
         'estado',
         'tipo_producto',
         'precio_base',
-        'descripcion'
+        'descripcion',
+        'ecommerce',
     ];
 
     public function imagenes()

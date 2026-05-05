@@ -139,7 +139,7 @@ class CheckoutController extends Controller
             $venta->total = $subtotal;
             $venta->save();
 
-            $venta->load('detalles.producto');
+            $venta->load('detalles.producto', 'pagos');
 
             // EMAIL
             Mail::to($cliente->email)

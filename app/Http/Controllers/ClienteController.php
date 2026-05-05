@@ -244,7 +244,7 @@ class ClienteController extends Controller
 
     public function search(Request $request)
     {
-        $q = $request->get('q');
+        $q = trim($request->get('q'));
 
         if (!$q || strlen($q) < 2) {
             return [];
@@ -254,10 +254,26 @@ class ClienteController extends Controller
             'emails',
             'telefonos',
             'municipio.departamento'
-        ])->where('nombre', 'like', "%{$q}%")
-            ->orWhere('nit', 'like', "%{$q}%")
-            ->limit(15)
-            ->get(['id', 'nombre', 'nit', 'municipios_id', 'direccion', 'ciudad_pais', 'estado_pais']);
+        ])
+        ->where(function ($query) use ($q) {
+            $query->where('nombre', 'like', "%{$q}%")
+                ->orWhere('nit', 'like', "%{$q}%");
+
+            // Buscar por ID solo si es numérico
+            if (is_numeric($q)) {
+                $query->orWhere('id', (int)$q);
+            }
+        })
+        ->limit(15)
+        ->get([
+            'id',
+            'nombre',
+            'nit',
+            'municipios_id',
+            'direccion',
+            'ciudad_pais',
+            'estado_pais'
+        ]);
     }
 
 }

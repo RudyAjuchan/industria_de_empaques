@@ -50,7 +50,7 @@
 
 <body>
 
-    <h1>Listado de Ventas</h1>
+    <h1>Listado de Ventas con pago pendiente</h1>
 
     @if (!empty($search))
         <div class="filter">
@@ -83,8 +83,8 @@
                     <td>{{ $v->cliente->nombre ?? '-' }}</td>
                     <td>{{ $v->vendedor->name ?? '-' }}</td>
 
-                    <td class="right" style="white-space: nowrap">Q {{ number_format($v->subtotal, 2) }}</td>
-                    <td class="right" style="white-space: nowrap">Q {{ number_format($v->descuento, 2) }}</td>
+                    <td class="right">Q {{ number_format($v->subtotal, 2) }}</td>
+                    <td class="right">Q {{ number_format($v->descuento, 2) }}</td>
                     <td class="right" style="white-space: nowrap">Q {{ number_format($v->costo_envio, 2) }}</td>
                     <td class="right" style="white-space: nowrap"><strong>Q {{ number_format($v->total, 2) }}</strong></td>
 

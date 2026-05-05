@@ -24,6 +24,21 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import '../../public/css/global.css'
 
 
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        const status = error.response?.status
+
+        if (status === 419 || status === 401) {
+            alert('Tu sesión ha expirado')
+            window.location.href = '/login'
+        }
+
+        return Promise.reject(error)
+    }
+)
+
+
 const vuetify = createVuetify({
     components,
     directives,

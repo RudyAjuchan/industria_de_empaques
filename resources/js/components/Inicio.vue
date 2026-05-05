@@ -21,6 +21,10 @@
                 <v-select v-model="filtros.month" :items="meses" label="Mes" density="compact" variant="outlined" />
             </v-col>
 
+            <v-col cols="12" md="2" v-if="filtros.periodo === 'dia'">
+                <v-text-field v-model="filtros.fecha" type="date" label="Fecha" density="compact" variant="outlined" />
+            </v-col>
+
             <!-- BOTÓN -->
             <v-col cols="12" md="5" class="d-flex ga-3">
                 <v-btn color="primary" @click="cargarEstadisticas">
@@ -260,10 +264,12 @@ export default {
                 periodo: 'mes',
                 year: new Date().getFullYear(),
                 month: new Date().getMonth() + 1,
+                fecha: new Date().toISOString().substr(0, 10),
             },
 
             periodos: [
                 { title: 'Hoy', value: 'hoy' },
+                { title: 'Día', value: 'dia' },
                 { title: 'Mes', value: 'mes' },
                 { title: 'Año', value: 'anio' },
             ],

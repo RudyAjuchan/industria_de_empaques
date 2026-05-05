@@ -45,7 +45,7 @@
             <v-card-actions>
                 <v-spacer />
 
-                <v-btn variant="tonal" color="red" @click="cerrar">
+                <v-btn variant="tonal" color="red" @click="cerrar" :loading="loading">
                     Cancelar
                 </v-btn>
 
@@ -59,6 +59,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ConfirmarFinalizar',
@@ -114,7 +115,13 @@ export default {
             }catch (error) {
 
                 if (error.response?.status === 422) {
-                    this.errores = error.response.data.errors
+                    if(error.response.data.message  == 'La venta tiene un saldo pendiente'){
+                        toast.error(error.response.data.message, {
+                            autoClose: 5000
+                        })
+                    }else{
+                        this.errores = error.response.data.errors
+                    }
                 }
 
             } finally {

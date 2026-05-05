@@ -31,6 +31,7 @@ class StoreVentaRequest extends FormRequest
             'detalle.*.productos_id' => ['required', 'exists:productos,id'],
             'detalle.*.precio' => ['required', 'numeric', 'gt:0'],
             'detalle.*.cantidad' => ['required', 'integer', 'gt:0'],
+            'no_deposito' => ['nullable', 'string'],
 
             // ahora opcionales
             'detalle.*.tipo_agarradors_id' => ['nullable', 'exists:tipo_agarradors,id'],
@@ -41,6 +42,9 @@ class StoreVentaRequest extends FormRequest
             'detalle.*.logo_path' => ['nullable', 'string'],
 
             'detalle.*.promocion_aplicada' => ['nullable', 'array'],
+
+            'detalle.*.imagenes' => 'nullable|array',
+            'detalle.*.imagenes.*' => 'file',
         ];
     }
 

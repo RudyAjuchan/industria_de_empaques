@@ -7,11 +7,12 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithMapping; // Importante para separar lógica
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Illuminate\Support\Carbon;
 
-class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyles, WithEvents
+class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyles, WithEvents, WithMapping
 {
     protected $fechaInicio;
     protected $fechaFin;
@@ -21,129 +22,129 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         $this->fechaInicio = $fechaInicio;
         $this->fechaFin = $fechaFin;
     }
-    
+
     public function collection()
     {
-        $query = DetalleVenta::with([
+        // Añadimos 'cliente.telefonos' para evitar N+1
+        return DetalleVenta::with([
             'venta.cliente.municipio.departamento',
+            'venta.cliente.telefonos', 
             'venta.vendedor',
-            'producto',
+            'venta.pagos',
+            'venta.banco',
+            'producto.paginas',
             'tipoPapel',
             'tipoAgarrador'
         ])
         ->whereHas('venta', function ($q) {
             $q->where('estado', 'emitida');
+            if ($this->fechaInicio) $q->whereDate('created_at', '>=', $this->fechaInicio);
+            if ($this->fechaFin) $q->whereDate('created_at', '<=', $this->fechaFin);
+        })
+        ->get();
+    }
 
-            if ($this->fechaInicio) {
-                $q->whereDate('created_at', '>=', $this->fechaInicio);
-            }
+    /**
+     * Usar WithMapping es más limpio para manejar datos nullables
+     */
+    public function map($d): array
+    {
+        $venta = $d->venta;
+        $cliente = $venta->cliente ?? null;
+        $producto = $d->producto ?? null;
+        $pagos = $venta->pagos ?? collect();
 
-            if ($this->fechaFin) {
-                $q->whereDate('created_at', '<=', $this->fechaFin);
-            }
-        });
+        $documento = $venta->serie . '-' . str_pad($venta->numero, 6, '0', STR_PAD_LEFT);
 
-        $detalles = $query->get();
+        // PAGOS - Manejo seguro de nulos
+        $totalPagado = $pagos->sum('monto');
+        $saldoPendiente = ($venta->total ?? 0) - $totalPagado;
 
-        return $detalles->map(function ($d) {
+        $historialPagos = $pagos->map(function ($p) {
+            $fecha = $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A';
+            return 'Q' . number_format($p->monto, 2) . " (" . ($p->metodo_pago ?? 'N/A') . ") " . $fecha;
+        })->implode(" | ");
 
-            $venta = $d->venta;
-            $cliente = $venta->cliente;
-            $producto = $d->producto;
-            $documento = $venta->serie . '-' . str_pad($venta->numero, 6, '0', STR_PAD_LEFT);
-            return [
+        return [
+            // VENTA
+            $venta->id,
+            $venta->created_at ? $venta->created_at->format('Y-m-d') : '',
+            $venta->updated_at ? $venta->updated_at->format('Y-m-d') : '',
+            $venta->serie,
+            $documento,
+            $venta->estado,
+            $venta->estado_produccion,
+            $venta->es_cliente_nuevo ? 'Nuevo' : 'Existente',
+            $venta->serie === 'WEB' ? 'Ecommerce' : 'Interno',
+            $venta->fecha_entrega ? Carbon::parse($venta->fecha_entrega)->format('Y-m-d') : '',
 
-                // VENTA
-                $venta->id,
-                optional($venta->created_at)->format('Y-m-d'),
-                $venta->serie,
-                $documento,
-                $venta->estado,
-                $venta->serie === 'WEB' ? 'Ecommerce' : 'Interno',
+            // CLIENTE (Uso de null-safe operator ?? para seguridad total)
+            $cliente->nombre ?? 'N/A',
+            $cliente->nit ?? 'C/F',
+            $cliente->dpi ?? '',
+            $cliente->email ?? '',
+            ($cliente && $cliente->telefonos->first()) ? $cliente->telefonos->first()->telefono_numero : '',
+            $cliente->genero ?? '',
+            $cliente->pais ?? '',
+            $cliente->estado_pais ?? '',
+            $cliente->ciudad_pais ?? '',
+            $cliente->municipio->departamento->nombre ?? '',
+            $cliente->municipio->nombre ?? '',
+            $cliente->direccion ?? '',
 
-                // CLIENTE
-                $cliente->nombre,
-                $cliente->nit ?? '',
-                $cliente->email ?? '',
-                optional($cliente->telefonos->first())->telefono_numero ?? '',
-                optional($cliente->municipio->departamento)->nombre ?? '',
-                optional($cliente->municipio)->nombre ?? '',
-                $cliente->direccion ?? '',
+            // ASESOR
+            $venta->vendedor->name ?? 'Sistema',
 
-                // ASESOR
-                optional($venta->vendedor)->name ?? '',
+            // PRODUCTO
+            $producto->nombre ?? 'Desconocido',
+            $producto->tipo ?? '',
+            $producto->tipo_producto ?? '',
+            $producto->paginas->nombre ?? '',
+            $producto->alto ?? 0,
+            $producto->ancho ?? 0,
+            $producto->fuelle ?? 0,
+            $d->tipoPapel->nombre ?? '',
+            $d->tipoAgarrador->nombre ?? '',
+            $d->color_agarrador ?? '',
+            $d->detalle_impresion ?? '',
 
-                // PRODUCTO
-                $producto->nombre,
-                $producto->tipo_producto,
+            // DETALLE
+            $d->nombre_logo ?? '',
+            //$d->logo_path ? basename($d->logo_path) : '',
+            //$d->archivo_diseno_path ? basename($d->archivo_diseno_path) : '',
+            $d->cantidad,
+            $d->precio,
+            $d->total,
 
-                $producto->tipo_producto === 'personalizado' ? $producto->alto : '',
-                $producto->tipo_producto === 'personalizado' ? $producto->ancho : '',
-                $producto->tipo_producto === 'personalizado' ? $producto->fuelle : '',
+            // TOTALES VENTA
+            $venta->subtotal,
+            $venta->descuento,
+            $venta->costo_envio,
+            $venta->total,
 
-                $producto->tipo_producto === 'personalizado'
-                    ? optional($d->tipoPapel)->nombre
-                    : '',
+            // PAGOS
+            $totalPagado,
+            $saldoPendiente,
+            $pagos->count(),
+            ($pagos->last() && $pagos->last()->created_at) ? $pagos->last()->created_at->format('Y-m-d') : '',
+            $historialPagos,
 
-                $producto->tipo_producto === 'personalizado'
-                    ? optional($d->tipoAgarrador)->nombre
-                    : '',
+            // INFO PAGO
+            $venta->tipo_pago,
+            $venta->banco->nombre ?? 'N/A',
 
-                $producto->tipo_producto === 'personalizado'
-                    ? $d->color_agarrador
-                    : '',
-
-                $producto->tipo_producto === 'personalizado'
-                    ? $d->detalle_impresion
-                    : '',
-
-                // DETALLE
-                $d->cantidad,
-                $d->precio,
-                $d->total,
-
-                // TOTALES VENTA
-                $venta->subtotal,
-                $venta->descuento,
-                $venta->costo_envio,
-                $venta->total,
-
-                // PAGO
-                $venta->tipo_pago,
-                $venta->no_deposito ?? '',
-                optional($venta->banco)->nombre ?? '',
-
-                // PROMOCIÓN
-                $d->promocion_aplicada['nombre'] ?? '',
-                $d->promocion_aplicada['tipo'] ?? '',
-                $d->promocion_aplicada['valor'] ?? '',
-            ];
-        });
+            // PROMOCIÓN
+            $d->promocion_aplicada['nombre'] ?? '',
+            $d->promocion_aplicada['tipo'] ?? '',
+            $d->promocion_aplicada['valor'] ?? '',
+        ];
     }
 
     public function headings(): array
     {
         return [
-            [
-                'VENTA', '', '', '', '', '',               // A1:F1 (6)
-                'CLIENTE', '', '', '', '', '', '',         // G1:M1 (7) <-- Aumentado
-                'ASESOR',                                  // N1 (1)
-                'PRODUCTO', '', '', '', '', '', '', '', '', // O1:W1 (9)
-                'DETALLE', '', '',                         // X1:Z1 (3)
-                'TOTALES', '', '', '',                     // AA1:AD1 (4)
-                'PAGO', '', '',                            // AE1:AG1 (3)
-                'PROMOCIÓN', '', ''                        // AH1:AJ1 (3)
-            ],
-            [
-                'ID Venta', 'Fecha', 'Serie', 'Número', 'Estado', 'Origen',
-                'Cliente', 'NIT', 'Email', 'Teléfono', 'Departamento', 'Municipio', 'Dirección', // CLIENTE
-                'Asesor',
-                'Producto', 'Tipo Producto', 'Alto', 'Ancho', 'Fuelle', 'Tipo Papel', 'Tipo Agarrador', 'Color', 'Detalle Impresión',
-                'Cantidad', 'Precio Unitario', 'Total Línea',
-                'Subtotal Venta', 'Descuento', 'Costo Envío', 'Total Venta',
-                'Tipo Pago', 'No. Referencia', 'Banco',
-                'Promoción Nombre', 'Promoción Tipo', 'Promoción Valor'
-            ]
+            ['VENTA', '', '', '', '', '', '', '', '', '', 'CLIENTE', '', '', '', '', '', '', '', '', '', '', '', 'ASESOR', 'PRODUCTO', '', '', '', '', '', '', '', '', '', '', 'DETALLE', '', '', '', '', '', 'TOTALES', '', '', '', 'PAGOS', '', '', '', '', 'PAGO INFO', '', 'PROMOCIÓN', '', ''],
+            ['ID', 'Fecha', 'Actualizado', 'Serie', 'Número', 'Estado', 'Est. Prod.', 'Tipo cliente', 'Origen', 'Entrega', 'Nombre', 'NIT', 'DPI', 'Email', 'Teléfono', 'Género', 'País', 'Estado', 'Ciudad', 'Depto', 'Municipio', 'Dirección', 'Asesor', 'Producto', 'Tipo', 'Categoría', 'Página', 'Alto', 'Ancho', 'Fuelle', 'Papel', 'Agarrador', 'Color', 'Impresión', 'Logo', 'Cant.', 'Precio', 'Subtotal L.', 'Subtotal V.', 'Desc.', 'Envío', 'Total V.', 'Pagado', 'Pendiente', 'Cant. Pagos', 'Últ. Pago', 'Historial', 'Tipo Pago', 'Banco', 'Nombre', 'Tipo', 'Valor']
         ];
     }
 
@@ -152,12 +153,12 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         return [
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+                'alignment' => ['horizontal' => 'center'],
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1E3A8A']],
             ],
             2 => [
                 'font' => ['bold' => true],
-                'alignment' => ['horizontal' => 'center', 'vertical' => 'center', 'wrapText' => true],
+                'alignment' => ['horizontal' => 'center', 'wrapText' => true],
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'DBEAFE']],
             ],
         ];
@@ -169,19 +170,30 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // REAJUSTE DE COMBINACIONES (Letras movidas por las 2 nuevas columnas)
-                $sheet->mergeCells('A1:F1');   // VENTA
-                $sheet->mergeCells('G1:M1');   // CLIENTE (Ahora hasta M)
-                $sheet->mergeCells('N1:N1');   // ASESOR
-                $sheet->mergeCells('O1:W1');   // PRODUCTO
-                $sheet->mergeCells('X1:Z1');   // DETALLE
-                $sheet->mergeCells('AA1:AD1'); // TOTALES
-                $sheet->mergeCells('AE1:AG1'); // PAGO
-                $sheet->mergeCells('AH1:AJ1'); // PROMOCIÓN
+                // COMBINACIONES DE CELDAS (Merging)
+                $sheet->mergeCells('A1:J1');   // Venta
+                $sheet->mergeCells('K1:V1');   // Cliente
+                $sheet->mergeCells('X1:AH1');  // Producto
+                $sheet->mergeCells('AI1:AL1'); // Detalle
+                $sheet->mergeCells('AM1:AP1'); // Totales
+                $sheet->mergeCells('AQ1:AU1'); // Pagos
+                $sheet->mergeCells('AV1:AW1'); // Pago Info
+                $sheet->mergeCells('AX1:AZ1'); // Promoción
 
+                // Auto-ancho para todas las columnas usadas
+                foreach (range('A', 'Z') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+                foreach (range('A', 'B') as $prefix) {
+                    foreach (range('A', 'Z') as $col) {
+                        $sheet->getColumnDimension($prefix.$col)->setAutoSize(true);
+                    }
+                }
+                
+                // Bordes
                 $highestRow = $sheet->getHighestRow();
-                // AJUSTE DE BORDES (Hasta AJ)
-                $sheet->getStyle("A1:AJ{$highestRow}")->applyFromArray([
+                $highestCol = $sheet->getHighestColumn();
+                $sheet->getStyle("A1:{$highestCol}{$highestRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -189,14 +201,6 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                         ],
                     ],
                 ]);
-
-                // Auto-size corregido para el nuevo ancho
-                foreach (range('A', 'Z') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
-                }
-                foreach (range('A', 'J') as $col) {
-                    $sheet->getColumnDimension('A' . $col)->setAutoSize(true);
-                }
             },
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VentaFinalizadaMail;
 use App\Models\DetalleEstadoProduccion;
 use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
@@ -9,6 +10,7 @@ use App\Models\HistorialEstadoCampo;
 use App\Models\HistorialEstadoProduccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class ProduccionOperativaController extends Controller
 {
@@ -31,6 +33,7 @@ class ProduccionOperativaController extends Controller
             ->with([
                 'detalleVenta.producto',
                 'detalleVenta.venta',
+                'detalleVenta.imagenes',
                 'detalleVenta.historialEstados.estadoProduccion',
                 'detalleVenta.historialEstados.procesoEstado',
                 'detalleVenta.historialEstados.usuario',
@@ -109,6 +112,16 @@ class ProduccionOperativaController extends Controller
 
     public function finalizarProceso(Request $request, DetalleVenta $detalleVenta)
     {
+        $detalle = $detalleVenta->load('venta');
+        $venta = $detalle->venta;
+        $pagado = $venta->pagos()->sum('monto');
+        $pendiente = $venta->total - $pagado;
+
+        if ($pendiente > 0) {
+            return response()->json([
+                'message' => 'La venta tiene un saldo pendiente'
+            ], 422);
+        }
         $estadoActivo = $detalleVenta->getEstadoActual();
 
         if (!$estadoActivo) {
@@ -210,6 +223,15 @@ class ProduccionOperativaController extends Controller
 
         //Recalcular estado de la venta
         $detalleVenta->venta->recalcularEstadoProduccion();
+
+        $venta = $detalleVenta->venta->fresh();
+
+        if ($venta->estado_produccion === 'finalizada') {
+            $venta->load('cliente', 'pagos');
+
+            Mail::to($venta->cliente->email)
+                ->send(new VentaFinalizadaMail($venta->cliente, $venta));
+        }
 
         return response()->json([
             'message' => $siguienteEstado

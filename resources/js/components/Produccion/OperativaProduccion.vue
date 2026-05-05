@@ -11,7 +11,7 @@
 
         <v-row>
             <v-col cols="12" md="6" lg="4" v-for="tarea in tareas" :key="tarea.id">
-                <TareaProduccionCard :tarea="tarea" @iniciar="abrirProceso" @finalizar="abrirFinalizar" @regresar="abrirRegresar"/>
+                <TareaProduccionCard :tarea="tarea" :estado="estado" @iniciar="abrirProceso" @finalizar="abrirFinalizar" @regresar="abrirRegresar"/>
             </v-col>
         </v-row>
 

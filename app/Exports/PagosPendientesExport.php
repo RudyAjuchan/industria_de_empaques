@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Venta;
 use Illuminate\Support\Collection;
+
 use Maatwebsite\Excel\Concerns\{
     FromCollection,
     WithHeadings,
@@ -16,68 +17,42 @@ use Maatwebsite\Excel\Concerns\{
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
+class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting
 {
-    protected array $filters;
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    protected $search;
 
-    public function __construct(array $filters)
+    public function __construct($search = null)
     {
-        $this->filters = $filters;
+        $this->search = ($search === "null" || $search === "") ? null : $search;
     }
-
-    public function collection(): Collection
+    public function collection()
     {
-        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos'])
-            ->orderBy('id', 'desc');
-
-        // 1. Filtro por Fechas
-        if (!empty($this->filters['fecha_inicio']) && !empty($this->filters['fecha_fin'])) {
-            $query->whereBetween('created_at', [
-                $this->filters['fecha_inicio'] . ' 00:00:00',
-                $this->filters['fecha_fin'] . ' 23:59:59'
-            ]);
-        }
-
-        // 2. Filtro por Estado
-        $estado = $this->filters['estado'] ?? null;
-        if ($estado === 'Emitidas') {
-            $query->where('estado', 'emitida');
-        } elseif ($estado === 'Anuladas') {
-            $query->where('estado', 'anulada');
-        } elseif ($estado === 'En Produccion') {
-            $query->where('estado_produccion', 'en_produccion');
-        } elseif ($estado === 'Sin Iniciar') {
-            $query->where('estado_produccion', 'sin_iniciar');
-        } elseif ($estado === 'Finalizadas') {
-            $query->where('estado_produccion', 'finalizada');
-        }
-
-        // 3. Filtro por Búsqueda (Search)
-        $search = trim($this->filters['search'] ?? '');
-        if (!empty($search) && $search !== 'null') {
-            $query->where(function ($sub) use ($search) {
-                if (str_contains($search, '-')) {
-                    [$serie, $numero] = explode('-', $search);
-                    $numero = ltrim($numero, '0');
-                    $sub->where('serie', 'like', "%{$serie}%")
-                        ->where('numero', $numero);
-                } else {
-                    $sub->where('serie', 'like', "%{$search}%")
-                        ->orWhere('numero', 'like', "%{$search}%");
-                }
-
-                $sub->orWhereHas('cliente', function ($c) use ($search) {
-                    $c->where('nombre', 'like', "%{$search}%");
+        return Venta::with(['pagos', 'cliente', 'vendedor'])
+            ->where('estado', 'emitida')
+            ->when($this->search, function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('numero', 'like', "%{$this->search}%")
+                        ->orWhereHas(
+                            'cliente',
+                            fn($c) =>
+                            $c->where('nombre', 'like', "%{$this->search}%")
+                        )
+                        ->orWhereHas(
+                            'vendedor',
+                            fn($v) =>
+                            $v->where('name', 'like', "%{$this->search}%")
+                        );
                 });
-                $sub->orWhereHas('vendedor', function ($v) use ($search) {
-                    $v->where('name', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        return $query->get();
+            })
+            ->get()
+            ->filter(function ($v) {
+                return $v->saldo_pendiente > 0;
+            })
+            ->values();
     }
-
 
     public function headings(): array
     {

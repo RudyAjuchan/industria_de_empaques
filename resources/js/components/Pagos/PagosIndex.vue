@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona los Productos</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona los pagos</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -17,47 +17,38 @@
 
                         <v-list density="compact">
                             <v-list-item prepend-icon="mdi-file-excel-outline" @click="exportExcel"
-                                v-if="can('producto.reporte')">
+                                v-if="can('pago.reporte')">
                                 <v-list-item-title>Excel</v-list-item-title>
                             </v-list-item>
 
                             <v-list-item prepend-icon="mdi-file-pdf-box" @click="exportPdf"
-                                v-if="can('producto.reporte')">
+                                v-if="can('pago.reporte')">
                                 <v-list-item-title>PDF</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/producto/create')"
-                        variant="tonal" :loading="loading" v-if="can('producto.crear')">
+<!--                     <v-btn color="primary" prepend-icon="mdi-plus" @click="create" variant="tonal" :loading="loading"
+                        v-if="can('pago.crear')">
                         Nuevo
-                    </v-btn>
+                    </v-btn> -->
                 </v-col>
             </v-row>
         </div>
-        <v-data-table-server :headers="headers" :items="productos" :items-length="total" :loading="loading"
-            @update:options="fetchProducto" fixed-header height="500px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" v-if="can('producto.ver')" :options="options">
-            <template v-slot:[`item.imagen`]="{ item }">
-                <v-img :src="item.imagen_principal_url || imagePlaceholder" width="52" height="52" aspect-ratio="1"
-                    contain loading="lazy"/>
+
+        <v-data-table :headers="headers" :items="pagos" :loading="loading" fixed-header height="400px"
+            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
+            v-if="can('pago.ver')">
+            <template v-slot:[`item.estado`]="{ item }">
+                <v-chip :color="item.estado === 'anulada' ? 'red' : 'green'" dark>
+                    {{ item.estado }}
+                </v-chip>
             </template>
             <template v-slot:[`item.actions`]="{ item }">
-                <v-row class="ga-2">
-                    <v-btn icon @click="$router.push(`/producto/${item.id}/edit`)" color="primary" variant="tonal"
-                        density="compact" v-if="can('producto.editar')">
-                        <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-
-                    <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
-                        v-if="can('producto.borrar')">
-                        <v-icon>mdi-delete-outline</v-icon>
-                    </v-btn>
-                </v-row>
+                <v-btn icon color="green" variant="tonal" density="compact" @click="abrirPago(item)">
+                    <v-icon>mdi-cash-plus</v-icon>
+                </v-btn>
             </template>
 
-            <template v-slot:[`item.ecommerce`]="{ item }">
-                {{ item.ecommerce === 1 ? 'Si' : 'No' }}
-            </template>
             <template v-slot:[`item.created_at`]="{ item }">
                 {{ formatDate(item.created_at) }}
             </template>
@@ -65,18 +56,28 @@
             <template v-slot:[`item.updated_at`]="{ item }">
                 {{ formatDate(item.updated_at) }}
             </template>
-
-            <template v-slot:[`item.precio_base`]="{ item }">
-                {{ formatQuetzales(item.precio_base) }}
+            <template v-slot:[`item.total`]="{ item }">
+                {{ formatQuetzales(item.total) }}
             </template>
-        </v-data-table-server>
+            <template v-slot:[`item.saldo_pendiente`]="{ item }">
+                <v-chip color="red">{{ formatQuetzales(item.saldo_pendiente) }}</v-chip>
+            </template>
 
+            <template v-slot:[`item.estado_produccion`]="{ item }">
+                <v-chip v-if="item.estado_produccion=='sin_iniciar'">{{ format_estado(item.estado_produccion) }}</v-chip>
+                <v-chip v-if="item.estado_produccion=='en_produccion'" color="red">{{ format_estado(item.estado_produccion) }}</v-chip>
+                <v-chip v-if="item.estado_produccion=='finalizada'" color="green">{{ format_estado(item.estado_produccion) }}</v-chip>
+            </template>
+        </v-data-table>
+
+        <!-- DIALOG PARA GUARDAR -->
+        <PagoDialog v-model="dialog" :venta="ventaSeleccionada" @saved="onSaved" />
 
         <!-- DIALOG PARA ELIMINAR -->
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar el producto
+                    Eliminar el banco
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">
@@ -113,93 +114,62 @@
 
 <script>
 import axios from 'axios'
+import PagoDialog from './PagoDialog.vue'
 import { toast } from 'vue3-toastify'
 
 
 export default {
-    name: 'producto.index',
+    name: 'pago.index',
+    components: {
+        PagoDialog,
+    },
     data() {
         return {
-            productos: [],
+            pagos: [],
             loading: false,
             deleting: false,
             showPermissions: false,
             selectedRole: null,
 
             headers: [
-                { title: 'Nombre', key: 'nombre' },
-                { title: 'Imagen', key: 'imagen', sortable: false },
-                { title: 'Alto', key: 'alto' },
-                { title: 'Ancho', key: 'ancho' },
-                { title: 'Fuelle', key: 'fuelle' },
-                { title: 'Ecommerce', key: 'ecommerce' },
-                { title: 'Tipo', key: 'tipo' },
-                { title: 'Página', key: 'paginas.nombre' },
-                { title: 'Tipo producto', key: 'tipo_producto' },
-                { title: 'Precio', key: 'precio_base' },
-                { title: 'Creado', key: 'created_at' },
-                { title: 'Actualizado', key: 'updated_at' },
-                { title: 'Acciones', key: 'actions', sortable: false }
+                { title: 'Número', key: 'numero_completo' },
+                { title: 'Cliente', key: 'cliente.nombre' },
+                { title: 'Total Venta', key: 'total' },
+                { title: 'Pago pendiente', key: 'saldo_pendiente' },
+                { title: 'Vendedor', key: 'vendedor.name' },
+                { title: 'Estado', key: 'estado' },
+                { title: 'Estado Producción', key: 'estado_produccion' },
+                { title: 'Fecha emitida', key: 'created_at' },
+                { title: 'Acciones', key: 'actions', sortable: false },
             ],
             search: null,
+            dialog: false,
             selected: null,
             toDelete: null,
             deleteDialog: false,
             informationDialog: false,
             message: "",
-            imagePlaceholder: '/storage/no-image.png',
-            total: 0,
-            options: {
-                page: 1,
-                itemsPerPage: 10,
-                sortBy: [{ key: 'id', order: 'desc' }],
-            },
-            debounceTimer: null,
+
+            dialog: false,
+            ventaSeleccionada: null,
         }
     },
 
     mounted() {
-        this.fetchProducto()
-        const toastType = this.$route.query.toast
-        if (toastType === 'saved') {
-            toast.success('Producto guardado correctamente', {
-                autoClose: 2000,
-                onClose: () => {
-                    this.$router.replace({ query: {} })
-                }
-            })
-        }
-
-        if (toastType === 'updated') {
-            toast.success('Producto actualizado correctamente', {
-                autoClose: 2000,
-                onClose: () => {
-                    this.$router.replace({ query: {} })
-                }
-            })
-        }
+        this.fetchPagos()
     },
 
     methods: {
-        async fetchProducto(options = this.options) {
+        async fetchPagos() {
             this.loading = true
+            await axios.get('/pagos')
+                .then(res => this.pagos = res.data)
+                .finally(() => this.loading = false)
+        },
 
-            // sincronizamos options cuando viene del data-table
-            this.options = options
-
-            const { data } = await axios.get('/producto', {
-                params: {
-                    page: options.page,
-                    per_page: options.itemsPerPage,
-                    search: this.search,
-                    sort_by: options.sortBy?.[0]?.key,
-                    sort_order: options.sortBy?.[0]?.order,
-                }
-            })
-
-            this.productos = data.data
-            this.total = data.total
-            this.loading = false
+        edit(item) {
+            this.selected = item
+            this.dialog = true
         },
 
         openDelete(item) {
@@ -212,14 +182,25 @@ export default {
                 search: this.search
             })
 
-            window.location.href = `/producto/export/excel?${params.toString()}`
+            window.location.href = `/pagos/export/excel?${params.toString()}`
         },
 
         exportPdf() {
             const params = new URLSearchParams({
                 search: this.search
             })
-            window.open(`/producto/export/pdf?${params.toString()}`, '_blank')
+            window.open(`/pagos/export/pdf?${params.toString()}`, '_blank')
+        },
+
+        create() {
+            this.selected = null
+            this.dialog = true
+        },
+
+        onSaved(tipo) {
+            console.log("si pasa")
+            this.fetchPagos();
+            toast.success('Banco guardado')
         },
 
         async confirmDelete() {
@@ -227,11 +208,11 @@ export default {
             this.deleting = true
 
             try {
-                await axios.delete(`/producto/${this.toDelete.id}`)
+                await axios.delete(`/banco/${this.toDelete.id}`)
                 this.deleteDialog = false
                 this.toDelete = null
-                await this.fetchProducto()
-                toast.success('Producto eliminado')
+                await this.fetchPagos()
+                toast.success('Banco eliminado')
             } catch (err) {
                 this.deleteDialog = false;
                 this.informationDialog = true;
@@ -252,6 +233,18 @@ export default {
             })
         },
 
+        format_estado(estado){
+            return estado.replace('_', ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        },
+
+        abrirPago(venta) {
+            this.ventaSeleccionada = venta
+            this.dialog = true
+        },
+
         formatQuetzales(value){
             if (value === null || value === undefined || isNaN(value)) {
                 return 'Q 0.00';
@@ -263,18 +256,6 @@ export default {
                 minimumFractionDigits: 2
             }).format(value);
         },
-    },
-    watch: {
-        search(newValue) {
-            clearTimeout(this.debounceTimer)
-
-            this.options.page = 1
-
-            this.debounceTimer = setTimeout(() => {
-                this.fetchProducto()
-            }, 800)
-        }
     }
-
 }
 </script>

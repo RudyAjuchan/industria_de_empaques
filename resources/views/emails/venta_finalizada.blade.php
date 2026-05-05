@@ -32,7 +32,12 @@
 
                             <h3 style="color:#00432C;">Hola {{ $cliente->nombre }}</h3>
 
-                            <p>Tu solicitud ha sido aprobada correctamente.</p>
+                            <p>Tu pedido ha sido finalizado correctamente.</p>
+
+                            <p style="margin-top:10px;">
+                                Tu pedido ya se encuentra <strong style="color:#2e7d32;">completado</strong>
+                                y listo para entrega, muy pronto recibirás tu producto.
+                            </p>
 
                             <p>
                                 <strong>No.</strong> {{ $venta->serie }}-{{ $venta->numero }}
@@ -201,6 +206,20 @@
                                         </strong>
                                     </td>
                                 </tr>
+
+                                @if ($venta->pagos->count())
+                                    <tr>
+                                        <td colspan="2">
+                                            <strong>Pagos realizados:</strong><br>
+                                            @foreach ($venta->pagos as $p)
+                                                <span style="font-size:11px;">
+                                                    Q{{ number_format($p->monto, 2) }} - {{ $p->metodo_pago }}
+                                                    ({{ $p->created_at->format('d/m/Y') }})
+                                                </span><br>
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                @endif
                             </table>
 
                             <br>
@@ -233,7 +252,8 @@
                                         </a>
                                     </td>
                                     <td style="padding: 0 10px;">
-                                        <a href="https://wa.me/50232500812" target="_blank" style="text-decoration: none;">
+                                        <a href="https://wa.me/50232500812" target="_blank"
+                                            style="text-decoration: none;">
                                             <img src="{{ config('app.url') }}/img/icons/whatsapp.png" width="30"
                                                 height="30" alt="WhatsApp" style="display:block;">
                                         </a>

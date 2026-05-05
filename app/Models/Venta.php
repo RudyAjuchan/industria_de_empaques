@@ -12,6 +12,7 @@ class Venta extends Model
         'vendedor_id',
         'clientes_id',
         'bancos_id',
+        'es_cliente_nuevo',
         'serie',
         'numero',
         'fecha_entrega',
@@ -37,9 +38,10 @@ class Venta extends Model
         'sat_fecha' => 'datetime',
         'sat_respuesta' => 'array',
         'promociones' => 'array',
+        'fecha_entrega' => 'date'
     ];
 
-    protected $appends = ['numero_completo'];
+    protected $appends = ['numero_completo', 'saldo_pendiente'];
 
     public function getNumeroCompletoAttribute()
     {
@@ -135,4 +137,21 @@ class Venta extends Model
         $this->save();
     }
 
+
+    public function pagos()
+    {
+        return $this->hasMany(Pago::class, 'ventas_id');
+    }
+
+    public function getSaldoPendienteAttribute()
+    {
+        $pagado = $this->pagos()->sum('monto');
+        return $this->total - $pagado;
+    }
+
+
+    public function getTotalPagadoAttribute()
+    {
+        return $this->pagos()->sum('monto');
+    }
 }

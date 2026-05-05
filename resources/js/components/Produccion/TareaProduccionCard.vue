@@ -19,6 +19,47 @@
                 <v-icon>mdi-arrow-u-left-top</v-icon> Regresado desde {{ ultimoRegreso.estado_produccion?.nombre }}
             </v-chip>
 
+            <div v-if="tarea.detalle_venta.imagenes?.length && estado.nombre=='Área de impresión'" class="mt-3">
+
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+
+                    <div v-for="img in tarea.detalle_venta.imagenes" :key="img.id"
+                        style="position:relative; border:1px solid #eee; border-radius:8px; overflow:hidden;">
+
+                        <img :src="getImagenUrl(img.path)" style="width:100%; height:80px; object-fit:cover;" />
+
+                        <!-- Descargar -->
+                        <v-btn icon size="x-small" color="primary" style="position:absolute; bottom:4px; right:4px;"
+                            @click="descargarImagen(img.path)">
+                            <v-icon size="14">mdi-download</v-icon>
+                        </v-btn>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DISEÑO -->
+            <div v-if="tarea.detalle_venta.archivo_diseno_path && estado.nombre=='Área de impresión'" class="mt-3 pa-2"
+                style="background:#f5f5f5; border-radius:8px;">
+
+                <div class="d-flex align-center justify-space-between">
+
+                    <div
+                        style="font-size:12px; max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        {{ getNombreArchivo(tarea.detalle_venta.archivo_diseno_path) }}
+                    </div>
+
+                    <v-btn icon size="small" color="purple"
+                        @click="descargarDiseno(tarea.detalle_venta.archivo_diseno_path)">
+                        <v-icon>mdi-download</v-icon>
+                    </v-btn>
+
+                </div>
+
+            </div>
+
         </v-card-text>
 
         <v-card-actions class="d-flex flex-column ga-2">
@@ -53,6 +94,10 @@ export default {
     name: 'TareaProduccionCard',
     props: {
         tarea: {
+            type: Object,
+            required: true
+        },
+        estado: {
             type: Object,
             required: true
         }
@@ -90,7 +135,7 @@ export default {
             }
 
             return null
-        }
+        },
 
         /* ultimoRegreso() {
 
@@ -115,8 +160,57 @@ export default {
 
             return null
         } */
+    },
 
+    methods: {
+        getImagenUrl(path) {
+            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+        },
 
+        async descargarImagen(path) {
+            try {
+                const url = `${this.getImagenUrl(path)}?t=${new Date().getTime()}`
+
+                const response = await fetch(url)
+                const blob = await response.blob()
+
+                const blobUrl = window.URL.createObjectURL(blob)
+
+                const link = document.createElement('a')
+                link.href = blobUrl
+                link.download = path.split('/').pop()
+
+                document.body.appendChild(link)
+                link.click()
+
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(blobUrl)
+
+            } catch (error) {
+                console.error(error)
+                toast.error('No se pudo descargar la imagen')
+            }
+        },
+
+        getNombreArchivo(path) {
+            return path.split('/').pop()
+        },
+
+        getDisenoUrl(path) {
+            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+        },
+
+        descargarDiseno(path) {
+            const url = this.getDisenoUrl(path)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = this.getNombreArchivo(path)
+
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        }
     }
 
 }

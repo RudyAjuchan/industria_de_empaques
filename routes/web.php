@@ -9,6 +9,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EstadisticasProduccionController;
 use App\Http\Controllers\ForcePasswordController;
 use App\Http\Controllers\PaginaController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Produccion\ColaProduccionController;
 use App\Http\Controllers\Produccion\EstadoProduccionController;
@@ -176,6 +177,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/produccionActiva', [VentaController::class, 'ventas_activas'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
     Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa');
+    Route::post('/s3/presigned-url', [VentaController::class, 'generatePresignedUrl'])->middleware('permission:venta.crear');
+    Route::post('/detalle/{id}/guardar-diseno', [VentaController::class, 'guardarDiseno'])->middleware('permission:venta.crear');
+    
     Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar');
     Route::get('/venta/{venta}/imprimir', [VentaController::class, 'imprimir'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/pdf', [VentaController::class, 'exportPdf'])->middleware('permission:venta.reporte');
@@ -188,8 +192,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::post('/product/search', [ProductosController::class, 'search'])
         ->middleware('permission:venta.crear');
 
-    Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:venta.reporte');
-    Route::get('/ventas/contabilidad', [VentaController::class, 'contabilidad'])->middleware('permission:venta.reporte');
+    Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:menu.contabilidad');
+    Route::get('/ventas/contabilidad', [VentaController::class, 'contabilidad'])->middleware('permission:menu.contabilidad');
 });
 
 /* RUTAS DE TRACKING DE PRODUCCIÓN */
@@ -261,10 +265,15 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF']);
     Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel']);
 });
-require __DIR__.'/auth.php';
 
-
-
+/* RUTAS PARA PAGOS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::post('/pagos', [PagoController::class, 'store'])->middleware('permission:pago.crear');
+    Route::get('/pagos/{venta}', [PagoController::class, 'show'])->middleware('permission:pago.ver');
+    Route::get('/pagos', [PagoController::class, 'index'])->middleware('permission:pago.ver');
+    Route::get('/pagos/export/pdf', [PagoController::class, 'exportPDF'])->middleware('permission:pago.ver');
+    Route::get('/pagos/export/excel', [PagoController::class, 'exportExcel'])->middleware('permission:pago.ver');
+});
 
 /* PARA EL ECOMMERCE */
 Route::prefix('api')->group(function () {
@@ -293,6 +302,7 @@ Route::prefix('api')->group(function () {
 
         Route::get('/home', [CatalogoController::class, 'home']);
         Route::get('/paginas', [PaginaController::class, 'index']);
+        Route::get('/tipos', [PaginaController::class, 'getTipos']);
         Route::get('/productos', [ProductoController::class, 'index']);
         Route::get('/productos/{id}', [ProductoController::class, 'show']);
 
@@ -310,3 +320,5 @@ Route::prefix('api')->group(function () {
     });
 
 });
+
+require __DIR__.'/auth.php';

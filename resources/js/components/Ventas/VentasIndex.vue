@@ -34,11 +34,29 @@
                 </v-col>
             </v-row>
         </div>
+
+        <v-row class="mb-2">
+            <v-col cols="3">
+                <v-text-field v-model="filters.fecha_inicio" label="Desde" type="date" density="compact"
+                    variant="outlined" @update:model-value="getVentas" />
+            </v-col>
+            <v-col cols="3">
+                <v-text-field v-model="filters.fecha_fin" label="Hasta" type="date" density="compact" variant="outlined"
+                    @update:model-value="getVentas" />
+            </v-col>
+            <v-col cols="3">
+                <v-select v-model="filters.estado" :items="['Emitidas', 'Anuladas', 'En Produccion', 'Sin Iniciar', 'Finalizadas', 'Todos']" label="Estado"
+                    density="compact" variant="outlined" @update:model-value="getVentas" />
+            </v-col>
+        </v-row>
         <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('venta.ver')" fixed-header height="400px"
             :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search">
 
             <template v-slot:[`item.created_at`]="{ item }">
                 {{ formatDate(item.created_at) }}
+            </template>
+            <template v-slot:[`item.total`]="{ item }">
+                {{ formatQuetzales(item.total) }}
             </template>
 
             <template v-slot:[`item.estado`]="{ item }">
@@ -85,6 +103,9 @@ import axios from 'axios'
 export default {
     name: 'ventas.index',
     data() {
+        const hoy = new Date();
+        const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split('T')[0];
         return {
             ventas: [],
             loading: false,
@@ -99,6 +120,11 @@ export default {
                 { title: 'Acciones', key: 'acciones', sortable: false },
             ],
             search: null,
+            filters: {
+                fecha_inicio: inicioMes,
+                fecha_fin: finMes,
+                estado: 'Emitidas' // 'activos', 'anulados', 'todos'
+            },
         }
     },
 
@@ -106,7 +132,7 @@ export default {
         async getVentas() {
             this.loading = true
             try {
-                const { data } = await axios.get('/venta')
+                const { data } = await axios.get('/venta', { params: this.filters })
                 this.ventas = data
             } finally {
                 this.loading = false
@@ -119,14 +145,16 @@ export default {
             await axios.delete(`/venta/${item.id}`)
             this.getVentas()
         },
-        exportExcel(){
+        exportExcel() {
             const params = new URLSearchParams({
+                ...this.filters,
                 search: this.search
             })
-
             window.location.href = `/venta/export/excel?${params.toString()}`
-        },exportPdf(){
+        },
+        exportPdf() {
             const params = new URLSearchParams({
+                ...this.filters,
                 search: this.search
             })
             window.open(`/venta/export/pdf?${params.toString()}`, '_blank')
@@ -158,7 +186,19 @@ export default {
                 .split(' ')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
-        }
+        },
+
+        formatQuetzales(value){
+            if (value === null || value === undefined || isNaN(value)) {
+                return 'Q 0.00';
+            }
+
+            return new Intl.NumberFormat('es-GT', {
+                style: 'currency',
+                currency: 'GTQ',
+                minimumFractionDigits: 2
+            }).format(value);
+        },
     },
 
     mounted() {

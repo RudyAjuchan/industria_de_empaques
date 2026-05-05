@@ -42,6 +42,10 @@
                 </v-col>
 
                 <v-col cols="12">
+                    <v-switch label="¿Ecommerce?" color="secondary" v-model="form.ecommerce"></v-switch>
+                </v-col>
+
+                <v-col cols="12">
                     <v-text-field v-model="form.tipo" variant="outlined" density="compact" :error-messages="errors.tipo"
                         label="Tipo" />
                 </v-col>
@@ -138,6 +142,7 @@ export default {
                 tipo_producto: 'personalizado',
                 precio_base: null,
                 descripcion: '',
+                ecommerce: false,
             },
             errors: {},
             paginas: [],
@@ -286,6 +291,7 @@ export default {
                     tipo_producto: producto.tipo_producto || 'personalizado',
                     precio_base: producto.precio_base,
                     descripcion: producto.descripcion,
+                    ecommerce: producto.ecommerce === 1 ? true: false,
                 }
 
                 this.files = producto.imagenes.map(img => ({

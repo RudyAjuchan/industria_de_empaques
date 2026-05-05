@@ -54,6 +54,9 @@ class ProductosController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'ecommerce' => filter_var($request->ecommerce, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+        ]);
         $request->validate([
             'nombre' => 'required|string',
             'alto' => 'nullable|numeric',
@@ -65,13 +68,14 @@ class ProductosController extends Controller
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
             'descripcion' => 'nullable|string',
+            'ecommerce' => 'required|boolean',
 
             'main_index' => 'required|integer',
         ]);
 
         DB::beginTransaction();
         try {
-            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion']);
+            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
 
             if ($data['tipo_producto'] === 'simple') {
                 $data['alto'] = $data['ancho'] = $data['fuelle'] = null;
@@ -120,6 +124,9 @@ class ProductosController extends Controller
 
     public function update(Request $request, Producto $producto)
     {
+        $request->merge([
+            'ecommerce' => filter_var($request->ecommerce, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+        ]);
         $request->validate([
             'nombre' => 'required|string',
             'alto' => 'nullable|numeric',
@@ -130,6 +137,7 @@ class ProductosController extends Controller
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
             'descripcion' => 'nullable|string',
+            'ecommerce' => 'required|boolean',
             'main_index' => 'required|integer',
         ]);
 
@@ -144,7 +152,8 @@ class ProductosController extends Controller
                 'paginas_id',
                 'tipo_producto',
                 'precio_base',
-                'descripcion'
+                'descripcion',
+                'ecommerce',
             ]);
 
             // Lógica de tipo de producto

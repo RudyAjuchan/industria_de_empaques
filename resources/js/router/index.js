@@ -46,6 +46,9 @@ const promocionesComponent = () => import('../components/Promociones/Promociones
 /* RUTAS PARA VENTAS CONTABILIDAD */
 const ventasContabilidadComponent = () => import('../components/Contabilidad/ContabilidadIndex.vue');
 
+/* RUTAS PARA PAGOS */
+const pagosComponent = () => import('../components/Pagos/PagosIndex.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -255,7 +258,16 @@ const routes = [
         name: 'ContabilidadVue',
         component: ventasContabilidadComponent,
         meta: { 
-            permission: 'promocion.ver' 
+            permission: 'menu.contabilidad' 
+        }
+    },
+    /* PARA PAGOS */
+    {
+        path: '/pagos',
+        name: 'pagos.index',
+        component: pagosComponent,
+        meta: {
+            permission: 'menu.pagos'
         }
     },
 ];

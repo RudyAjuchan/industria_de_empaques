@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\PaginaExport;
 use App\Models\Pagina;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
@@ -16,6 +17,14 @@ class PaginaController extends Controller
         return Pagina::where('estado', 1)
             ->orderBy('nombre')
             ->get();
+    }
+    public function getTipos()
+    {
+        return Producto::where('estado', 1)
+            ->where('ecommerce', 1)
+            ->select('tipo')
+            ->distinct()
+            ->pluck('tipo');
     }
 
     public function store(Request $request)

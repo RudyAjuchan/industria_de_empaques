@@ -153,12 +153,20 @@
                         <div class="label">Promociones</div>
                     </a>
                 @endcan
-                @can('venta.reporte')
+                @can('menu.contabilidad')
                     <a href="#" data-route="/ventas_contabilidad" data-title="Ventas Contabilidad">
                         <div class="ico" aria-hidden="true">
                             <i class="mdi mdi-calculator"></i>
                         </div>
                         <div class="label">Ventas Contabilidad</div>
+                    </a>
+                @endcan
+                @can('menu.pagos')
+                    <a href="#" data-route="/pagos" data-title="Pagos pendientes">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-credit-card"></i>
+                        </div>
+                        <div class="label">Pagos</div>
                     </a>
                 @endcan
             </nav>

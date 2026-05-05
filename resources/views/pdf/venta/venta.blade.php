@@ -19,15 +19,26 @@
             border-collapse: collapse;
         }
 
+        .table-resumen{
+            width: 35%;
+        }
+
         th, td {
-            border: 1px solid #666;
+            /* border: 1px solid #666; */
             padding: 2px 3px;
             vertical-align: top;
         }
 
         th {
-            background: #f3f3f3;
+            /* background: #f3f3f3; */
             text-align: left;
+        }
+
+        .table-color td, .table-color th{
+            border: 1px solid #666;
+        }
+        .table-color th{
+            background: #f3f3f3;
         }
 
         .no-border td, .no-border th {

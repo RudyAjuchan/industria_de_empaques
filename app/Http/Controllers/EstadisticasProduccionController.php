@@ -67,6 +67,10 @@ class EstadisticasProduccionController extends Controller
             $query->whereDate('fecha_inicio', now());
         }
 
+        if ($request->periodo === 'dia') {
+            $query->whereDate('fecha_inicio', $request->fecha);
+        }
+
         if ($request->periodo === 'mes') {
             $query->whereYear('fecha_inicio', $request->year)
                 ->whereMonth('fecha_inicio', $request->month);

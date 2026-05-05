@@ -10,7 +10,7 @@
         <col style="width:17.5%">
         <col style="width:17.5%">
     </colgroup>
-    <table style="margin-bottom:25px">
+    <table style="margin-bottom:25px" class="table-color">
         <tbody>
             <tr>
                 <th style="width:25%">NÚMERO DE INFORME</th>

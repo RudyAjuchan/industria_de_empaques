@@ -16,6 +16,7 @@ class CatalogoController extends Controller
         $masVendidos = Producto::with(['imagenes'])
             ->withCount('detalles')
             ->where('estado', 1)
+            ->where('ecommerce', 1)
             ->orderByDesc('detalles_count')
             ->take(8)
             ->get();
@@ -24,6 +25,7 @@ class CatalogoController extends Controller
         if ($masVendidos->sum('detalles_count') === 0) {
             $masVendidos = Producto::with('imagenes')
                 ->where('estado', 1)
+                ->where('ecommerce', 1)
                 ->latest()
                 ->take(8)
                 ->get();
@@ -35,6 +37,7 @@ class CatalogoController extends Controller
         // RECIENTES
         $recientes = Producto::with('imagenes')
             ->where('estado', 1)
+            ->where('ecommerce', 1)
             ->latest()
             ->take(8)
             ->get()

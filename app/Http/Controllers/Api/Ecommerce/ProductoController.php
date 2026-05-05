@@ -14,7 +14,8 @@ class ProductoController extends Controller
     public function index(Request $request)
     {
         $query = Producto::with(['imagenes', 'paginas'])
-            ->where('estado', 1);
+            ->where('estado', 1)
+            ->where('ecommerce', 1);
 
         if ($request->paginas_id) {
             $query->where('paginas_id', $request->paginas_id);
@@ -60,6 +61,12 @@ class ProductoController extends Controller
     public function show($id)
     {
         $producto = Producto::with(['imagenes', 'paginas'])->findOrFail($id);
+
+        if ($producto->estado != 1 || $producto->ecommerce != 1) {
+            return response()->json([
+                'message' => 'Producto no disponible'
+            ], 404);
+        }
 
         // APLICAR PROMOCIÓN
         $promo = Promocion::vigente()
@@ -131,8 +138,11 @@ class ProductoController extends Controller
     public function promociones()
     {
         return Promocion::vigente()
-            ->where('aplica_a', 'producto') // o quitar si quieres todas
-            ->with('productos')
+            ->where('aplica_a', 'producto')
+            ->with(['productos' => function ($q) {
+            $q->where('estado', 1)
+                ->where('ecommerce', 1);
+        }])
             ->get()
             ->map(function ($promo) {
                 return [

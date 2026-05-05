@@ -22,6 +22,7 @@ class DetalleVenta extends Model
         'cantidad',
         'promocion_aplicada',
         'total',
+        'archivo_diseno_path',
     ];
 
     protected $casts = [
@@ -82,5 +83,10 @@ class DetalleVenta extends Model
             ->whereNull('fecha_fin')
             ->orderByDesc('fecha_inicio')
             ->first();
+    }
+
+    public function imagenes()
+    {
+        return $this->hasMany(DetalleVentaImagen::class, 'detalle_ventas_id');
     }
 }

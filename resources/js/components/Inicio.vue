@@ -45,7 +45,7 @@
         <!-- ESTADISTICAS GENERALES (unidades) -->
         <v-row class="mb-5">
             <v-col cols="12">
-                <h2>Estadísticas Generales</h2>
+                <h2>Estado de pedidos del periodo</h2>
             </v-col>
             <v-col cols="12" sm="6" md="2">
                 <v-card class="pa-3 elevation-2">
@@ -85,7 +85,7 @@
 
             <v-col cols="12" sm="6" md="2">
                 <v-card class="pa-3 elevation-2">
-                    <div class="text-caption text-grey">Pendiente</div>
+                    <div class="text-caption text-grey">Pendiente de pedidos</div>
                     <div class="text-h5 font-weight-bold text-grey-darken-1">
                         {{ formatNumber(estadisticas.pendiente) }}
                     </div>
@@ -97,6 +97,9 @@
         <v-row class="mb-5">
             <v-col cols="12">
                 <h2>Estadísticas Por área (unidades)</h2>
+                <div class="text-caption text-grey mb-4">
+                    Mostrando el avance de los pedidos creados en el periodo seleccionado
+                </div>
             </v-col>
             <v-col v-for="(estado, index) in porEstado" :key="index" cols="12" sm="6" md="4" lg="3">
                 <v-card class="pa-4 elevation-2 rounded-lg">
@@ -156,7 +159,22 @@
             <v-col cols="12">
                 <v-card class="pa-4 elevation-2">
                     <div class="text-h6 mb-3">Producción por estado</div>
-                    <canvas id="graficaEstados"></canvas>
+                    <v-row>
+                        <v-col cols="12">
+                            <h2>Comparativa por área</h2>
+                        </v-col>
+
+                        <v-col v-for="(estado, index) in porEstado" :key="'chart-' + index" cols="12" sm="6" md="4"
+                            lg="3">
+                            <v-card class="pa-3" style="position: relative; height: 250px;">
+                                <div class="text-subtitle-2 font-weight-bold mb-2">
+                                    {{ estado.estado }}
+                                </div>
+
+                                <canvas :id="'chart-' + index"></canvas>
+                            </v-card>
+                        </v-col>
+                    </v-row>
                 </v-card>
             </v-col>
         </v-row>
@@ -206,29 +224,178 @@
                 </v-card>
             </v-col>
         </v-row>
+
+        <v-row class="mt-5">
+
+            <!-- TABLA -->
+            <v-col cols="12" md="6">
+                <v-card class="pa-4 elevation-2">
+                    <v-card-title>
+                        Venta por página
+                    </v-card-title>
+
+                    <v-table density="compact">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Página</th>
+                                <th class="text-right">Venta sin envío</th>
+                                <th class="text-right">Costo envío</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="(item, index) in ventasPorPagina" :key="index">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ item.nombre }}</td>
+                                <td class="text-right">Q{{ formatNumber(item.venta) }}</td>
+                                <td class="text-right">Q{{ formatNumber(item.envio) }}</td>
+                                <td class="text-right font-weight-bold">
+                                    Q{{ formatNumber(item.total) }}
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <!-- TOTALES -->
+                        <tfoot>
+                            <tr class="bg-grey-lighten-3 font-weight-bold">
+                                <td colspan="2">TOTAL</td>
+                                <td class="text-right">
+                                    Q{{ formatNumber(totalesVentaPagina.venta) }}
+                                </td>
+                                <td class="text-right">
+                                    Q{{ formatNumber(totalesVentaPagina.envio) }}
+                                </td>
+                                <td class="text-right">
+                                    Q{{ formatNumber(totalesVentaPagina.total) }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </v-table>
+                </v-card>
+            </v-col>
+
+            <!-- GRÁFICA -->
+            <v-col cols="12" md="6">
+                <v-card class="pa-4 elevation-2" style="height: 400px;">
+                    <div class="text-h6 mb-3 text-center">
+                        Gráfica de ventas por página
+                    </div>
+
+                    <canvas id="graficaVentas"></canvas>
+                </v-card>
+            </v-col>
+
+        </v-row>
+
+        <v-row class="mt-6">
+
+            <!-- TABLA -->
+            <v-col cols="12" md="5">
+                <v-card class="pa-4 elevation-2">
+                    <v-card-title>Tipo de producto</v-card-title>
+
+                    <v-table density="compact">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Tipo</th>
+                                <th class="text-right">Unidades</th>
+                                <th class="text-right">Ventas</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="(item, index) in tiposProducto" :key="index">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ item.tipo }}</td>
+                                <td class="text-right">{{ formatNumber(item.unidades) }}</td>
+                                <td class="text-right">{{ item.ventas }}</td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot>
+                            <tr class="bg-grey-lighten-3 font-weight-bold">
+                                <td colspan="2">TOTAL</td>
+                                <td class="text-right">{{ formatNumber(totalesTipos.unidades) }}</td>
+                                <td class="text-right">{{ totalesTipos.ventas }}</td>
+                            </tr>
+                        </tfoot>
+                    </v-table>
+                </v-card>
+            </v-col>
+
+            <!-- GRÁFICA -->
+            <v-col cols="12" md="7">
+                <v-card class="pa-4 elevation-2" style="height: 350px;">
+                    <div class="text-subtitle-1 font-weight-bold mb-2 text-center">
+                        Unidades por tipo
+                    </div>
+                    <canvas id="graficaTipos"></canvas>
+                </v-card>
+            </v-col>
+
+        </v-row>
+
+        <v-overlay :model-value="loading" class="align-center justify-center">
+            <v-progress-circular indeterminate size="64" />
+        </v-overlay>
     </div>
 </template>
 <script>
 import LoginWelcome from './LoginWelcome.vue';
 import ChartDataLabels from 'chartjs-plugin-datalabels'
+
+const centerTextPlugin = {
+    id: 'centerText',
+    afterDraw(chart) {
+        const { ctx, chartArea: { top, bottom, left, right } } = chart;
+        const text = chart.config.options.plugins.centerText?.text;
+
+        if (!text) return;
+
+        ctx.save();
+
+        // Calculamos el centro exacto del área del gráfico
+        const centerX = (left + right) / 2;
+        const centerY = (top + bottom) / 2;
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillStyle = '#333';
+
+        // Dibujar el texto en el centro
+        ctx.fillText(text, centerX, centerY);
+
+        ctx.restore();
+    }
+}
+
 import {
     Chart,
-    BarController,
-    BarElement,
-    CategoryScale,
-    LinearScale,
+    ArcElement,
+    DoughnutController,
     Tooltip,
-    Legend
+    Legend,
+    LinearScale,
+    BarController,
+    CategoryScale,
+    BarElement,
 } from 'chart.js'
 
 Chart.register(
-    BarController,
-    BarElement,
-    CategoryScale,
-    LinearScale,
+    ArcElement,
+    DoughnutController,
     Tooltip,
     Legend,
-    ChartDataLabels
+    ChartDataLabels,
+    centerTextPlugin,
+    LinearScale,
+    BarController,
+    CategoryScale,
+    BarElement,
 )
 export default {
     name: 'InicioVue',
@@ -276,7 +443,47 @@ export default {
             years: [],
             mesesDisponibles: {},
 
-            meses: []
+            meses: [],
+
+            chart: [],
+
+            ventasPorPagina: [],
+            headersVentas: [
+                { title: 'No.', key: 'no' },
+                { title: 'Página / Asesor', key: 'nombre' },
+                { title: 'Venta sin envío', key: 'venta' },
+                { title: 'Costo envío', key: 'envio' },
+                { title: 'Total', key: 'total' }
+            ],
+            chartVentas: null,
+            totalesVentaPagina: [],
+            coloresBase: [
+                'rgba(79, 129, 189, 0.8)',  // azul
+                'rgba(192, 80, 77, 0.8)',   // rojo
+                'rgba(155, 187, 89, 0.8)',  // verde
+                'rgba(128, 100, 162, 0.8)', // morado
+                'rgba(75, 172, 198, 0.8)',  // celeste
+                'rgba(247, 150, 70, 0.8)',  // naranja
+                'rgba(146, 208, 80, 0.8)',  // verde claro
+                'rgba(0, 176, 240, 0.8)',   // azul claro
+                'rgba(255, 192, 0, 0.8)',   // amarillo
+                'rgba(112, 48, 160, 0.8)',  // púrpura fuerte
+
+                // extras
+                'rgba(0, 112, 192, 0.8)',   // azul oscuro
+                'rgba(0, 176, 80, 0.8)',    // verde fuerte
+                'rgba(255, 102, 0, 0.8)',   // naranja fuerte
+                'rgba(153, 153, 153, 0.8)', // gris
+                'rgba(91, 155, 213, 0.8)',  // azul suave
+                'rgba(237, 125, 49, 0.8)',  // naranja suave
+            ],
+
+            tiposProducto: [],
+            totalesTipos: {
+                unidades: 0,
+                ventas: 0
+            },
+            chartTipos: null
         }
     },
     methods: {
@@ -284,14 +491,37 @@ export default {
         async cargarEstadisticas() {
             this.loading = true
             try {
-                const { data } = await axios.get('/estadisticas-produccion', {
+                const response = await axios.get('/estadisticas-produccion', {
                     params: this.filtros
                 })
 
-                this.estadisticas = data.totales
-                this.porEstado = data.por_estado
+                const response2 = await axios.get('/estadisticas-por-pagina', {
+                    params: this.filtros
+                })
+
+                const response3 = await axios.get('/estadisticas-por-tipo', {
+                    params: this.filtros
+                })
+
+                this.estadisticas = response.data.totales
+                this.porEstado = response.data.por_estado
+                this.ventasPorPagina = response2.data.ventas_por_pagina || []
+                this.totalesVentaPagina = response2.data.totales || []
+
 
                 this.$nextTick(() => this.renderChart())
+                this.$nextTick(() => this.renderChartVentas())
+
+
+                this.tiposProducto = response3.data.tipos_producto || []
+                this.totalesTipos = response3.data.totales || {
+                    unidades: 0,
+                    ventas: 0
+                }
+
+                this.$nextTick(() => {
+                    this.renderChartTipos()
+                })
 
             } finally {
                 this.loading = false
@@ -300,82 +530,76 @@ export default {
 
         renderChart() {
 
-            if (this.chart) {
-                this.chart.destroy()
+            // destruir charts anteriores
+            if (this.chart.length) {
+                this.chart.forEach(c => c.destroy())
             }
 
-            const ctx = document.getElementById('graficaEstados')
+            this.chart = []
 
-            const labels = this.porEstado.map(e => e.estado)
-            const produccion = this.porEstado.map(e => e.finalizadas)
-            const desechadas = this.porEstado.map(e => e.desechadas)
-            const extras = this.porEstado.map(e => e.extras)
+            this.porEstado.forEach((estado, index) => {
 
-            this.chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Producción',
-                            data: produccion,
-                            backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                            borderColor: 'rgba(76, 175, 80, 1)',
-                            borderWidth: 1
+                const ctx = document.getElementById('chart-' + index)
+
+                if (!ctx) return
+
+                const chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Producción', 'Pendiente'],
+                        datasets: [
+                            {
+                                data: [
+                                    estado.finalizadas,
+                                    estado.pendiente
+                                ],
+                                backgroundColor: [
+                                    'rgba(76, 175, 80, 0.8)', // verde
+                                    'rgba(158, 158, 158, 0.5)' // gris
+                                ],
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '65%',
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                bottom: 20
+                            }
                         },
-                        {
-                            label: 'Extras',
-                            data: extras,
-                            backgroundColor: 'rgba(156, 39, 176, 0.6)',
-                            borderColor: 'rgba(156, 39, 176, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Desechadas',
-                            data: desechadas,
-                            backgroundColor: 'rgba(244, 67, 54, 0.6)',
-                            borderColor: 'rgba(244, 67, 54, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: (value) => {
-                                return value > 0 ? Number(value).toLocaleString('en-US') : ''
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
                             },
-                            font: {
-                                weight: 'bold'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    const value = context.raw || 0
-                                    return `${context.dataset.label}: ${Number(value).toLocaleString('en-US')}`
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => {
-                                    return Number(value).toLocaleString('en-US')
-                                }
-                            }
-                        }
-                    },
 
-                }
+                            centerText: {
+                                text: `Total: ${this.formatNumber(estado.pedido)}`
+                            },
+                            datalabels: {
+                                formatter: (value) => {
+                                    return value > 0 ? Number(value).toLocaleString('en-US') : ''
+                                },
+                                color: '#000',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const value = context.raw || 0
+                                        return `${context.label}: ${Number(value).toLocaleString('en-US')}`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+
+                this.chart.push(chartInstance)
             })
         },
 
@@ -404,7 +628,7 @@ export default {
                 value: m
             }))
 
-            this.filtros.month = this.meses[0]?.value || null
+            //this.filtros.month = this.meses[0]?.value || null
         },
 
         nombreMes(mes) {
@@ -423,6 +647,163 @@ export default {
         exportExcel() {
             const params = new URLSearchParams(this.filtros).toString()
             window.open(`/export/excel?${params}`, '_blank')
+        },
+
+        renderChartVentas() {
+
+            if (this.chartVentas) {
+                this.chartVentas.destroy()
+            }
+            const colores = this.ventasPorPagina.map((_, index) => {
+                return this.coloresBase[index % this.coloresBase.length]
+            })
+
+            const ctx = document.getElementById('graficaVentas')
+
+            const labels = this.ventasPorPagina.map(v => v.nombre)
+            const data = this.ventasPorPagina.map(v => v.total)
+
+            this.chartVentas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total ventas',
+                            data: data,
+                            backgroundColor: colores,
+                            borderColor: colores.map(c => c.replace('0.8', '1')),
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => {
+                                return 'Q' + Number(value).toLocaleString('es-GT')
+                            },
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return 'Q' + Number(context.raw).toLocaleString('es-GT')
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => 'Q' + Number(value).toLocaleString('es-GT')
+                            }
+                        }
+                    }
+                }
+            })
+        },
+
+        renderChartTipos() {
+
+            if (this.chartTipos) {
+                this.chartTipos.destroy()
+            }
+
+            const ctx = document.getElementById('graficaTipos')
+
+            const labels = this.tiposProducto.map(t => t.tipo)
+            const data = this.tiposProducto.map(t => t.unidades)
+
+            const colores = data.map((_, index) => {
+                return this.coloresBase[index % this.coloresBase.length]
+            })
+
+            this.chartTipos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Unidades vendidas',
+                            data: data,
+                            backgroundColor: colores,
+                            borderColor: colores.map(c => c.replace('0.8', '1')),
+                            borderWidth: 1,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 40,
+                            left: 10,
+                            right: 10
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => {
+                                return value > 0
+                                    ? Number(value).toLocaleString('es-GT')
+                                    : ''
+                            },
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return Number(context.raw)
+                                        .toLocaleString('es-GT')
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 35,
+                                minRotation: 35,
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => {
+                                    return Number(value)
+                                        .toLocaleString('es-GT')
+                                }
+                            }
+                        }
+                    }
+                }
+            })
         }
     },
     mounted() {

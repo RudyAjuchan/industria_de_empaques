@@ -7,12 +7,14 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithMapping; // Importante para separar lógica
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Illuminate\Support\Carbon;
 
-class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyles, WithEvents, WithMapping
+class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyles, WithEvents, WithMapping, WithColumnFormatting, ShouldAutoSize
 {
     protected $fechaInicio;
     protected $fechaFin;
@@ -30,7 +32,7 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             'venta.cliente.municipio.departamento',
             'venta.cliente.telefonos', 
             'venta.vendedor',
-            'venta.pagos',
+            'venta.pagos.banco',
             'venta.banco',
             'producto.paginas',
             'tipoPapel',
@@ -62,8 +64,12 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
 
         $historialPagos = $pagos->map(function ($p) {
             $fecha = $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A';
-            return 'Q' . number_format($p->monto, 2) . " (" . ($p->metodo_pago ?? 'N/A') . ") " . $fecha;
-        })->implode(" | ");
+            return 'Q' . number_format($p->monto, 2) 
+            . " (" . ($p->metodo_pago ?? 'N/A') . ") " 
+            . " (Banco: " . ($p->banco->nombre ?? 'N/A') . ") " 
+            . " (No. dep: " . ($p->referencia ?? 'N/A') . ") " 
+            . $fecha;
+        })->implode("\n");
 
         return [
             // VENTA
@@ -150,6 +156,13 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
 
     public function styles(Worksheet $sheet)
     {
+        // Aplicamos el ajuste de texto específicamente al rango de la columna J
+        // desde la fila 2 hasta la última con datos.
+        $lastRow = $sheet->getHighestRow();
+        $sheet->getStyle('AU2:AU' . $lastRow)->getAlignment()->setWrapText(true);
+
+        // Alineación vertical arriba para que se vea ordenado
+        $sheet->getStyle('AU2:AU' . $lastRow)->getAlignment()->setVertical('top');
         return [
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -202,6 +215,21 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                     ],
                 ]);
             },
+        ];
+    }
+
+
+    public function columnFormats(): array
+    {
+        return [
+            'AK' => '"Q" #,##0.00',
+            'AL' => '"Q" #,##0.00',
+            'AM' => '"Q" #,##0.00',
+            'AN' => '"Q" #,##0.00',
+            'AO' => '"Q" #,##0.00',
+            'AP' => '"Q" #,##0.00',
+            'AQ' => '"Q" #,##0.00',
+            'AR' => '"Q" #,##0.00',
         ];
     }
 }

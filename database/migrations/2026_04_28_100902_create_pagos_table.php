@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('referencia')->nullable();
 
             $table->foreignId('users_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('bancos_id')->nullable()->constrained('bancos');
 
             $table->timestamps();
         });

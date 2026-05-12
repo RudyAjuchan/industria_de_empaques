@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class PagoController extends Controller
 {
     public function index(){
-        return Venta::with('pagos', 'vendedor', 'cliente')
+        return Venta::with('pagos.banco', 'vendedor', 'cliente')
         ->get()
         ->where('estado', 'emitida')
         ->filter(fn ($v) => $v->saldo_pendiente > 0)
@@ -26,6 +26,7 @@ class PagoController extends Controller
             'monto' => 'required|numeric|min:0.01',
             'metodo_pago' => 'required|string',
             'referencia' => 'nullable|string',
+            'banco_id' => 'nullable|exists:bancos,id',
         ]);
 
         $venta = Venta::findOrFail($request->ventas_id);
@@ -44,6 +45,7 @@ class PagoController extends Controller
             'metodo_pago' => $request->metodo_pago,
             'referencia' => $request->referencia,
             'users_id' => Auth::user()->id,
+            'bancos_id' => $request->banco_id
         ]);
 
         return response()->json([
@@ -64,7 +66,7 @@ class PagoController extends Controller
         $search = $request->input('search');
         $search = ($search === "null") ? null : $search;
 
-        $query = Venta::with(['pagos', 'vendedor', 'cliente'])
+        $query = Venta::with(['pagos.banco', 'vendedor', 'cliente'])
             ->where('estado', 'emitida');
 
         if ($search) {
@@ -89,5 +91,10 @@ class PagoController extends Controller
             new PagosPendientesExport($search),
             'pagos_pendientes.xlsx'
         );
+    }
+
+    public function delete(Request $request){
+        Pago::destroy($request->id);
+        return response()->json(['message' => 'Pago eliminado']);
     }
 }

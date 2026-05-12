@@ -83,7 +83,7 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
         $historial = $venta->pagos->map(function ($p) {
             return 'Q' . number_format($p->monto, 2) .
                 ' (' . ($p->metodo_pago ?? 'N/A') . ') ' .
-                optional($p->created_at)->format('d/m/Y');
+                optional($p->created_at)->format('d/m/Y') . ' Banco: '. $p->banco?->nombre . ' No. dep: '.$p->referencia;
         })->implode("\n"); // salto de línea
 
         return [

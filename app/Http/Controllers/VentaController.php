@@ -11,6 +11,7 @@ use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
 use App\Models\Pagina;
+use App\Models\Pago;
 use App\Models\ProcesoEstadoProduccion;
 use App\Models\Producto;
 use App\Models\Venta;
@@ -181,6 +182,18 @@ class VentaController extends Controller
             ]);
 
             // =========================
+            // SI TIENE DEPOSITO DEBE GUARDARSE EN PAGOS
+            // =========================
+            Pago::create([
+                'ventas_id' => $venta,
+                'monto' => $deposito,
+                'metodo_pago' => $data['tipo_pago'],
+                'referencia' => $data['no_deposito'] ?? null,
+                'users_id' => Auth::user()->id,
+                'bancos_id' => $data['bancos_id'],
+            ]);
+
+            // =========================
             // ESTADO INICIAL
             // =========================
             $estadoInicial = EstadoProduccion::orderBy('orden')->first();
@@ -336,7 +349,7 @@ class VentaController extends Controller
     public function exportPdf(Request $request)
     {
         // Inicializamos la consulta
-        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos'])
+        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos.banco'])
             ->orderBy('id', 'desc');
 
         // Filtro por Rango de Fechas

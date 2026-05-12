@@ -23,7 +23,7 @@
 
         <v-row v-else>
             <v-col cols="12" v-for="detalle in detalles" :key="detalle.id">
-                <ProductoTrackingCard :detalle="detalle" :estados="estados" />
+                <ProductoTrackingCard :detalle="detalle" />
             </v-col>
         </v-row>
     </v-container>

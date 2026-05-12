@@ -81,7 +81,6 @@ export default {
         return {
             observacion: '',
             loading: false,
-            loading: false,
             camposDefinidos: [],
             valoresCampos: {},
             errores: {},

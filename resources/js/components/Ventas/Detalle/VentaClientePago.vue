@@ -110,10 +110,13 @@
                 <div class="text-caption mb-2">Historial</div>
 
                 <v-list density="compact" v-if="venta.pagos?.length">
-                    <v-list-item v-for="p in venta.pagos" :key="p.id">
+                    <v-list-item v-for="(p,index) in venta.pagos" :key="p.id">
                         <v-list-item-title>
-                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }}
+                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index>0" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="red" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
+                        <v-list-item-subtitle>
+                            {{ p.banco?.nombre }}
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle>
                             {{ formatDate(p.created_at) }}
                         </v-list-item-subtitle>
@@ -130,12 +133,40 @@
     </v-row>
 
     <v-divider class="my-4" />
+
+    <!-- DIALOG PARA ELIMINAR -->
+    <v-dialog v-model="deleteDialog" max-width="420">
+        <v-card rounded="xl">
+            <v-card-title class="text-subtitle-1 font-weight-bold">
+                Eliminar el banco
+            </v-card-title>
+
+            <v-card-text class="text-body-2 text-medium-emphasis">
+                ¿Seguro que quieres eliminar? Esta acción no se puede deshacer.
+            </v-card-text>
+
+            <v-card-actions class="px-4 pb-4">
+                <v-spacer />
+                <v-btn variant="tonal" @click="deleteDialog = false, idEliminar = null">Cancelar</v-btn>
+                <v-btn color="error" :loading="saving" @click="deletePago">Eliminar</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script>
+import { toast } from 'vue3-toastify';
 export default {
     props: {
         venta: Object
+    },
+
+    data(){
+        return{
+            deleteDialog: false,
+            idEliminar: null,
+            saving: false,
+        }
     },
 
     computed: {
@@ -176,12 +207,26 @@ export default {
             return promo.tipo === 'porcentaje'
                 ? subtotal * (promo.valor / 100)
                 : promo.valor
-        }
+        },
     },
 
     methods: {
         formatDate(date) {
             return new Date(date).toLocaleString('es-GT')
+        },
+        async deletePago(){
+            this.saving = true
+            try{
+                await axios.post("/pagos/eliminar", {id: this.idEliminar})
+                this.saving = false
+                this.deleteDialog = false
+                window.location.reload();
+            }catch(e){
+                this.saving = false
+                this.deleteDialog = false
+                toast.error('Hubo un error inesperado al eliminar')
+            }
+
         }
     }
 }

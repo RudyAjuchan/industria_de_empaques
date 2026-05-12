@@ -155,17 +155,19 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA PRODUCTOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
+    // 1. RUTAS ESTÁTICAS (ORDENADAS PRIMERO)
     Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.ver');
     Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.ver');
     Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.ver');
+    Route::get('/producto/estado-produccion', [ProductosController::class, 'getEstadosProduccion'])->middleware('permission:producto.crear|venta.crear');
+    Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])->middleware('permission:producto.reporte');
+    Route::get('/producto/export/excel', [ProductosController::class, 'exportExcel'])->middleware('permission:producto.reporte');
+
+    // RUTAS CON PARÁMETROS (AL FINAL)
     Route::get('/producto/{producto}', [ProductosController::class, 'show'])->middleware('permission:producto.editar');
     Route::post('/producto', [ProductosController::class, 'store'])->middleware('permission:producto.crear|venta.crear');
     Route::put('/producto/{producto}', [ProductosController::class, 'update'])->middleware('permission:producto.editar');
     Route::delete('/producto/{producto}', [ProductosController::class, 'destroy'])->middleware('permission:producto.borrar');
-    Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])
-    ->middleware('permission:producto.reporte');
-    Route::get('/producto/export/excel', [ProductosController::class, 'exportExcel'])
-    ->middleware('permission:producto.reporte');
 });
 
 /* RUTAS PARA VENTAS */
@@ -261,6 +263,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* ESTADÍSTICAS PARA DASHBOARD */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/estadisticas-produccion', [EstadisticasProduccionController::class, 'estadisticasProduccion']);
+    Route::get('/estadisticas-por-pagina', [EstadisticasProduccionController::class, 'ventasPorPagina']);
+    Route::get('/estadisticas-por-tipo', [EstadisticasProduccionController::class, 'estadisticasPorTipo']);
     Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion']);
     Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF']);
     Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel']);
@@ -269,6 +273,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA PAGOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::post('/pagos', [PagoController::class, 'store'])->middleware('permission:pago.crear');
+    Route::post('/pagos/eliminar', [PagoController::class, 'delete'])->middleware('permission:pago.borrar');
     Route::get('/pagos/{venta}', [PagoController::class, 'show'])->middleware('permission:pago.ver');
     Route::get('/pagos', [PagoController::class, 'index'])->middleware('permission:pago.ver');
     Route::get('/pagos/export/pdf', [PagoController::class, 'exportPDF'])->middleware('permission:pago.ver');

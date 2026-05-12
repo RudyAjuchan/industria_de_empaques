@@ -32,4 +32,14 @@ class EstadoProduccion extends Model
     {
         return $this->hasMany(DetalleEstadoProduccion::class, 'estado_produccions_id');
     }
+
+    public function productos()
+    {
+        return $this->belongsToMany(
+            Producto::class,
+            'producto_estado_produccion',
+            'estado_produccions_id',
+            'productos_id'
+        );
+    }
 }

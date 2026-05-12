@@ -27,7 +27,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
     public function collection(): Collection
     {
-        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos'])
+        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos.banco'])
             ->orderBy('id', 'desc');
 
         // 1. Filtro por Fechas
@@ -108,6 +108,8 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $historial = $venta->pagos->map(function ($p) {
             return 'Q' . number_format($p->monto, 2) .
                 ' (' . ($p->metodo_pago ?? 'N/A') . ') ' .
+                ' (Banco: ' . ($p->banco->nombre ?? 'N/A') . ') ' .
+                ' (No. dep: ' . ($p->referencia ?? 'N/A') . ') ' .
                 optional($p->created_at)->format('d/m/Y');
         })->implode("\n"); // salto de línea
 

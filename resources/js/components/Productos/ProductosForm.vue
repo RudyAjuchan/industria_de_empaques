@@ -1,6 +1,6 @@
 <template>
     <v-row dense>
-        <v-col cols="7">
+        <v-col cols="6">
             <v-row>
                 <v-col cols="12">
                     <v-text-field v-model="form.nombre" variant="outlined" density="compact" label="Nombre" required
@@ -63,30 +63,64 @@
                 </v-col>
 
                 <v-col cols="12">
-                    <draggable v-model="files" item-key="id" class="v-row mt-3">
-                        <template #item="{ element, index }">
-                            <v-col cols="4">
-                                <v-card outlined class="pa-2" :color="index === mainIndex ? 'green-lighten-4' : ''">
-                                    <v-img :src="filePreview(element)" height="120" contain />
+                    <div class="text-subtitle-2 mb-2">
+                        Estados de producción
+                    </div>
 
-                                    <v-btn block size="small" color="green" variant="tonal" class="mt-2"
-                                        @click="setMain(index)">
-                                        {{ index === mainIndex ? 'Principal' : 'Marcar principal' }}
+                    <draggable v-model="form.estados_produccion" item-key="id" handle=".drag-handle">
+                        <template #item="{ element, index }">
+                            <v-card class="mb-2 pa-2">
+                                <div class="d-flex align-center">
+
+                                    <v-icon class="mr-2 drag-handle">
+                                        mdi-drag
+                                    </v-icon>
+
+                                    <v-select v-model="element.id" :items="getEstadosDisponibles(index)"
+                                        item-title="nombre" item-value="id" density="compact" variant="outlined"
+                                        hide-details class="flex-grow-1" />
+
+                                    <v-btn icon size="small" color="red" variant="text" @click="removeEstado(index)">
+                                        <v-icon>mdi-delete</v-icon>
                                     </v-btn>
-                                </v-card>
-                            </v-col>
+                                </div>
+                            </v-card>
                         </template>
                     </draggable>
+
+                    <v-btn color="primary" variant="tonal" size="small" @click="addEstado">
+                        Agregar estado
+                    </v-btn>
                 </v-col>
             </v-row>
         </v-col>
 
-        <v-col cols="5">
-            <!-- FILEPOND -->
-            <file-pond name="imagenes" ref="pond" label-idle="Arrastra tus imágenes..." :allow-multiple="true"
-                :server="server" accepted-file-types="image/jpeg, image/png, image/webp" :files="files"
-                @updatefiles="handleFilePond" label-max-file-size-exceeded="El archivo es demasiado grande"
-                label-max-file-size="Máximo permitido: {filesize}" max-file-size="2MB" />
+        <v-col cols="6">
+            <v-row>
+                <v-col cols="12">
+                    <!-- FILEPOND -->
+                    <file-pond name="imagenes" ref="pond" label-idle="Arrastra tus imágenes..." :allow-multiple="true"
+                        :server="server" accepted-file-types="image/jpeg, image/png, image/webp" :files="files"
+                        @updatefiles="handleFilePond" label-max-file-size-exceeded="El archivo es demasiado grande"
+                        label-max-file-size="Máximo permitido: {filesize}" max-file-size="50MB" />
+                </v-col>
+            </v-row>
+            <v-col cols="12">
+                <draggable v-model="files" item-key="id" class="v-row mt-3">
+                    <template #item="{ element, index }">
+                        <v-col cols="4">
+                            <v-card outlined class="pa-2" :color="index === mainIndex ? 'green-lighten-4' : ''">
+                                <v-img :src="filePreview(element)" height="120" contain />
+    
+                                <v-btn block size="small" color="green" variant="tonal" class="mt-2"
+                                    @click="setMain(index)">
+                                    {{ index === mainIndex ? 'Principal' : 'Marcar principal' }}
+                                </v-btn>
+                            </v-card>
+                        </v-col>
+                    </template>
+                </draggable>
+            </v-col>
         </v-col>
     </v-row>
 
@@ -143,9 +177,11 @@ export default {
                 precio_base: null,
                 descripcion: '',
                 ecommerce: false,
+                estados_produccion: [],
             },
             errors: {},
             paginas: [],
+            estadosProduccionDisponibles: [],
             mainIndex: 0,
             server: {
                 load: (source, load, error, progress, abort) => {
@@ -170,6 +206,7 @@ export default {
 
     mounted() {
         this.fetchPaginas();
+        this.fetchEstadosProduccion();
     },
 
     methods: {
@@ -190,6 +227,18 @@ export default {
                 if (value !== null && value !== '') {
                     formData.append(key, value)
                 }
+            })
+
+            this.form.estados_produccion.forEach((estado, index) => {
+                formData.append(
+                    `estados_produccion[${index}][id]`,
+                    estado.id
+                )
+
+                formData.append(
+                    `estados_produccion[${index}][orden]`,
+                    index + 1
+                )
             })
 
             this.files.forEach((item, index) => {
@@ -257,7 +306,42 @@ export default {
             this.paginas.push(pagina)
             this.form.paginas_id = pagina.id
             toast.success('Pagina guardado')
-        }
+        },
+
+        async fetchEstadosProduccion() {
+            const { data } = await axios.get('/producto/estado-produccion')
+            this.estadosProduccionDisponibles = data
+        },
+
+        addEstado() {
+            this.form.estados_produccion.push({
+                id: null
+            })
+        },
+
+        removeEstado(index) {
+            this.form.estados_produccion.splice(index, 1)
+        },
+
+        getEstadosDisponibles(currentIndex) {
+
+            // IDs ya seleccionados
+            const seleccionados = this.form.estados_produccion
+                .map((e, index) => {
+                    // excluir el select actual
+                    if (index !== currentIndex) {
+                        return e.id
+                    }
+
+                    return null
+                })
+                .filter(Boolean)
+
+            // devolver solo disponibles
+            return this.estadosProduccionDisponibles.filter(
+                estado => !seleccionados.includes(estado.id)
+            )
+}
     },
 
     watch: {
@@ -273,6 +357,7 @@ export default {
                         fuelle: '',
                         tipo: '',
                         paginas_id: null,
+                        estados_produccion: [],
                     }
                     this.files = []
                     this.mainIndex = 0
@@ -292,6 +377,12 @@ export default {
                     precio_base: producto.precio_base,
                     descripcion: producto.descripcion,
                     ecommerce: producto.ecommerce === 1 ? true: false,
+                    estados_produccion: producto.estados_produccion
+                        ? producto.estados_produccion.map(e => ({
+                            id: e.id,
+                            orden: e.pivot.orden
+                        }))
+                        : [],
                 }
 
                 this.files = producto.imagenes.map(img => ({

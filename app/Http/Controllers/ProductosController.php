@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductosExport;
+use App\Models\EstadoProduccion;
 use App\Models\Pagina;
 use App\Models\Producto;
 use App\Models\ProductoImagen;
@@ -70,6 +71,10 @@ class ProductosController extends Controller
             'descripcion' => 'nullable|string',
             'ecommerce' => 'required|boolean',
 
+            'estados_produccion' => 'required|array|min:1',
+            'estados_produccion.*.id' => 'required|exists:estado_produccions,id',
+            'estados_produccion.*.orden' => 'required|integer',
+
             'main_index' => 'required|integer',
         ]);
 
@@ -84,6 +89,17 @@ class ProductosController extends Controller
             }
 
             $producto = Producto::create($data);
+
+            $syncData = [];
+
+            foreach ($request->estados_produccion as $estado) {
+
+                $syncData[$estado['id']] = [
+                    'orden' => $estado['orden']
+                ];
+            }
+
+            $producto->estadosProduccion()->sync($syncData);
 
             if ($request->has('imagenes_ordenadas')) {
                 foreach ($request->imagenes_ordenadas as $index => $imgData) {
@@ -118,7 +134,8 @@ class ProductosController extends Controller
     public function show(Producto $producto)
     {
         return $producto->load([
-            'imagenes' => fn($q) => $q->orderBy('orden')
+            'imagenes' => fn($q) => $q->orderBy('orden'),
+            'estadosProduccion'
         ]);
     }
 
@@ -139,6 +156,10 @@ class ProductosController extends Controller
             'descripcion' => 'nullable|string',
             'ecommerce' => 'required|boolean',
             'main_index' => 'required|integer',
+
+            'estados_produccion' => 'required|array|min:1',
+            'estados_produccion.*.id' => 'required|exists:estado_produccions,id',
+            'estados_produccion.*.orden' => 'required|integer',
         ]);
 
         DB::beginTransaction();
@@ -164,6 +185,17 @@ class ProductosController extends Controller
             }
 
             $producto->update($data);
+
+            $syncData = [];
+
+            foreach ($request->estados_produccion as $estado) {
+
+                $syncData[$estado['id']] = [
+                    'orden' => $estado['orden']
+                ];
+            }
+
+            $producto->estadosProduccion()->sync($syncData);
 
             // ================= IMÁGENES =================
             if ($request->has('imagenes_ordenadas')) {
@@ -280,5 +312,9 @@ class ProductosController extends Controller
     public function search(Request $request)
     {
         return Producto::where('estado', 1)->where('paginas_id', $request->id)->get();
+    }
+
+    public function getEstadosProduccion(){
+        return EstadoProduccion::where('estado', 1)->get();
     }
 }

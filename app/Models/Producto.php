@@ -52,4 +52,16 @@ class Producto extends Model
     {
         return $this->hasMany(DetalleVenta::class, 'productos_id');
     }
+
+    public function estadosProduccion()
+    {
+        return $this->belongsToMany(
+            EstadoProduccion::class,
+            'producto_estado_produccion',
+            'productos_id',
+            'estado_produccions_id'
+        )
+            ->withPivot('orden')
+            ->orderBy('pivot_orden');
+    }
 }

@@ -33,30 +33,41 @@ export default {
 
     computed: {
         estadoActualId() {
-            const activo = [...this.historial]
-                .filter(h => !h.fecha_fin)
+
+            const ultimaEntrada = [...this.historial]
+                .filter(h => h.tipo_evento === 'entrada_estado')
                 .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
 
-            return activo?.estado_produccions_id ?? null
+            if (!ultimaEntrada) {
+                return null
+            }
+
+            // ¿fue finalizado?
+            const fueFinalizado = this.historial.some(h =>
+                h.tipo_evento === 'finalizacion_estado' &&
+                h.estado_produccions_id === ultimaEntrada.estado_produccions_id
+            )
+
+            // último estado del flujo
+            const ultimoEstado = [...this.estados]
+                .sort((a, b) => b.pivot.orden - a.pivot.orden)[0]
+
+            // si finalizó el último → ya no hay estado activo
+            if (
+                fueFinalizado &&
+                ultimaEntrada.estado_produccions_id === ultimoEstado?.id
+            ) {
+                return null
+            }
+
+            return ultimaEntrada.estado_produccions_id
         },
 
         estadosCompletados() {
-            // Si está finalizado → todos completos
-            if (this.estaFinalizado) {
-                return this.estados.map(e => e.id)
-            }
 
-            if (!this.estadoActualId) return []
-
-            const estadoActual = this.estados.find(
-                e => e.id === this.estadoActualId
-            )
-
-            if (!estadoActual) return []
-
-            return this.estados
-                .filter(e => e.orden < estadoActual.orden)
-                .map(e => e.id)
+            return this.historial
+                .filter(h => h.tipo_evento === 'finalizacion_estado')
+                .map(h => h.estado_produccions_id)
         },
 
         getIcon() {
@@ -99,6 +110,11 @@ export default {
         },
 
         activeStep() {
+
+            if (this.estaFinalizado) {
+                return this.estados.length - 1
+            }
+
             return this.estados.findIndex(
                 e => e.id === this.estadoActualId
             )
@@ -106,9 +122,17 @@ export default {
 
         estaFinalizado() {
 
-            const activo = this.historial.some(h => !h.fecha_fin)
+            const ultimoEstado = [...this.estados]
+                .sort((a, b) => b.pivot.orden - a.pivot.orden)[0]
 
-            return !activo
+            if (!ultimoEstado) {
+                return false
+            }
+
+            return this.historial.some(h =>
+                h.tipo_evento === 'finalizacion_estado' &&
+                h.estado_produccions_id === ultimoEstado.id
+            )
         }
 
 

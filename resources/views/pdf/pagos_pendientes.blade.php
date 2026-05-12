@@ -98,7 +98,9 @@
                             @foreach ($v->pagos as $p)
                                 <div>
                                     Q{{ number_format($p->monto, 2) }}
-                                    ({{ $p->metodo_pago ?? 'N/A' }})
+                                    ({{ $p->metodo_pago ?? 'N/A' }}) <br>
+                                    {{ $p->banco?->nombre }} <br>
+                                    No. deposito: {{ $p->referencia }}
                                 </div>
                             @endforeach
                         @else

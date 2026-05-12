@@ -107,29 +107,40 @@ export default {
         ultimoRegreso() {
 
             const historial = this.tarea.detalle_venta?.historial_estados
+
             if (!historial) return null
 
-            // Último regreso registrado
+            // último regreso
             const regreso = [...historial]
                 .filter(h => h.tipo_evento === 'regreso_estado')
                 .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
 
             if (!regreso) return null
 
-            // Estado actual activo
+            // estado activo actual
             const estadoActivo = historial
-                .filter(h => h.tipo_evento === 'entrada_estado' && !h.fecha_fin)
+                .filter(h =>
+                    h.tipo_evento === 'entrada_estado' &&
+                    !h.fecha_fin
+                )
                 .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))[0]
 
             if (!estadoActivo) return null
 
-            // Necesitamos comparar orden
-            const ordenActual = estadoActivo.estado_produccion?.orden
-            const ordenDesde = regreso.estado_produccion?.orden
+            // ORDEN REAL DEL PRODUCTO
+            const ordenActual = this.getOrdenEstado(
+                estadoActivo.estado_produccions_id
+            )
 
-            if (!ordenActual || !ordenDesde) return null
+            const ordenDesde = this.getOrdenEstado(
+                regreso.estado_produccions_id
+            )
 
-            // Mostrar solo si aún no supera el estado desde donde regresó
+            if (!ordenActual || !ordenDesde) {
+                return null
+            }
+
+            // si aún no supera el estado desde donde regresó
             if (ordenActual <= ordenDesde) {
                 return regreso
             }
@@ -210,7 +221,18 @@ export default {
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
-        }
+        },
+
+        getOrdenEstado(estadoId) {
+
+            const estados = this.tarea.detalle_venta.producto.estados_produccion || []
+
+            const estado = estados.find(
+                e => e.id === estadoId
+            )
+
+            return estado?.pivot?.orden ?? 0
+        },
     }
 
 }

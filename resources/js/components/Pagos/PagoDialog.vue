@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="open" max-width="420">
+    <v-dialog v-model="open" max-width="500">
         <v-card>
             <v-card-title>
                 Nuevo pago
@@ -10,11 +10,14 @@
                 <div class="text-subtitle-2 mb-2">Historial de pagos</div>
 
                 <v-list density="compact" v-if="venta.pagos?.length">
-                    <v-list-item v-for="pago in venta.pagos" :key="pago.id">
+                    <v-list-item v-for="(pago, index) in venta.pagos" :key="pago.id">
                         <v-list-item-title>
-                            Q{{ pago.monto }} - {{ pago.metodo_pago }}
+                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index>0" @click="deleteDialog = true, idEliminar = pago.id" color="red" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
 
+                        <v-list-item-subtitle>
+                            {{ pago.banco?.nombre }}
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle>
                             {{ formatDate(pago.created_at) }}
                         </v-list-item-subtitle>
@@ -46,6 +49,8 @@
                 <v-select v-model="form.metodo_pago" :items="tipoPago" item-title="nombre" item-value="nombre"
                     label="Método de pago" variant="outlined" density="compact" :error-messages="errores.metodo_pago" />
 
+                <v-autocomplete :items="bancos" item-title="nombre" item-value="id" density="compact" variant="outlined" label="Banco" v-model="form.banco_id"></v-autocomplete>
+
                 <v-text-field v-model="form.referencia" label="No depósito" variant="outlined" density="compact"
                     :error-messages="errores.referencia" />
 
@@ -63,9 +68,30 @@
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <!-- DIALOG PARA ELIMINAR -->
+    <v-dialog v-model="deleteDialog" max-width="420">
+        <v-card rounded="xl">
+            <v-card-title class="text-subtitle-1 font-weight-bold">
+                Eliminar el banco
+            </v-card-title>
+
+            <v-card-text class="text-body-2 text-medium-emphasis">
+                ¿Seguro que quieres eliminar? Esta acción no se puede deshacer.
+            </v-card-text>
+
+            <v-card-actions class="px-4 pb-4">
+                <v-spacer />
+                <v-btn variant="tonal" @click="deleteDialog = false, idEliminar = null">Cancelar</v-btn>
+                <v-btn color="error" :loading="saving" @click="deletePago">Eliminar</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script>
+import { toast } from 'vue3-toastify';
+
 
 export default {
     name: 'PagoDialog',
@@ -73,6 +99,7 @@ export default {
     props: {
         modelValue: Boolean,
         venta: Object, // null o existente
+        bancos: Object, // null o existente
     },
 
     emits: ['update:modelValue', 'saved'],
@@ -87,6 +114,7 @@ export default {
                 ventas_id: '',
                 monto: '',
                 metodo_pago: '',
+                banco_id: '',
                 referencia: '',
             },
             tipoPago: [
@@ -97,6 +125,8 @@ export default {
                 { nombre: 'Cheque' },
                 { nombre: 'Transferencia Internacional' },
             ],
+            deleteDialog: false,
+            idEliminar: null,
         }
     },
 
@@ -133,7 +163,8 @@ export default {
                     ventas_id: this.venta.id,
                     monto: this.form.monto,
                     metodo_pago: this.form.metodo_pago,
-                    referencia: this.form.referencia
+                    referencia: this.form.referencia,
+                    banco_id: this.form.banco_id
                 })
 
                 this.close()
@@ -170,6 +201,22 @@ export default {
                 minimumFractionDigits: 2
             }).format(value);
         },
+
+        async deletePago(){
+            this.saving = true
+            try{
+                await axios.post("/pagos/eliminar", {id: this.idEliminar})
+                this.saving = false
+                this.deleteDialog = false
+                this.close()
+                this.$emit('saved', false)
+            }catch(e){
+                this.saving = false
+                this.deleteDialog = false
+                toast.error('Hubo un error inesperado al eliminar')
+            }
+
+        }
     },
 
     computed: {

@@ -71,13 +71,13 @@
         </v-data-table>
 
         <!-- DIALOG PARA GUARDAR -->
-        <PagoDialog v-model="dialog" :venta="ventaSeleccionada" @saved="onSaved" />
+        <PagoDialog v-model="dialog" :venta="ventaSeleccionada" @saved="onSaved" :bancos="bancos"/>
 
         <!-- DIALOG PARA ELIMINAR -->
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar el banco
+                    Eliminar el pago
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">
@@ -152,11 +152,13 @@ export default {
 
             dialog: false,
             ventaSeleccionada: null,
+            bancos: [],
         }
     },
 
     mounted() {
         this.fetchPagos()
+        this.fetchBancos()
     },
 
     methods: {
@@ -164,6 +166,13 @@ export default {
             this.loading = true
             await axios.get('/pagos')
                 .then(res => this.pagos = res.data)
+                .finally(() => this.loading = false)
+        },
+
+        async fetchBancos(){
+            this.loading = true
+            await axios.get('/banco')
+                .then(res => this.bancos = res.data)
                 .finally(() => this.loading = false)
         },
 

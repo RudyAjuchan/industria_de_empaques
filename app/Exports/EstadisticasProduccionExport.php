@@ -2,57 +2,34 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
+use App\Exports\Dashboard\ProduccionSheet;
+use App\Exports\Dashboard\TiposProductoSheet;
+use App\Exports\Dashboard\VentasPorPaginaSheet;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class EstadisticasProduccionExport implements FromArray, WithStrictNullComparison
+class EstadisticasProduccionExport implements WithMultipleSheets
 {
     protected $data;
+    protected $data2;
+    protected $data3;
 
-    public function __construct($data)
+    public function __construct($data, $data2, $data3)
     {
         $this->data = $data;
+        $this->data2 = $data2;
+        $this->data3 = $data3;
     }
 
-    public function array(): array
+    public function sheets(): array
     {
-        $rows = [];
+        return [
 
-        // TÍTULO
-        $rows[] = ['REPORTE DE PRODUCCIÓN'];
-        $rows[] = [];
+            new ProduccionSheet($this->data),
 
-        // TOTALES
-        $rows[] = ['Totales'];
-        $rows[] = ['Pedido', (int) ($this->data['totales']['pedido'] ?: 0)];
-        $rows[] = ['Producción', (int) ($this->data['totales']['finalizadas'] ?: 0)];
-        $rows[] = ['Extras', (int) ($this->data['totales']['extras'] ?: 0)];
-        $rows[] = ['Desechadas', (int) ($this->data['totales']['desechadas'] ?: 0)];
-        $rows[] = ['Pendiente', (int) ($this->data['totales']['pendiente'] ?: 0)];
-        $rows[] = [];
+            new VentasPorPaginaSheet($this->data2),
 
-        // ENCABEZADOS TABLA
-        $rows[] = [
-            'Estado',
-            'Pedido',
-            'Producción',
-            'Extras',
-            'Desechadas',
-            'Pendiente'
+            new TiposProductoSheet($this->data3),
+
         ];
-
-        // DATOS
-        foreach ($this->data['por_estado'] as $item) {
-            $rows[] = [
-                $item['estado'],
-                (int) ($item['pedido'] ?: 0),
-                (int) ($item['finalizadas'] ?: 0),
-                (int) ($item['extras'] ?: 0),
-                (int) ($item['desechadas'] ?: 0),
-                (int) ($item['pendiente'] ?: 0),
-            ];
-        }
-
-        return $rows;
     }
 }

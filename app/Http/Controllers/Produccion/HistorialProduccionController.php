@@ -15,10 +15,9 @@ class HistorialProduccionController extends Controller
 {
     public function trackingVenta(Venta $venta)
     {
-        $estados = EstadoProduccion::orderBy('orden')->get();
-
         $detalles = $venta->detalles()->with([
-            'producto',
+            'producto.estadosProduccion',
+
             'historialEstados.estadoProduccion',
             'historialEstados.procesoEstado',
             'historialEstados.usuario',
@@ -26,7 +25,6 @@ class HistorialProduccionController extends Controller
         ])->get();
 
         return response()->json([
-            'estados' => $estados,
             'detalles' => $detalles,
             'venta' => $venta,
         ]);

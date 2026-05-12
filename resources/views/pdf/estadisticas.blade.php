@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
         }
 
-        h2 {
+        h2, h3 {
             text-align: center;
             margin-bottom: 10px;
+        }
+
+        .section {
+            margin-bottom: 25px;
         }
 
         .cards {
@@ -29,18 +32,19 @@
         }
 
         .title {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
         }
 
         .value {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 10px;
         }
 
         th {
@@ -55,60 +59,57 @@
             text-align: center;
         }
 
-        .green {
-            color: green;
+        .right {
+            text-align: right;
         }
 
-        .red {
-            color: red;
+        .bold {
+            font-weight: bold;
         }
 
-        .purple {
-            color: purple;
-        }
+        .green { color: green; }
+        .red { color: red; }
+        .purple { color: purple; }
     </style>
 </head>
 
 <body>
 
-    <h2>Reporte de Producción</h2>
+<h2>Reporte General</h2>
 
-    <!-- FILTROS -->
-    <p>
-        Periodo: {{ $filtros['periodo'] ?? '' }} |
-        Año: {{ $filtros['year'] ?? '' }} |
-        Mes: {{ $filtros['month'] ?? '' }}
-    </p>
+<p>
+    Periodo: {{ $filtros['periodo'] ?? '' }} |
+    Año: {{ $filtros['year'] ?? '' }} |
+    Mes: {{ $filtros['month'] ?? '' }}
+</p>
 
-    <!-- CARDS -->
+<!-- ================= PRODUCCIÓN ================= -->
+<div class="section">
+    <h3>Producción</h3>
+
     <div class="cards">
         <div class="card">
             <div class="title">Pedido</div>
             <div class="value">{{ number_format($totales['pedido']) }}</div>
         </div>
-
         <div class="card">
             <div class="title">Producción</div>
             <div class="value green">{{ number_format($totales['finalizadas']) }}</div>
         </div>
-
         <div class="card">
             <div class="title">Extras</div>
             <div class="value purple">+{{ number_format($totales['extras']) }}</div>
         </div>
-
         <div class="card">
             <div class="title">Desechadas</div>
             <div class="value red">{{ number_format($totales['desechadas']) }}</div>
         </div>
-
         <div class="card">
             <div class="title">Pendiente</div>
             <div class="value">{{ number_format($totales['pendiente']) }}</div>
         </div>
     </div>
 
-    <!-- TABLA -->
     <table>
         <thead>
             <tr>
@@ -133,7 +134,72 @@
             @endforeach
         </tbody>
     </table>
+</div>
+
+<!-- ================= VENTAS POR PÁGINA ================= -->
+<div class="section">
+    <h3>Ventas por Página</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Página</th>
+                <th>Venta</th>
+                <th>Envío</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($porPagina as $item)
+                <tr>
+                    <td>{{ $item['nombre'] }}</td>
+                    <td class="right">Q{{ number_format($item['venta'], 2) }}</td>
+                    <td class="right">Q{{ number_format($item['envio'], 2) }}</td>
+                    <td class="right bold">Q{{ number_format($item['total'], 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr>
+                <td class="bold">TOTAL</td>
+                <td class="right">Q{{ number_format($totalesPorPagina['venta'], 2) }}</td>
+                <td class="right">Q{{ number_format($totalesPorPagina['envio'], 2) }}</td>
+                <td class="right bold">Q{{ number_format($totalesPorPagina['total'], 2) }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- ================= TIPOS DE PRODUCTO ================= -->
+<div class="section">
+    <h3>Tipos de Producto</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Unidades</th>
+                <th>Ventas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($porTipo as $item)
+                <tr>
+                    <td>{{ $item['tipo'] }}</td>
+                    <td>{{ number_format($item['unidades']) }}</td>
+                    <td>{{ $item['ventas'] }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr>
+                <td class="bold">TOTAL</td>
+                <td>{{ number_format($totalesPorTipo['unidades']) }}</td>
+                <td>{{ $totalesPorTipo['ventas'] }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
 
 </body>
-
 </html>

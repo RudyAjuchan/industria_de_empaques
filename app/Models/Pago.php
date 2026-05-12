@@ -12,11 +12,16 @@ class Pago extends Model
         'metodo_pago',
         'referencia',
         'users_id',
+        'bancos_id',
     ];
 
     public function venta()
     {
         return $this->belongsTo(Venta::class, 'ventas_id');
+    }
+
+    public function banco(){
+        return $this->belongsTo(Banco::class, 'bancos_id');
     }
 
     public function usuario()

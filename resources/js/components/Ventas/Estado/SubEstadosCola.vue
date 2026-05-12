@@ -7,7 +7,7 @@
                         {{ titulo(item) }}
                     </v-col>
                     <v-col cols="3">
-                        <v-chip density="compact" :color="getChipColor(item.estado_produccion.orden)">{{ `${item.estado_produccion.orden}. ${item.estado_produccion.nombre}` }}</v-chip>
+                        <v-chip density="compact" :color="getChipColor(getOrdenEstado(item.estado_produccions_id))">{{ `${item.estado_produccion.orden}. ${item.estado_produccion.nombre}` }}</v-chip>
                     </v-col>
                 </v-row>
             </v-expansion-panel-title>
@@ -59,7 +59,11 @@ export default {
             required: true,
             default: () => []
         },
-        cantidadPedido: Number
+        cantidadPedido: Number,
+        estados: {
+            type: Array,
+            required: true
+        }
     },
 
     methods: {
@@ -143,7 +147,16 @@ export default {
             const pedido = this.cantidadPedido || 0
 
             return Math.max(finalizadas - pedido, 0)
-        }
+        },
+
+        getOrdenEstado(estadoId) {
+
+            const estado = this.estados.find(
+                e => e.id === estadoId
+            )
+
+            return estado?.pivot?.orden ?? '-'
+        },
     },
 }
 </script>

@@ -14,11 +14,69 @@ class ProduccionController extends Controller
 {
     public function estadosAnteriores(HistorialEstadoProduccion $tarea)
     {
-        $estadoActual = EstadoProduccion::find($tarea->estado_produccions_id);
+        /*
+        |--------------------------------------------------------------------------
+        | DETALLE Y PRODUCTO
+        |--------------------------------------------------------------------------
+        */
+        $detalleVenta = $tarea->detalleVenta;
 
-        return EstadoProduccion::where('orden', '<', $estadoActual->orden)
-            ->orderByDesc('orden')
-            ->get();
+        if (!$detalleVenta || !$detalleVenta->producto) {
+            return response()->json([]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO ACTUAL
+        |--------------------------------------------------------------------------
+        */
+        $estadoActual = EstadoProduccion::find(
+            $tarea->estado_produccions_id
+        );
+
+        if (!$estadoActual) {
+            return response()->json([]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FLUJO DEL PRODUCTO
+        |--------------------------------------------------------------------------
+        */
+        $flujo = $detalleVenta->producto
+            ->estadosProduccion
+            ->sortBy('pivot.orden')
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO ACTUAL DENTRO DEL FLUJO
+        |--------------------------------------------------------------------------
+        */
+        $flujoActual = $flujo->firstWhere(
+            'id',
+            $estadoActual->id
+        );
+
+        if (!$flujoActual) {
+            return response()->json([]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SOLO ESTADOS ANTERIORES DEL FLUJO
+        |--------------------------------------------------------------------------
+        */
+        $anteriores = $flujo
+            ->filter(function ($estado) use ($flujoActual) {
+
+                return $estado->pivot->orden <
+                    $flujoActual->pivot->orden;
+            })
+            ->sortByDesc('pivot.orden')
+            ->values();
+
+        return response()->json($anteriores);
     }
 
     public function regresarEstado(Request $request, DetalleVenta $detalleVenta)
@@ -28,7 +86,11 @@ class ProduccionController extends Controller
             'observacion' => 'nullable|string'
         ]);
 
-        // Estado actual activo
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO ACTUAL ACTIVO
+        |--------------------------------------------------------------------------
+        */
         $estadoActivo = $detalleVenta->getEstadoActual();
 
         if (!$estadoActivo) {
@@ -37,24 +99,78 @@ class ProduccionController extends Controller
             ], 422);
         }
 
-        $estadoActual = EstadoProduccion::find($estadoActivo->estado_produccions_id);
-        $estadoDestino = EstadoProduccion::find($request->estado_destino_id);
+        $estadoActual = EstadoProduccion::find(
+            $estadoActivo->estado_produccions_id
+        );
+
+        $estadoDestino = EstadoProduccion::find(
+            $request->estado_destino_id
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FLUJO REAL DEL PRODUCTO
+        |--------------------------------------------------------------------------
+        */
+        $flujo = $detalleVenta->producto
+            ->estadosProduccion
+            ->sortBy('pivot.orden')
+            ->values();
+
+        // Estado actual dentro del flujo
+        $flujoActual = $flujo->firstWhere(
+            'id',
+            $estadoActual->id
+        );
+
+        // Estado destino dentro del flujo
+        $flujoDestino = $flujo->firstWhere(
+            'id',
+            $estadoDestino->id
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDACIONES
+        |--------------------------------------------------------------------------
+        */
+
+        // El producto no usa ese estado
+        if (!$flujoDestino) {
+            return response()->json([
+                'message' => 'El producto no utiliza ese estado'
+            ], 422);
+        }
+
+        // El estado actual no existe en flujo
+        if (!$flujoActual) {
+            return response()->json([
+                'message' => 'El estado actual no pertenece al flujo del producto'
+            ], 422);
+        }
 
         // No permitir regresar al mismo o superior
-        if ($estadoDestino->orden >= $estadoActual->orden) {
+        if (
+            $flujoDestino->pivot->orden >=
+            $flujoActual->pivot->orden
+        ) {
             return response()->json([
                 'message' => 'Solo se puede regresar a estados anteriores'
             ], 422);
         }
 
-        // No permitir regresar al primero
-        if ($estadoActual->orden == 1) {
+        // No permitir regresar desde el primero
+        if ($flujoActual->pivot->orden == 1) {
             return response()->json([
                 'message' => 'No se puede regresar desde el primer estado'
             ], 422);
         }
 
-        // Cerrar proceso activo si existe
+        /*
+        |--------------------------------------------------------------------------
+        | CERRAR PROCESO ACTIVO
+        |--------------------------------------------------------------------------
+        */
         $procesoActivo = $detalleVenta->getProcesoActivo();
 
         if ($procesoActivo) {
@@ -63,14 +179,22 @@ class ProduccionController extends Controller
             ]);
         }
 
-        // Cerrar estado actual
+        /*
+        |--------------------------------------------------------------------------
+        | CERRAR ESTADO ACTUAL
+        |--------------------------------------------------------------------------
+        */
         $estadoActivo->update([
             'fecha_fin' => now(),
             'observacion' => $request->observacion,
             'users_id' => Auth::id(),
         ]);
 
-        // Registrar evento de regreso
+        /*
+        |--------------------------------------------------------------------------
+        | REGISTRAR EVENTO DE REGRESO
+        |--------------------------------------------------------------------------
+        */
         HistorialEstadoProduccion::create([
             'detalle_ventas_id' => $detalleVenta->id,
             'estado_produccions_id' => $estadoActual->id,
@@ -81,7 +205,11 @@ class ProduccionController extends Controller
             'observacion' => $request->observacion,
         ]);
 
-        // Crear nueva entrada al estado destino
+        /*
+        |--------------------------------------------------------------------------
+        | CREAR NUEVA ENTRADA AL ESTADO DESTINO
+        |--------------------------------------------------------------------------
+        */
         HistorialEstadoProduccion::create([
             'detalle_ventas_id' => $detalleVenta->id,
             'estado_produccions_id' => $estadoDestino->id,
@@ -89,7 +217,11 @@ class ProduccionController extends Controller
             'tipo_evento' => 'entrada_estado',
         ]);
 
-        // Recalcular venta
+        /*
+        |--------------------------------------------------------------------------
+        | RECALCULAR ESTADO DE VENTA
+        |--------------------------------------------------------------------------
+        */
         $detalleVenta->venta->recalcularEstadoProduccion();
 
         return response()->json([

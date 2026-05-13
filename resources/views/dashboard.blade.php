@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Jeple Guatemala</title>
+    <title>Industria de Empaques S.A.</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite('resources/js/app.js')
-    <link rel="icon" type="image/x-icon" href="{{ asset('img/jeple_logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('img/logo_empaque.png') }}">
 </head>
 
 <body>

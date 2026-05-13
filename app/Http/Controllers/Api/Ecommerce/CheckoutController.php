@@ -91,7 +91,7 @@ class CheckoutController extends Controller
 
                 $subtotal += $totalItem;
 
-                $venta->detalles()->create([
+                $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
 
                     'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
@@ -101,8 +101,6 @@ class CheckoutController extends Controller
                     'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ($item['detalle_impresion'] ?? ''),
                     'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
 
-                    'logo_path' => $item['logo_path'] ?? null,
-
                     'promocion_aplicada' => $promocionAplicada,
 
                     'precio' => $precio,
@@ -111,6 +109,22 @@ class CheckoutController extends Controller
 
                     'proceso_estado_produccions_id' => 1,
                 ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | IMÁGENES
+                |--------------------------------------------------------------------------
+                */
+                if (!empty($item['imagenes'])) {
+
+                    foreach ($item['imagenes'] as $path) {
+
+                        $detalle->imagenes()->create([
+                            'path' => $path,
+                            'estado' => 1
+                        ]);
+                    }
+                }
             }
 
             // PROMO CARRITO
@@ -160,7 +174,7 @@ class CheckoutController extends Controller
         if ($request->hasFile('logo')) {
             // 1. Cambiamos el disco a 's3' 
             // 2. Eliminamos el parámetro 'public' (ya que el bucket es privado)
-            $path = $request->file('logo')->store('logos', 's3');
+            $path = $request->file('logo')->store('ventas/detalles', 's3');
 
             return response()->json([
                 'path' => $path,

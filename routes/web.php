@@ -178,9 +178,13 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/ecommerce/{id}', [VentaController::class, 'getVenta'])->middleware('permission:ecommerce.editar');
     Route::get('/produccionActiva', [VentaController::class, 'ventas_activas'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
+    Route::post('/venta/delete-imagen', [VentaController::class, 'deleteLogo'])->middleware('permission:venta.crear|permission:ecommerce.editar');
     Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/s3/presigned-url', [VentaController::class, 'generatePresignedUrl'])->middleware('permission:venta.crear');
     Route::post('/detalle/{id}/guardar-diseno', [VentaController::class, 'guardarDiseno'])->middleware('permission:venta.crear');
+    Route::post('/detalle-venta/{detalle}/imagenes', [VentaController::class, 'subirImagenes'])->middleware('permission:venta.crear');
+    Route::delete('/detalle-imagen/{imagen}', [VentaController::class, 'eliminarImagen'])->middleware('permission:venta.borrar');
+    Route::delete('/detalle/{detalle}/diseno', [VentaController::class, 'eliminarDiseno'])->middleware('permission:venta.borrar');
     
     Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar');
     Route::get('/venta/{venta}/imprimir', [VentaController::class, 'imprimir'])->middleware('permission:venta.reporte');

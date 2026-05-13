@@ -8,6 +8,7 @@ use App\Http\Requests\StoreVentaRequest;
 use App\Mail\ConfirmarVentaMail;
 use App\Models\Cliente;
 use App\Models\DetalleVenta;
+use App\Models\DetalleVentaImagen;
 use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
 use App\Models\Pagina;
@@ -70,9 +71,10 @@ class VentaController extends Controller
             ->get();
     }
 
-    public function ventas_activas(){
+    public function ventas_activas()
+    {
         return Venta::with(['cliente', 'vendedor', 'banco'])
-            ->where('estado_produccion','<>', 'finalizada')
+            ->where('estado_produccion', '<>', 'finalizada')
             ->where('estado', '<>', 'pendiente')
             ->where('estado', '<>', 'anulada')
             ->orderBy('id', 'desc')
@@ -185,7 +187,7 @@ class VentaController extends Controller
             // SI TIENE DEPOSITO DEBE GUARDARSE EN PAGOS
             // =========================
             Pago::create([
-                'ventas_id' => $venta,
+                'ventas_id' => $venta->id,
                 'monto' => $deposito,
                 'metodo_pago' => $data['tipo_pago'],
                 'referencia' => $data['no_deposito'] ?? null,
@@ -194,20 +196,12 @@ class VentaController extends Controller
             ]);
 
             // =========================
-            // ESTADO INICIAL
-            // =========================
-            $estadoInicial = EstadoProduccion::orderBy('orden')->first();
-
-            if (!$estadoInicial) {
-                throw new \Exception('No existe un estado de producción inicial');
-            }
-
-            // =========================
             // DETALLES
             // =========================
             foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::find($item['productos_id']);
+                $producto = Producto::with('estadosProduccion')
+                    ->find($item['productos_id']);
 
                 $precio = $producto->tipo_producto === 'simple'
                     ? $producto->precio_base
@@ -259,6 +253,24 @@ class VentaController extends Controller
                             'estado' => 1
                         ]);
                     }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | FLUJO DEL PRODUCTO
+                |--------------------------------------------------------------------------
+                */
+                $flujo = $producto->estadosProduccion
+                    ->sortBy('pivot.orden')
+                    ->values();
+
+                $estadoInicial = $flujo->first();
+
+                if (!$estadoInicial) {
+
+                    throw new \Exception(
+                        "El producto {$producto->nombre} no tiene flujo configurado"
+                    );
                 }
 
                 // =========================
@@ -313,7 +325,7 @@ class VentaController extends Controller
             'cliente.emails',
             'cliente.municipio.departamento',
             'banco',
-            'pagos',
+            'pagos.banco',
             'detalles.producto.paginas',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
@@ -455,7 +467,8 @@ class VentaController extends Controller
             'banco',
             'detalles.producto',
             'detalles.tipoAgarrador',
-            'detalles.tipoPapel'
+            'detalles.tipoPapel',
+            'detalles.imagenes',
         ])->findOrFail($id);
 
         // adaptar estructura para el frontend
@@ -478,6 +491,7 @@ class VentaController extends Controller
                 'producto' => $d->producto,
                 'tipo_agarrador' => $d->tipoAgarrador,
                 'tipo_papel' => $d->tipoPapel,
+                'imagenes' => $d->imagenes,
             ];
         });
 
@@ -486,44 +500,74 @@ class VentaController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'bancos_id' => 'required',
+        ]);
+
         return DB::transaction(function () use ($request, $id) {
 
-            $venta = Venta::with('detalles.imagenes')->findOrFail($id);
+            $venta = Venta::with([
+                'detalles.imagenes',
+                'detalles.historialEstados.campos'
+            ])->findOrFail($id);
+
             $data = $request->all();
 
-            // =========================
-            // SUBTOTAL
-            // =========================
-            $subtotal = collect($data['detalle'])->sum(function ($item) {
+            /*
+            |--------------------------------------------------------------------------
+            | IMÁGENES EXISTENTES
+            |--------------------------------------------------------------------------
+            */
+            $imagenesExistentes = [];
 
-                $total = $item['precio'] * $item['cantidad'];
+            foreach ($data['detalle'] as $item) {
+
+                if (!empty($item['imagenes'])) {
+
+                    foreach ($item['imagenes'] as $img) {
+
+                        if (is_array($img) && !empty($img['uploaded'])) {
+                            $imagenesExistentes[] = $img['path'];
+                        }
+                    }
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUBTOTAL
+            |--------------------------------------------------------------------------
+            */
+            $subtotal = collect($data['detalle'])->sum(function ($item) {
+                $producto = Producto::find( $item['productos_id']);
+                $precio = $producto->tipo_producto === 'simple' ? $producto->precio_base : $item['precio'];
+
+                $total = $precio * $item['cantidad'];
 
                 if (!empty($item['promocion_aplicada'])) {
                     $promo = $item['promocion_aplicada'];
-
                     if ($promo['tipo'] === 'porcentaje') {
-                        $total -= $total * ($promo['valor'] / 100);
+                        $total -= $total *($promo['valor'] / 100);
                     } else {
                         $total -= $promo['valor'];
                     }
                 }
-
                 return $total;
             });
+            $costoLogo = $data['costo_logo'] ?? 0;
+            $costoEnvio = $data['costo_envio'] ?? 0;
+            $descuento = $data['descuento'] ?? 0;
+            $deposito = $data['cantidad_deposito'] ?? 0;
 
-            $costoLogo   = $data['costo_logo'] ?? 0;
-            $costoEnvio  = $data['costo_envio'] ?? 0;
-            $descuento   = $data['descuento'] ?? 0;
-            $deposito    = $data['cantidad_deposito'] ?? 0;
-
-            // =========================
-            // PROMO CARRITO
-            // =========================
+            /*
+            |--------------------------------------------------------------------------
+            | PROMO CARRITO
+            |--------------------------------------------------------------------------
+            */
             $promoData = $data['promociones'] ?? null;
             $promocionMonto = 0;
-
             if ($promoData) {
-                if ($promoData['tipo'] === 'porcentaje') {
+                if ( $promoData['tipo']=== 'porcentaje' ) {
                     $promocionMonto = $subtotal * ($promoData['valor'] / 100);
                 } else {
                     $promocionMonto = $promoData['valor'];
@@ -531,117 +575,200 @@ class VentaController extends Controller
             }
 
             $total = $subtotal + $costoLogo + $costoEnvio - $descuento - $promocionMonto;
+
             $pendiente = $total - $deposito;
 
-            // =========================
-            // UPDATE VENTA
-            // =========================
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE VENTA
+            |--------------------------------------------------------------------------
+            */
             $venta->update([
+
                 'clientes_id' => $data['clientes_id'],
                 'bancos_id' => $data['bancos_id'],
                 'fecha_entrega' => $data['fecha_entrega'],
                 'tipo_pago' => $data['tipo_pago'],
-
                 'no_deposito' => $data['no_deposito'] ?? null,
                 'cantidad_deposito' => $deposito,
                 'pendiente_pagar' => $pendiente,
-
                 'costo_logo' => $costoLogo,
                 'subtotal' => $subtotal,
                 'descuento' => $descuento,
                 'promociones' => $promoData,
                 'costo_envio' => $costoEnvio,
                 'total' => $total,
-
                 'estado' => 'emitida',
             ]);
 
-            // =========================
-            // ELIMINAR DETALLES + IMÁGENES
-            // =========================
-            foreach ($venta->detalles as $detalle) {
+            /*
+            |--------------------------------------------------------------------------
+            | PAGOS
+            |--------------------------------------------------------------------------
+            */
+            $pago =
+                $venta->pagos()->first();
+            if ($pago) {
+                $pago->update([
+                    'monto' => $deposito,
+                    'metodo_pago' => $data['tipo_pago'],
+                    'referencia' => $data['no_deposito'] ?? null,
+                    'bancos_id' => $data['bancos_id'],
+                ]);
+            } else {
+                $venta->pagos()->create([
+                    'monto' => $deposito,
+                    'metodo_pago' => $data['tipo_pago'],
+                    'referencia' => $data['no_deposito'] ?? null,
+                    'users_id' => Auth::id(),
+                    'bancos_id' => $data['bancos_id'],
+                ]);
+            }
 
+            /*
+            |--------------------------------------------------------------------------
+            | ELIMINAR DETALLES ANTERIORES
+            |--------------------------------------------------------------------------
+            */
+            foreach ($venta->detalles as $detalle) {
+                /*
+                |--------------------------------------------------------------------------
+                | IMÁGENES
+                |--------------------------------------------------------------------------
+                */
                 foreach ($detalle->imagenes as $img) {
-                    Storage::disk('s3')->delete($img->path);
+                    if ( !in_array( $img->path, $imagenesExistentes ) ) {
+                        Storage::disk('s3')->delete( $img->path);
+                    }
                     $img->delete();
                 }
-
+                /*
+                |--------------------------------------------------------------------------
+                | HISTORIAL
+                |--------------------------------------------------------------------------
+                */
+                foreach ($detalle->historialEstados as $historial) {
+                    $historial->campos()->delete();
+                }
+                $detalle->historialEstados()->delete();
                 $detalle->delete();
             }
 
-            // =========================
-            // ESTADO INICIAL
-            // =========================
-            $estadoInicial = EstadoProduccion::orderBy('orden')->first();
-
-            if (!$estadoInicial) {
-                throw new \Exception('No existe un estado de producción inicial');
-            }
-
-            // =========================
-            // CREAR NUEVOS DETALLES
-            // =========================
+            /*
+            |--------------------------------------------------------------------------
+            | NUEVOS DETALLES
+            |--------------------------------------------------------------------------
+            */
             foreach ($data['detalle'] as $index => $item) {
 
-                $totalItem = $item['precio'] * $item['cantidad'];
-
+                $producto = Producto::with('estadosProduccion')->find($item['productos_id']);
+                $precio = $producto->tipo_producto === 'simple' ? $producto->precio_base : $item['precio'];
+                $totalItem =
+                    $precio * $item['cantidad'];
                 if (!empty($item['promocion_aplicada'])) {
                     $promo = $item['promocion_aplicada'];
 
-                    if ($promo['tipo'] === 'porcentaje') {
+                    if ( $promo['tipo'] === 'porcentaje' ) {
                         $totalItem -= $totalItem * ($promo['valor'] / 100);
                     } else {
                         $totalItem -= $promo['valor'];
                     }
                 }
 
-                $detalle = $venta->detalles()->create([
-                    'productos_id' => $item['productos_id'],
-                    'tipo_agarradors_id' => $item['tipo_agarradors_id'],
-                    'tipo_papels_id' => $item['tipo_papels_id'],
-                    'color_agarrador' => $item['color_agarrador'] ?? '',
-                    'detalle_impresion' => $item['detalle_impresion'] ?? '',
-                    'nombre_logo' => $item['nombre_logo'] ?? '',
-                    'logo_path' => $item['logo_path'] ?? null,
-                    'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
-                    'precio' => $item['precio'],
-                    'cantidad' => $item['cantidad'],
-                    'total' => $totalItem,
-                    'proceso_estado_produccions_id' => 1,
-                ]);
+                /*
+                |--------------------------------------------------------------------------
+                | DETALLE
+                |--------------------------------------------------------------------------
+                */
+                $detalle =
+                    $venta->detalles()->create([
 
-                // =========================
-                // NUEVAS IMÁGENES
-                // =========================
-                if ($request->hasFile("detalle.$index.imagenes")) {
+                        'productos_id' => $item['productos_id'],
+                        'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
+                        'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
+                        'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ( $item['color_agarrador'] ?? '' ),
+                        'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ( $item['detalle_impresion'] ?? '' ),
+                        'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ( $item['nombre_logo'] ?? ''),
+                        'archivo_diseno_path' => $item['archivo_diseno_path'] ?? null,
+                        'promocion_aplicada' => $item['promocion_aplicada']?? null,
+                        'precio' => $precio,
+                        'cantidad' => $item['cantidad'],
+                        'total' => $totalItem,
+                        'proceso_estado_produccions_id' => 1,
+                    ]);
 
-                    foreach ($request->file("detalle.$index.imagenes") as $file) {
+                /*
+                |--------------------------------------------------------------------------
+                | IMÁGENES
+                |--------------------------------------------------------------------------
+                */
+                if (!empty($item['imagenes'])) {
 
-                        $path = $file->store('ventas/detalles', 's3');
+                    foreach ($item['imagenes'] as $img) {
 
-                        $detalle->imagenes()->create([
-                            'path' => $path,
-                            'estado' => 1
-                        ]);
+                        /*
+                        |--------------------------------------------------------------------------
+                        | EXISTENTE
+                        |--------------------------------------------------------------------------
+                        */
+                        if (is_array($img) && !empty($img['uploaded'])) {
+
+                            $detalle->imagenes()->create([
+                                'path' => $img['path'],
+                                'estado' => 1
+                            ]);
+
+                            continue;
+                        }
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | NUEVA
+                        |--------------------------------------------------------------------------
+                        */
+                        if ($img instanceof \Illuminate\Http\UploadedFile) {
+
+                            $path = Storage::disk('s3')
+                                ->putFile('ventas/detalles', $img);
+
+                            $detalle->imagenes()->create([
+                                'path' => $path,
+                                'estado' => 1
+                            ]);
+                        }
                     }
                 }
 
-                // =========================
-                // HISTORIAL
-                // =========================
+                /*
+                |--------------------------------------------------------------------------
+                | FLUJO
+                |--------------------------------------------------------------------------
+                */
+                $flujo = $producto->estadosProduccion->sortBy('pivot.orden')->values();
+                $estadoInicial = $flujo->first();
+                if (!$estadoInicial) {
+                    throw new \Exception("El producto {$producto->nombre} no tiene flujo configurado");
+                }
+                /*
+                |--------------------------------------------------------------------------
+                | HISTORIAL
+                |--------------------------------------------------------------------------
+                */
                 HistorialEstadoProduccion::create([
                     'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $estadoInicial->id,
                     'proceso_estado_produccions_id' => null,
-                    'users_id' => Auth::user()->id,
+                    'users_id' => Auth::id(),
                     'fecha_inicio' => now(),
                     'tipo_evento' => 'entrada_estado',
                 ]);
             }
 
-            // =========================
-            // RELACIONES
-            // =========================
+            /*
+            |--------------------------------------------------------------------------
+            | RELACIONES
+            |--------------------------------------------------------------------------
+            */
             $venta->load(
                 'detalles.producto',
                 'detalles.tipoAgarrador',
@@ -650,16 +777,14 @@ class VentaController extends Controller
                 'pagos'
             );
 
-            // =========================
-            // EMAIL
-            // =========================
             $cliente = Cliente::find($data['clientes_id']);
 
-            Mail::to($cliente->email)
-                ->send(new ConfirmarVentaMail($cliente, $venta));
+            Mail::to($cliente->email)->send(new ConfirmarVentaMail($cliente, $venta));
 
             return response()->json([
-                'message' => 'Venta actualizada correctamente'
+                'message' =>
+                'Venta actualizada correctamente',
+                'venta' => $venta
             ]);
         });
     }
@@ -749,5 +874,80 @@ class VentaController extends Controller
         return response()->json([
             'message' => 'Archivo asociado correctamente'
         ]);
+    }
+
+    public function subirImagenes(Request $request, DetalleVenta $detalle)
+    {
+        $request->validate([
+            'imagenes.*' => 'required|image|max:10240'
+        ]);
+
+        foreach ($request->file('imagenes') as $file) {
+
+            $path = $file->store(
+                'ventas/detalles',
+                's3'
+            );
+
+            $detalle->imagenes()->create([
+                'path' => $path,
+                'estado' => 1
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Imágenes subidas'
+        ]);
+    }
+
+    public function eliminarImagen(DetalleVentaImagen $imagen)
+    {
+        if ($imagen->path) {
+
+            Storage::disk('s3')
+                ->delete($imagen->path);
+        }
+
+        $imagen->delete();
+
+        return response()->json([
+            'message' => 'Imagen eliminada'
+        ]);
+    }
+
+    public function eliminarDiseno(DetalleVenta $detalle)
+    {
+        if ($detalle->archivo_diseno_path) {
+
+            Storage::disk('s3')
+                ->delete(
+                    $detalle->archivo_diseno_path
+                );
+        }
+
+        $detalle->update([
+            'archivo_diseno_path' => null
+        ]);
+
+        return response()->json([
+            'message' => 'Diseño eliminado'
+        ]);
+    }
+
+    public function deleteLogo(Request $request)
+    {
+        $path = $request->path;
+
+        // Cambiamos el disco a 's3' para que busque y elimine allá
+        if ($path && Storage::disk('s3')->exists($path)) {
+            Storage::disk('s3')->delete($path);
+        }
+
+        DetalleVentaImagen::where(
+            'path',
+            $path
+        )->delete();
+
+        return response()->json(['message' => 'Eliminado']);
     }
 }

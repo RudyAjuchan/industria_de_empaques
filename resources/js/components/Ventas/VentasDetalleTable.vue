@@ -29,7 +29,7 @@
                     <th style="min-width: 120px">Total</th>
                     <th style="min-width: 200px">Logo</th>
                     <th style="min-width: 100px">Archivo</th>
-                    <th></th>
+                    <th>Eliminar</th>
                 </tr>
             </thead>
 
@@ -113,7 +113,7 @@
                             <!-- PREVIEWS -->
                             <div v-for="(img, i) in item.imagenes" :key="i" style="position:relative">
 
-                                <v-img :src="img.preview" width="60" height="60" cover class="rounded" />
+                                <v-img :src="img.preview || img.url" width="60" height="60" cover class="rounded" />
 
                                 <v-btn icon size="x-small" color="red" style="position:absolute; top:-6px; right:-6px"
                                     @click="removeImagen(index, i)" :loading="loading">
@@ -188,8 +188,8 @@
                         </div>
                     </td>
 
-                    <td>
-                        <v-btn icon size="small" color="red" @click="eliminarFila(index)" :loading="loading">
+                    <td class="text-center">
+                        <v-btn icon size="small" color="red" @click="eliminarFila(index)" :loading="loading" :disabled="modo=='editar'">
                             <v-icon>mdi-delete</v-icon>
                         </v-btn>
                     </td>
@@ -557,12 +557,43 @@ export default {
             });
         },
 
-        removeImagen(index, i) {
-            // Liberamos la memoria del objeto URL
-            URL.revokeObjectURL(this.detalle[index].imagenes[i].preview);
+        async removeImagen(index, i) {
+            const img = this.detalle[index].imagenes[i]
+            /*
+            |--------------------------------------------------------------------------
+            | SI YA EXISTE EN S3
+            |--------------------------------------------------------------------------
+            */
+            if (img.uploaded) {
 
-            // Eliminamos del array
-            this.detalle[index].imagenes.splice(i, 1);
+                try {
+                    await axios.post('/venta/delete-imagen',{ path: img.path })
+                } catch (e) {
+                    console.error(e)
+                    toast.error('No se pudo eliminar')
+                    return
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | LIBERAR MEMORIA
+            |--------------------------------------------------------------------------
+            */
+            if (img.preview?.startsWith('blob:')) {
+                URL.revokeObjectURL(
+                    img.preview
+                )
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ELIMINAR ARRAY
+            |--------------------------------------------------------------------------
+            */
+            this.detalle[index]
+                .imagenes
+                .splice(i, 1)
         },
 
         getPreview(img) {

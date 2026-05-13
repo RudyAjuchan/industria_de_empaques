@@ -97,7 +97,7 @@
                     density="compact" />
                 <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact"
                     :error-messages="errors.descuento" />
-                <v-text-field label="Promociones" :model-value="form.promociones_monto" :readonly="!!form.promociones"
+                <v-text-field label="Promociones" v-model.number="form.promociones_monto" :readonly="!!form.promociones"
                     :disabled="!!form.promociones" variant="outlined" density="compact" />
 
                 <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
@@ -247,9 +247,32 @@ export default {
                         }
                     })
 
-                    // IMÁGENES (esto sigue igual)
+                    // IMÁGENES
                     if (item.imagenes?.length) {
                         item.imagenes.forEach((img, i) => {
+                            /*
+                            |--------------------------------------------------------------------------
+                            | EXISTENTE
+                            |--------------------------------------------------------------------------
+                            */
+                            if (img.uploaded) {
+                                formData.append(
+                                    `detalle[${index}][imagenes][${i}][path]`,
+                                    img.path
+                                )
+                                formData.append(
+                                    `detalle[${index}][imagenes][${i}][uploaded]`,
+                                    true
+                                )
+
+                                return
+                            }
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | NUEVA
+                            |--------------------------------------------------------------------------
+                            */
                             if (img.file) {
                                 formData.append(
                                     `detalle[${index}][imagenes][${i}]`,
@@ -454,7 +477,31 @@ export default {
             this.form = {
                 ...this.form,
                 ...this.venta,
-                detalle: this.venta.detalle || []
+                detalle: (this.venta.detalle || []).map(item => ({
+                    ...item,
+                    /*
+                    |--------------------------------------------------------------------------
+                    | IMÁGENES
+                    |--------------------------------------------------------------------------
+                    */
+                    imagenes: (item.imagenes || []).map(img => ({
+                        id: img.id,
+                        path: img.path,
+                        url:
+                            `https://d2r0bm90jl3wk0.cloudfront.net/${img.path}`,
+                        /*
+                        |--------------------------------------------------------------------------
+                        | FILEPOND
+                        |--------------------------------------------------------------------------
+                        */
+                        source: img.path,
+                        options: {
+                            type: 'local'
+                        },
+                        uploaded: true,
+                        file: null
+                    }))
+                }))
             }
 
             this.setDataCliente(this.venta.cliente)

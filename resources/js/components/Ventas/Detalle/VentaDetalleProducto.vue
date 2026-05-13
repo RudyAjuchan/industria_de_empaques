@@ -106,9 +106,35 @@
                                     </template>
                                 </v-tooltip>
 
+                                <v-tooltip text="Eliminar">
+                                    <template #activator="{ props }">
+
+                                        <v-btn v-bind="props" icon size="x-small" color="red"
+                                            @click="eliminarImagen(img.id)">
+                                            <v-icon size="14">
+                                                mdi-delete
+                                            </v-icon>
+                                        </v-btn>
+
+                                    </template>
+                                </v-tooltip>
+
                             </div>
 
                         </div>
+                    </td>
+                </tr>
+
+                <tr v-else>
+                    <th colspan="3">LOGO</th>
+
+                    <td colspan="3">
+
+                        <v-btn color="primary" variant="tonal" prepend-icon="mdi-upload"
+                            @click="$refs.inputImagenes.click()" :loading="loading || uploadingDiseno">
+                            Subir imágenes
+                        </v-btn>
+
                     </td>
                 </tr>
 
@@ -133,6 +159,37 @@
                                 </template>
                             </v-tooltip>
 
+                            <v-tooltip text="Eliminar diseño">
+                                <template #activator="{ props }">
+
+                                    <v-btn v-bind="props" icon size="small" color="red" @click="eliminarDiseno">
+                                        <v-icon>
+                                            mdi-delete
+                                        </v-icon>
+                                    </v-btn>
+
+                                </template>
+                            </v-tooltip>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr v-else>
+                    <th colspan="3">DISEÑO</th>
+
+                    <td colspan="3">
+
+                        <v-btn color="purple" variant="tonal" prepend-icon="mdi-upload"
+                            @click="$refs.inputDiseno.click()" :loading="loading || uploadingDiseno">
+                            Subir diseño
+                        </v-btn>
+
+                        <div v-if="uploadingDiseno" class="mt-3">
+                            <v-progress-linear :model-value="uploadProgress" height="20" color="purple" striped>
+                                <strong>{{ uploadProgress }}%</strong>
+                            </v-progress-linear>
                         </div>
 
                     </td>
@@ -140,6 +197,14 @@
             </tbody>
         </table>
     </div>
+
+    <input ref="inputImagenes" type="file" multiple hidden accept="image/*" @change="subirImagenes" />
+
+    <input ref="inputDiseno" type="file" hidden accept=".psd,.ai,.pdf,.cdr" @change="subirDiseno" />
+
+    <v-overlay :model-value="loading" class="align-center justify-center">
+        <v-progress-circular indeterminate size="64" />
+    </v-overlay>
 </template>
 
 <script>
@@ -150,6 +215,13 @@ export default {
         item: {
             type: Object,
             required: true
+        }
+    },
+    data(){
+        return {
+            uploadingDiseno: false,
+            uploadProgress: 0,
+            loading: false,
         }
     },
     methods: {
@@ -202,6 +274,126 @@ export default {
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
+        },
+
+        async subirImagenes(e) {
+            this.loading = true
+            const files = e.target.files
+            if (!files.length) return
+            const form = new FormData()
+            for (const file of files) {
+                form.append('imagenes[]', file)
+            }
+            await axios.post(
+                `/detalle-venta/${this.item.id}/imagenes`,
+                form
+            )
+            this.loading = false
+            toast.success('Imágenes subidas')
+            window.location.reload();
+        },
+
+        async subirDiseno(e) {
+            const file = e.target.files[0]
+            if (!file) return
+            try {
+                this.uploadingDiseno = true
+                this.uploadProgress = 0
+                /*
+                |--------------------------------------------------------------------------
+                | PRESIGNED URL
+                |--------------------------------------------------------------------------
+                */
+                const { data } = await axios.post(
+                    '/s3/presigned-url',
+                    {
+                        filename: file.name,
+                        content_type: file.type
+                    }
+                )
+                /*
+                |--------------------------------------------------------------------------
+                | SUBIR A S3
+                |--------------------------------------------------------------------------
+                */
+                await axios.put(
+                    data.url,
+                    file,
+                    {
+                        headers: {
+                            'Content-Type': file.type
+                        },
+
+                        onUploadProgress: (progressEvent) => {
+
+                            if (!progressEvent.total) return
+
+                            this.uploadProgress = Math.round(
+                                (progressEvent.loaded * 100)
+                                / progressEvent.total
+                            )
+                        }
+                    }
+                )
+                /*
+                |--------------------------------------------------------------------------
+                | GUARDAR PATH
+                |--------------------------------------------------------------------------
+                */
+                await axios.post(
+                    `/detalle/${this.item.id}/guardar-diseno`,
+                    {
+                        path: data.path
+                    }
+                )
+                toast.success('Diseño subido')
+                window.location.reload();
+            } catch (e) {
+                console.error(e)
+                toast.error('Error al subir diseño')
+            } finally {
+                this.uploadingDiseno = false
+                setTimeout(() => {
+                    this.uploadProgress = 0
+                }, 500)
+            }
+        },
+
+        async eliminarImagen(id) {
+
+            if (!confirm('¿Eliminar imagen?')) {
+                return
+            }
+            this.loading = true
+            try {
+                await axios.delete(
+                    `/detalle-imagen/${id}`
+                )
+                this.loading = false
+                toast.success('Imagen eliminada')
+                window.location.reload()
+            } catch (e) {
+                this.loading = false
+                toast.error(
+                    'No se pudo eliminar'
+                )
+            }
+        },
+
+        async eliminarDiseno() {
+            if (!confirm('¿Eliminar diseño?')) {
+                return
+            }
+            this.loading = true
+            try {
+                await axios.delete(`/detalle/${this.item.id}/diseno`)
+                this.loading = false
+                toast.success('Diseño eliminado')
+                window.location.reload()
+            } catch (e) {
+                this.loading = false
+                toast.error('No se pudo eliminar')
+            }
         }
     }
 }

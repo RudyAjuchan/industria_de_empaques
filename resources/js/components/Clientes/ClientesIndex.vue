@@ -36,7 +36,7 @@
         </div>
 
         <v-data-table :headers="headers" :items="clientes" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" v-if="can('cliente.ver')">
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" v-if="can('cliente.ver')">
 
             <template v-slot:[`item.contacto`]="{ item }">
                 <v-menu open-on-hover location="end" v-if="item.emails.length > 0">

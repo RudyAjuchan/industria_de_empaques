@@ -36,7 +36,7 @@
         </div>
         <v-data-table-server :headers="headers" :items="productos" :items-length="total" :loading="loading"
             @update:options="fetchProducto" fixed-header height="500px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" v-if="can('producto.ver')" :options="options">
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" v-if="can('producto.ver')" :options="options">
             <template v-slot:[`item.imagen`]="{ item }">
                 <v-img :src="item.imagen_principal_url || imagePlaceholder" width="52" height="52" aspect-ratio="1"
                     contain loading="lazy"/>

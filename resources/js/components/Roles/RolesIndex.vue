@@ -36,7 +36,7 @@
         </div>
 
         <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search" v-if="can('rol.ver')">
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search" v-if="can('rol.ver')">
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
                     <v-btn icon @click="edit(item.id)" color="primary" variant="tonal" density="compact"

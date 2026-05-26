@@ -169,6 +169,14 @@
                         <div class="label">Pagos</div>
                     </a>
                 @endcan
+                @can('menu.banner')
+                    <a href="#" data-route="/banners" data-title="Banners publicitarios">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-billboard"></i>
+                        </div>
+                        <div class="label">Banners</div>
+                    </a>
+                @endcan
             </nav>
 
             <div class="footer">

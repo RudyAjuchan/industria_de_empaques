@@ -50,7 +50,7 @@
             </v-col>
         </v-row>
         <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('venta.ver')" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search">
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search">
 
             <template v-slot:[`item.created_at`]="{ item }">
                 {{ formatDate(item.created_at) }}

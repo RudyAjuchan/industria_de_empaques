@@ -64,4 +64,24 @@ class Producto extends Model
             ->withPivot('orden')
             ->orderBy('pivot_orden');
     }
+
+    public function promociones()
+    {
+        return $this->belongsToMany(
+            Promocion::class,
+            'promocion_productos',
+            'productos_id',
+            'promocions_id'
+        );
+    }
+
+    public function promocionVigente()
+    {
+        return $this->belongsToMany(
+            Promocion::class,
+            'promocion_productos',
+            'productos_id',
+            'promocions_id'
+        )->vigente();
+    }
 }

@@ -24,9 +24,16 @@ class RolesAndPermissions2 extends Seeder
             'pago.editar',
             'pago.borrar',
             'pago.reporte',
+            /* PERMISOS PARA PUBLICIDAD */
+            'banner.ver',
+            'banner.crear',
+            'banner.editar',
+            'banner.borrar',
+            'banner.reporte',
             /* PERMISOS PARA SIDEBAR */
             'menu.pagos',
             'menu.contabilidad',
+            'menu.banner',
         ];
 
         foreach ($permisos as $p) {

@@ -140,9 +140,9 @@ class ProductoController extends Controller
         return Promocion::vigente()
             ->where('aplica_a', 'producto')
             ->with(['productos' => function ($q) {
-            $q->where('estado', 1)
-                ->where('ecommerce', 1);
-        }])
+                $q->where('estado', 1)
+                    ->where('ecommerce', 1);
+            }])
             ->get()
             ->map(function ($promo) {
                 return [
@@ -161,5 +161,38 @@ class ProductoController extends Controller
                     })
                 ];
             });
+    }
+
+    public function buscarProductoEcommerce(Request $request)
+    {
+        $search = $request->search;
+        $productos = Producto::query()
+            ->where('ecommerce', 1)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'LIKE', "%{$search}%")
+                        ->orWhere('nombre', 'LIKE', "%{$search}%")
+                        ->orWhere('tipo', 'LIKE', "%{$search}%");
+                });
+            })
+            ->select(
+                'id',
+                'nombre',
+                'tipo',
+                'precio_base'
+            )
+            ->limit(8)
+            ->get()
+            ->map(function ($producto) {
+                return [
+                    'id' => $producto->id,
+                    'nombre' => $producto->nombre,
+                    'tipo' => $producto->tipo,
+                    'precio' => $producto->precio_base,
+                    'imagen' => $producto->imagen_principal_url ?? null
+                ];
+            });
+
+        return response()->json($productos);
     }
 }

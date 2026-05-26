@@ -28,7 +28,7 @@
 
         <!-- TABLA -->
         <v-data-table :headers="headers" :items="items" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" />
+            :header-props="{ class: 'bg-teal-lighten-2' }" />
 
     </div>
 </template>

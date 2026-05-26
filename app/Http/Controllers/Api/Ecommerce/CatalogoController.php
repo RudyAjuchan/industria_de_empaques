@@ -43,23 +43,85 @@ class CatalogoController extends Controller
             ->get()
             ->map(fn($p) => $this->aplicarPromocion($p));
 
-        $promosCarrito = Promocion::vigente()
-            ->where('aplica_a', 'carrito')
-            ->get()
-            ->map(function ($promo) {
-                return [
+        // PROMOCIONES
+        $productosPROMO = Producto::with([
+            'imagenes',
+            'promocionVigente'
+        ])
+            ->where('estado', 1)
+            ->whereHas('promocionVigente')
+            ->latest()
+            ->take(12)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Transformar promociones
+        |--------------------------------------------------------------------------
+        */
+        $productosPROMO->transform(function ($producto) {
+
+            $promo = $producto->promocionVigente->first();
+
+            $producto->tiene_promocion = false;
+            $producto->promocion = null;
+            $producto->precio_promocion = null;
+
+            if ($promo) {
+
+                $producto->tiene_promocion = true;
+
+                $producto->promocion = [
                     'id' => $promo->id,
                     'nombre' => $promo->nombre,
                     'tipo' => $promo->tipo,
-                    'valor' => $promo->valor
+                    'valor' => $promo->valor,
                 ];
-            });
+
+                /*
+                |--------------------------------------------------------------------------
+                | Calcular precio promocional
+                |--------------------------------------------------------------------------
+                */
+                if (
+                    $producto->tipo_producto === 'simple' &&
+                    $producto->precio_base
+                ) {
+
+                    if ($promo->tipo === 'porcentaje') {
+
+                        $producto->precio_promocion =
+                            round(
+                                $producto->precio_base -
+                                    (
+                                        $producto->precio_base *
+                                        ($promo->valor / 100)
+                                    ),
+                                2
+                            );
+                    } else {
+
+                        $producto->precio_promocion =
+                            max(
+                                0,
+                                round(
+                                    $producto->precio_base - $promo->valor,
+                                    2
+                                )
+                            );
+                    }
+                }
+            }
+
+            return $producto;
+        });
+
 
         return response()->json([
             'destacados' => $masVendidos,
             'recientes' => $recientes,
             'paginas' => Pagina::where('estado', 1)->get(),
-            'promociones_carrito' => $promosCarrito
+            'promociones_carrito' => $productosPROMO
         ]);
     }
 

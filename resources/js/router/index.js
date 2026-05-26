@@ -49,6 +49,9 @@ const ventasContabilidadComponent = () => import('../components/Contabilidad/Con
 /* RUTAS PARA PAGOS */
 const pagosComponent = () => import('../components/Pagos/PagosIndex.vue');
 
+/* RUTAS PARA BANNERS */
+const bannersComponent = () => import('../components/Banners/BannersIndex.vue');
+
 const routes = [
     /* RUTAS DEL MENÚ */
     {
@@ -268,6 +271,15 @@ const routes = [
         component: pagosComponent,
         meta: {
             permission: 'menu.pagos'
+        }
+    },
+    /* PARA BANNERS */
+    {
+        path: '/banners',
+        name: 'banner.index',
+        component: bannersComponent,
+        meta: {
+            permission: 'menu.banner'
         }
     },
 ];

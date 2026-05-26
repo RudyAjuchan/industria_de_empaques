@@ -40,7 +40,7 @@
         <!-- Table -->
         <v-card rounded="xl" variant="flat" class="pa-2">
             <v-data-table :headers="headers" :items="filteredUsers" :loading="loading" item-key="id" fixed-header
-                height="400px" :header-props="{ class: 'bg-green-darken-2' }" density="compact"
+                height="400px" :header-props="{ class: 'bg-teal-lighten-2' }" density="compact"
                 v-if="can('usuario.ver')">
                 <template v-slot:[`item.status`]="{ item }">
                     <v-chip size="small" :color="item.status === 'active' ? 'success' : 'red'" variant="tonal" label>

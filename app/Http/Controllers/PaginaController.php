@@ -7,6 +7,7 @@ use App\Models\Pagina;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -25,6 +26,42 @@ class PaginaController extends Controller
             ->select('tipo')
             ->distinct()
             ->pluck('tipo');
+    }
+    public function getTiposProducts()
+    {
+        return Producto::where('estado', 1)
+            ->where('ecommerce', 1)
+            ->select('tipo as nombre', DB::raw('count(*) as total'))
+            ->groupBy('tipo')
+            ->get();
+    }
+
+    public function getTiposFooter()
+    {
+        $tipos = Producto::query()
+            ->whereNotNull('tipo')
+            ->where('tipo', '!=', '')
+            ->where('estado', 1)
+            ->where('ecommerce', 1)
+            ->distinct()
+            ->orderBy('tipo')
+            ->limit(5)
+            ->pluck('tipo');
+        return response()->json($tipos);
+    }
+
+    public function getTiposSlider()
+    {
+        $tipos = Producto::query()
+            ->selectRaw('tipo, COUNT(*) as total')
+            ->whereNotNull('tipo')
+            ->where('estado', 1)
+            ->where('ecommerce', 1)
+            ->groupBy('tipo')
+            ->orderBy('tipo')
+            ->get();
+
+        return response()->json($tipos);
     }
 
     public function store(Request $request)
@@ -66,8 +103,7 @@ class PaginaController extends Controller
     public function exportPdf(Request $request)
     {
         $search = ($request->input('search') === "null") ? null : $request->input('search');
-        $pagina = Pagina::
-            where('nombre', 'LIKE', '%'.$search.'%')
+        $pagina = Pagina::where('nombre', 'LIKE', '%' . $search . '%')
             ->where('estado', 1)
             ->orderBy('nombre')
             ->get();

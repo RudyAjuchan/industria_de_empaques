@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\ClienteAuthController;
 use App\Http\Controllers\Api\Ecommerce\CatalogoController;
 use App\Http\Controllers\Api\Ecommerce\CheckoutController;
@@ -284,6 +285,20 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/pagos/export/excel', [PagoController::class, 'exportExcel'])->middleware('permission:pago.ver');
 });
 
+/* RUTAS PARA BANNERS */
+Route::middleware(['auth', 'force.password'])->group(function () {
+    Route::post('/banners', [BannerController::class, 'store'])->middleware('permission:banner.crear');
+    Route::get('/prod/search', [BannerController::class, 'buscar'])->middleware('permission:banner.crear');
+    Route::get('/prod/tipos', [BannerController::class, 'getTiposProd'])->middleware('permission:banner.crear');
+    Route::get('/banners', [BannerController::class, 'index'])->middleware('permission:banner.ver');
+    Route::delete('/banners/{banner}', [BannerController::class, 'destroy'])->middleware('permission:banner.borrar');
+    Route::put('/banners/{banner}', [BannerController::class, 'update'])->middleware('permission:banner.editar');
+    Route::get('/banners/{banner}', [BannerController::class, 'show'])->middleware('permission:banner.ver');
+    //Route::get('/banners/export/pdf', [BannerController::class, 'exportPDF'])->middleware('permission:banner.ver');
+    //Route::get('/banners/export/excel', [BannerController::class, 'exportExcel'])->middleware('permission:banner.ver');
+});
+
+
 /* PARA EL ECOMMERCE */
 Route::prefix('api')->group(function () {
 
@@ -312,6 +327,9 @@ Route::prefix('api')->group(function () {
         Route::get('/home', [CatalogoController::class, 'home']);
         Route::get('/paginas', [PaginaController::class, 'index']);
         Route::get('/tipos', [PaginaController::class, 'getTipos']);
+        Route::get('/tiposProducts', [PaginaController::class, 'getTiposProducts']);
+        Route::get('/tipos-footer', [PaginaController::class, 'getTiposFooter']);
+        Route::get('/tipos-slider', [PaginaController::class, 'getTiposSlider']);
         Route::get('/productos', [ProductoController::class, 'index']);
         Route::get('/productos/{id}', [ProductoController::class, 'show']);
 
@@ -326,6 +344,10 @@ Route::prefix('api')->group(function () {
         Route::post('/validar-promociones', [ProductoController::class, 'validarPromos']);
 
         Route::get('/promociones', [ProductoController::class, 'promociones']);
+        
+        /* NUEVAS RUTAS */
+        Route::get('/producto/buscar', [ProductoController::class, 'buscarProductoEcommerce']);
+        Route::get('/banners', [BannerController::class, 'ecommerce']);
     });
 
 });

@@ -25,7 +25,7 @@
 
         <!-- TABLA -->
         <v-data-table :headers="headers" :items="promociones" :loading="loading" fixed-header height="400px"
-            density="compact" :search="search" :header-props="{ class: 'bg-green-darken-2' }">
+            density="compact" :search="search" :header-props="{ class: 'bg-teal-lighten-2' }">
 
             <!-- ACCIONES -->
             <template v-slot:[`item.actions`]="{ item }">

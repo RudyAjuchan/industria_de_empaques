@@ -36,7 +36,7 @@
         </div>
 
         <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search"
             v-if="can('pagina.ver')">
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">

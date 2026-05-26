@@ -36,7 +36,7 @@
         </div>
 
         <v-data-table :headers="headers" :items="pagos" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-green-darken-2' }" density="compact" :search="search"
+            :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search"
             v-if="can('pago.ver')">
             <template v-slot:[`item.estado`]="{ item }">
                 <v-chip :color="item.estado === 'anulada' ? 'red' : 'green'" dark>

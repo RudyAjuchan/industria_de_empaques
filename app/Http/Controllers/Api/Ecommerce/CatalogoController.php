@@ -74,6 +74,8 @@ class CatalogoController extends Controller
                 $producto->promocion = [
                     'id' => $promo->id,
                     'nombre' => $promo->nombre,
+                    'titulo' => $promo->titulo,
+                    'descripcion' => $promo->descripcion,
                     'tipo' => $promo->tipo,
                     'valor' => $promo->valor,
                 ];
@@ -138,6 +140,10 @@ class CatalogoController extends Controller
             $producto->tiene_promocion = true;
 
             $producto->promocion = [
+                'id' => $promo->id,
+                'nombre' => $promo->nombre,
+                'titulo' => $promo->titulo,
+                'descripcion' => $promo->descripcion,
                 'tipo' => $promo->tipo,
                 'valor' => $promo->valor
             ];

@@ -13,6 +13,13 @@
                 <!-- NOMBRE -->
                 <v-text-field v-model="form.nombre" label="Nombre" density="compact" variant="outlined" :error-messages="errors.nombre"/>
 
+                <!-- TITULO -->
+                <v-text-field v-model="form.titulo" label="Título" density="compact" variant="outlined" :error-messages="errors.titulo"/>
+
+                <!-- DESCRIPCION -->
+                <v-textarea v-model="form.descripcion" label="Descripción" rows="3" auto-grow density="compact"
+                    variant="outlined" :error-messages="errors.descripcion"/>
+
                 <!-- TIPO -->
                 <v-select v-model="form.tipo" :items="tipos" label="Tipo" density="compact" variant="outlined" />
 
@@ -138,6 +145,8 @@ export default {
             return {
                 id: null,
                 nombre: '',
+                titulo: '',
+                descripcion: '',
                 tipo: 'porcentaje',
                 valor: 1,
                 fecha_inicio: '',

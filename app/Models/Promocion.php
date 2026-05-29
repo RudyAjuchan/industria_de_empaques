@@ -8,6 +8,8 @@ class Promocion extends Model
 {
     protected $fillable = [
         'nombre',
+        'titulo',
+        'descripcion',
         'tipo',
         'valor',
         'fecha_inicio',

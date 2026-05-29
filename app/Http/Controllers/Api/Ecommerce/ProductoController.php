@@ -44,6 +44,10 @@ class ProductoController extends Controller
             if ($promo) {
                 $producto->tiene_promocion = true;
                 $producto->promocion = [
+                    'id' => $promo->id,
+                    'nombre' => $promo->nombre,
+                    'titulo' => $promo->titulo,
+                    'descripcion' => $promo->descripcion,
                     'tipo' => $promo->tipo,
                     'valor' => $promo->valor
                 ];
@@ -79,6 +83,10 @@ class ProductoController extends Controller
         if ($promo) {
             $producto->tiene_promocion = true;
             $producto->promocion = [
+                'id' => $promo->id,
+                'nombre' => $promo->nombre,
+                'titulo' => $promo->titulo,
+                'descripcion' => $promo->descripcion,
                 'tipo' => $promo->tipo,
                 'valor' => $promo->valor
             ];
@@ -128,6 +136,8 @@ class ProductoController extends Controller
                 'promocion' => $promo ? [
                     'id' => $promo->id,
                     'nombre' => $promo->nombre,
+                    'titulo' => $promo->titulo,
+                    'descripcion' => $promo->descripcion,
                     'tipo' => $promo->tipo,
                     'valor' => $promo->valor
                 ] : null
@@ -148,6 +158,8 @@ class ProductoController extends Controller
                 return [
                     'id' => $promo->id,
                     'nombre' => $promo->nombre,
+                    'titulo' => $promo->titulo,
+                    'descripcion' => $promo->descripcion,
                     'tipo' => $promo->tipo,
                     'valor' => $promo->valor,
                     'productos' => $promo->productos->map(function ($p) {

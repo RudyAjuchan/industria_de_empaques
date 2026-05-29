@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Producto;
 use App\Models\Promocion;
 use Illuminate\Http\Request;
 
@@ -16,6 +17,8 @@ class PromocionController extends Controller
     {
         $data = $request->validate([
             'nombre' => 'required',
+            'titulo' => 'nullable|string|max:255',
+            'descripcion' => 'nullable|string',
             'tipo' => 'required|in:porcentaje,monto',
             'valor' => 'required|numeric|min:0',
             'fecha_inicio' => 'required|date',
@@ -44,6 +47,8 @@ class PromocionController extends Controller
 
         $data = $request->validate([
             'nombre' => 'required',
+            'titulo' => 'nullable|string|max:255',
+            'descripcion' => 'nullable|string',
             'tipo' => 'required|in:porcentaje,monto',
             'valor' => 'required|numeric|min:0',
             'fecha_inicio' => 'required|date',
@@ -74,5 +79,193 @@ class PromocionController extends Controller
         ]);
 
         return response()->noContent(); // Retorna 204
+    }
+
+    /**
+     * HERO / SLIDER
+     */
+    public function getPromoEco()
+    {
+        $promociones = Promocion::query()
+            ->vigente()
+            ->withCount('productos')
+            ->orderBy('fecha_fin')
+            ->get()
+            ->map(function ($promo) {
+
+                return [
+                    'id' => $promo->id,
+
+                    // CARD
+                    'nombre' => $promo->nombre,
+
+                    // HERO
+                    'titulo' => $promo->titulo,
+                    'descripcion' => $promo->descripcion,
+
+                    // DESCUENTO
+                    'tipo' => $promo->tipo,
+                    'valor' => $promo->valor,
+
+                    // COUNTDOWN
+                    'fecha_inicio' => $promo->fecha_inicio,
+                    'fecha_fin' => $promo->fecha_fin,
+
+                    // PRODUCTOS
+                    'productos_count' => $promo->productos_count,
+                ];
+            });
+
+        return response()->json($promociones);
+    }
+
+    /**
+     * PRODUCTOS DE PROMOCIÓN
+     */
+    public function getProdPromoEco(Request $request, $id)
+    {
+        $promocion = Promocion::query()
+            ->vigente()
+            ->findOrFail($id);
+
+        $productos = $promocion->productos()
+            ->where('estado', 1)
+            ->where('ecommerce', 1)
+            ->with([
+                'imagenPrincipal',
+                'paginas'
+            ])
+            ->paginate(12);
+
+        $productos->getCollection()->transform(function ($producto) use ($promocion) {
+
+            // PRECIO ORIGINAL
+            $precioOriginal = $producto->precio_base;
+
+            // PRECIO FINAL
+            $precioFinal = $precioOriginal;
+            if ($producto->tipo_producto === 'simple' && $precioOriginal) {
+                if ($promocion->tipo === 'porcentaje') {
+                    $precioFinal = $precioOriginal -
+                        ($precioOriginal * ($promocion->valor / 100));
+                } else {
+                    $precioFinal = $precioOriginal - $promocion->valor;
+                }
+                // EVITAR NEGATIVOS
+                $precioFinal = max($precioFinal, 0);
+            }
+
+            return [
+                'id' => $producto->id,
+                'nombre' => $producto->nombre,
+                'descripcion' => $producto->descripcion,
+                'tipo_producto' => $producto->tipo_producto,
+                'precio_base' => $precioOriginal,
+                'precio_final' => round($precioFinal, 2),
+                'imagen' => $producto->imagen_principal_url,
+                'pagina' => $producto->paginas?->nombre,
+
+                /**
+                 * PROMO
+                 */
+                'promocion' => [
+                    'id' => $promocion->id,
+                    'nombre' => $promocion->nombre,
+                    'tipo' => $promocion->tipo,
+                    'valor' => $promocion->valor,
+                ]
+            ];
+        });
+
+        return response()->json($productos);
+    }
+
+    /**
+     * TODOS LOS PRODUCTOS EN PROMOCIÓN
+     */
+    public function getPromoEcoInit(Request $request)
+    {
+        $productos = Producto::query()
+            ->where('estado', 1)
+            ->where('ecommerce', 1)
+            /**
+             * SOLO PRODUCTOS
+             * CON PROMOCIÓN VIGENTE
+             */
+            ->whereHas('promociones', function ($q) {
+                $q->vigente();
+            })
+            ->with([
+                'imagenPrincipal',
+                'paginas',
+                /**
+                 * SOLO PROMO VIGENTE
+                 */
+                'promociones' => function ($q) {
+                    $q->vigente()
+                        ->orderBy('fecha_fin');
+                }
+            ])
+            ->paginate(12);
+        $productos->getCollection()->transform(function ($producto) {
+            /**
+             * TOMAR PRIMERA PROMO
+             */
+            $promocion = $producto->promociones->first();
+            if (!$promocion) {
+                return null;
+            }
+            $precioOriginal = $producto->precio_base;
+            $precioFinal = $precioOriginal;
+            /**
+             * CALCULAR DESCUENTO
+             */
+            if (
+                $producto->tipo_producto === 'simple' &&
+                $precioOriginal
+            ) {
+                if ($promocion->tipo === 'porcentaje') {
+                    $precioFinal =
+                        $precioOriginal -
+                        ($precioOriginal *
+                            ($promocion->valor / 100));
+                } else {
+                    $precioFinal =
+                        $precioOriginal -
+                        $promocion->valor;
+                }
+
+                $precioFinal = max($precioFinal, 0);
+            }
+
+            return [
+                'id' => $producto->id,
+                'nombre' => $producto->nombre,
+                'descripcion' => $producto->descripcion,
+                'tipo_producto' => $producto->tipo_producto,
+                'precio_base' => $precioOriginal,
+                'precio_final' => round($precioFinal, 2),
+                'imagen' => $producto->imagen_principal_url,
+                'pagina' => $producto->paginas?->nombre,
+                /**
+                 * PROMO
+                 */
+                'promocion' => [
+                    'id' => $promocion->id,
+                    'nombre' => $promocion->nombre,
+                    'tipo' => $promocion->tipo,
+                    'valor' => $promocion->valor,
+                ]
+            ];
+        });
+
+        /**
+         * ELIMINAR NULLS
+         */
+        $productos->setCollection(
+            $productos->getCollection()->filter()->values()
+        );
+
+        return response()->json($productos);
     }
 }

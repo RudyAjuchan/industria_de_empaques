@@ -348,6 +348,9 @@ Route::prefix('api')->group(function () {
         /* NUEVAS RUTAS */
         Route::get('/producto/buscar', [ProductoController::class, 'buscarProductoEcommerce']);
         Route::get('/banners', [BannerController::class, 'ecommerce']);
+        Route::get('/promociones', [PromocionController::class, 'getPromoEco']);
+        Route::get('/promociones/productos', [PromocionController::class, 'getPromoEcoInit']);
+        Route::get('/promociones/{id}/productos', [PromocionController::class, 'getProdPromoEco']);
     });
 
 });

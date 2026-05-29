@@ -121,6 +121,8 @@ export default {
             headers: [
                 { title: 'Código', key: 'id' },
                 { title: 'Nombre', key: 'nombre' },
+                { title: 'Título', key: 'titulo' },
+                { title: 'Descripción', key: 'descripcion' },
                 { title: 'Tipo', key: 'tipo' },
                 { title: 'Valor', key: 'valor' },
                 { title: 'Inicio', key: 'fecha_inicio' },

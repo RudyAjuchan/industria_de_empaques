@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\EstadisticasProduccionExport;
 use App\Models\DetalleVenta;
 use App\Models\Venta;
+use Illuminate\Support\Facades\Validator;
 
 class EstadisticasProduccionController extends Controller
 {
@@ -36,7 +37,9 @@ class EstadisticasProduccionController extends Controller
         });
 
         return response()->json([
-            'years' => $years,
+            'years' => $years->isNotEmpty()
+                ? $years
+                : collect([now()->year]),
             'meses' => $mesesPorYear
         ]);
     }
@@ -65,6 +68,7 @@ class EstadisticasProduccionController extends Controller
 
     private function obtenerDatos($request)
     {
+        $filtros = $this->validarFiltros($request);
         $estados = EstadoProduccion::orderBy('orden')->get();
 
         /*
@@ -76,22 +80,7 @@ class EstadisticasProduccionController extends Controller
             'producto.estadosProduccion'
         ]);
 
-        if ($request->periodo === 'hoy') {
-            $ventasQuery->whereDate('created_at', now());
-        }
-
-        if ($request->periodo === 'dia') {
-            $ventasQuery->whereDate('created_at', $request->fecha);
-        }
-
-        if ($request->periodo === 'mes') {
-            $ventasQuery->whereYear('created_at', $request->year)
-                ->whereMonth('created_at', $request->month);
-        }
-
-        if ($request->periodo === 'anio') {
-            $ventasQuery->whereYear('created_at', $request->year);
-        }
+        $this->aplicarFiltroFecha($ventasQuery, $filtros);
 
         $ventas = $ventasQuery->get();
 
@@ -321,6 +310,7 @@ class EstadisticasProduccionController extends Controller
 
     private function obtenerVentasPorPaginaData($request)
     {
+        $filtros = $this->validarFiltros($request);
         $query = Venta::with([
             'detalles.producto.paginas'
         ]);
@@ -330,22 +320,7 @@ class EstadisticasProduccionController extends Controller
         | FILTROS
         |--------------------------------------------------------------------------
         */
-        if ($request->periodo === 'hoy') {
-            $query->whereDate('created_at', now());
-        }
-
-        if ($request->periodo === 'dia') {
-            $query->whereDate('created_at', $request->fecha);
-        }
-
-        if ($request->periodo === 'mes') {
-            $query->whereYear('created_at', $request->year)
-                ->whereMonth('created_at', $request->month);
-        }
-
-        if ($request->periodo === 'anio') {
-            $query->whereYear('created_at', $request->year);
-        }
+        $this->aplicarFiltroFecha($query, $filtros);
 
         $ventas = $query->get();
 
@@ -357,6 +332,15 @@ class EstadisticasProduccionController extends Controller
         $agrupado = [];
 
         foreach ($ventas as $venta) {
+            $paginasVenta = $venta->detalles
+                ->map(fn($detalle) => $detalle->producto->paginas->nombre ?? 'Sin página')
+                ->unique()
+                ->values();
+
+            $envioPorPagina = $paginasVenta->isNotEmpty()
+                ? ($venta->costo_envio ?? 0) / $paginasVenta->count()
+                : 0;
+
             foreach ($venta->detalles as $detalle) {
 
                 $pagina = $detalle->producto->paginas->nombre ?? 'Sin página';
@@ -372,8 +356,11 @@ class EstadisticasProduccionController extends Controller
                 $agrupado[$pagina]['venta'] +=
                     ($detalle->cantidad ?? 0) * ($detalle->precio ?? 0);
 
-                // Envío (solo una vez por venta, no por detalle)
-                $agrupado[$pagina]['envio'] += $venta->costo_envio ?? 0;
+                // Envío distribuido una sola vez por venta entre sus páginas.
+                if ($paginasVenta->contains($pagina)) {
+                    $agrupado[$pagina]['envio'] += $envioPorPagina;
+                    $paginasVenta = $paginasVenta->reject(fn($item) => $item === $pagina)->values();
+                }
             }
         }
 
@@ -426,6 +413,7 @@ class EstadisticasProduccionController extends Controller
 
     private function obtenerTiposProductoData($request)
     {
+        $filtros = $this->validarFiltros($request);
         $query = DetalleVenta::with('producto');
 
         /*
@@ -433,22 +421,7 @@ class EstadisticasProduccionController extends Controller
         | FILTROS (igual que todo tu sistema)
         |--------------------------------------------------------------------------
         */
-        if ($request->periodo === 'hoy') {
-            $query->whereDate('created_at', now());
-        }
-
-        if ($request->periodo === 'dia') {
-            $query->whereDate('created_at', $request->fecha);
-        }
-
-        if ($request->periodo === 'mes') {
-            $query->whereYear('created_at', $request->year)
-                ->whereMonth('created_at', $request->month);
-        }
-
-        if ($request->periodo === 'anio') {
-            $query->whereYear('created_at', $request->year);
-        }
+        $this->aplicarFiltroFecha($query, $filtros);
 
         $detalles = $query->get();
 
@@ -492,5 +465,42 @@ class EstadisticasProduccionController extends Controller
                 'ventas' => collect($resultado)->sum('ventas'),
             ]
         ];
+    }
+
+    private function validarFiltros(Request $request): array
+    {
+        $data = array_merge([
+            'periodo' => 'mes',
+            'year' => now()->year,
+            'month' => now()->month,
+            'fecha' => now()->toDateString(),
+        ], $request->only('periodo', 'year', 'month', 'fecha'));
+
+        return Validator::make($data, [
+            'periodo' => ['required', 'in:hoy,dia,mes,anio'],
+            'fecha' => ['required_if:periodo,dia', 'date'],
+            'year' => ['required_if:periodo,mes,anio', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required_if:periodo,mes', 'integer', 'between:1,12'],
+        ])->validate();
+    }
+
+    private function aplicarFiltroFecha($query, array $filtros): void
+    {
+        if ($filtros['periodo'] === 'hoy') {
+            $query->whereDate('created_at', now()->toDateString());
+        }
+
+        if ($filtros['periodo'] === 'dia') {
+            $query->whereDate('created_at', $filtros['fecha']);
+        }
+
+        if ($filtros['periodo'] === 'mes') {
+            $query->whereYear('created_at', $filtros['year'])
+                ->whereMonth('created_at', $filtros['month']);
+        }
+
+        if ($filtros['periodo'] === 'anio') {
+            $query->whereYear('created_at', $filtros['year']);
+        }
     }
 }

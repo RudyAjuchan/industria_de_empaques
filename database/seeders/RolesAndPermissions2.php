@@ -30,6 +30,10 @@ class RolesAndPermissions2 extends Seeder
             'banner.editar',
             'banner.borrar',
             'banner.reporte',
+            /* PERMISOS PARA DASHBOARDS */
+            'dashboard.general.ver',
+            'dashboard.corporativo.ver',
+            'dashboard.corporativo.reporte',
             /* PERMISOS PARA SIDEBAR */
             'menu.pagos',
             'menu.contabilidad',

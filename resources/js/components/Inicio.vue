@@ -31,11 +31,11 @@
                     Aplicar
                 </v-btn>
 
-                <v-btn color="error" variant="tonal" @click="exportPDF">
+                <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="error" variant="tonal" @click="exportPDF">
                     Exportar PDF
                 </v-btn>
 
-                <v-btn color="success" variant="tonal" @click="exportExcel">
+                <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="success" variant="tonal" @click="exportExcel">
                     Exportar Excel
                 </v-btn>
             </v-col>
@@ -225,7 +225,7 @@
             </v-col>
         </v-row>
 
-        <v-row class="mt-5">
+        <v-row v-if="corporativo" class="mt-5">
 
             <!-- TABLA -->
             <v-col cols="12" md="6">
@@ -289,7 +289,7 @@
 
         </v-row>
 
-        <v-row class="mt-6">
+        <v-row v-if="corporativo" class="mt-6">
 
             <!-- TABLA -->
             <v-col cols="12" md="5">
@@ -346,6 +346,7 @@
 <script>
 import LoginWelcome from './LoginWelcome.vue';
 import ChartDataLabels from 'chartjs-plugin-datalabels'
+import { toast } from 'vue3-toastify'
 
 const centerTextPlugin = {
     id: 'centerText',
@@ -402,6 +403,12 @@ export default {
     components: {
         LoginWelcome
     },
+    props: {
+        corporativo: {
+            type: Boolean,
+            default: false,
+        },
+    },
     data() {
         return {
             loading: false,
@@ -414,8 +421,6 @@ export default {
             },
 
             porEstado: [],
-
-            chart: null,
 
             headers: [
                 { title: 'Estado', key: 'estado' },
@@ -456,7 +461,11 @@ export default {
                 { title: 'Total', key: 'total' }
             ],
             chartVentas: null,
-            totalesVentaPagina: [],
+            totalesVentaPagina: {
+                venta: 0,
+                envio: 0,
+                total: 0,
+            },
             coloresBase: [
                 'rgba(79, 129, 189, 0.8)',  // azul
                 'rgba(192, 80, 77, 0.8)',   // rojo
@@ -495,34 +504,40 @@ export default {
                     params: this.filtros
                 })
 
-                const response2 = await axios.get('/estadisticas-por-pagina', {
-                    params: this.filtros
-                })
-
-                const response3 = await axios.get('/estadisticas-por-tipo', {
-                    params: this.filtros
-                })
-
                 this.estadisticas = response.data.totales
                 this.porEstado = response.data.por_estado
-                this.ventasPorPagina = response2.data.ventas_por_pagina || []
-                this.totalesVentaPagina = response2.data.totales || []
-
 
                 this.$nextTick(() => this.renderChart())
-                this.$nextTick(() => this.renderChartVentas())
 
+                if (this.corporativo) {
+                    const response2 = await axios.get('/estadisticas-por-pagina', {
+                        params: this.filtros
+                    })
 
-                this.tiposProducto = response3.data.tipos_producto || []
-                this.totalesTipos = response3.data.totales || {
-                    unidades: 0,
-                    ventas: 0
+                    const response3 = await axios.get('/estadisticas-por-tipo', {
+                        params: this.filtros
+                    })
+
+                    this.ventasPorPagina = response2.data.ventas_por_pagina || []
+                    this.totalesVentaPagina = response2.data.totales || {
+                        venta: 0,
+                        envio: 0,
+                        total: 0,
+                    }
+
+                    this.tiposProducto = response3.data.tipos_producto || []
+                    this.totalesTipos = response3.data.totales || {
+                        unidades: 0,
+                        ventas: 0
+                    }
+
+                    this.$nextTick(() => this.renderChartVentas())
+                    this.$nextTick(() => this.renderChartTipos())
                 }
 
-                this.$nextTick(() => {
-                    this.renderChartTipos()
-                })
-
+            } catch (error) {
+                console.error(error)
+                toast.error('No se pudieron cargar las estadísticas')
             } finally {
                 this.loading = false
             }
@@ -615,7 +630,7 @@ export default {
             this.mesesDisponibles = data.meses
 
             // seleccionar por defecto
-            this.filtros.year = this.years[0]
+            this.filtros.year = this.years[0] || new Date().getFullYear()
 
             this.actualizarMeses()
         },
@@ -806,9 +821,9 @@ export default {
             })
         }
     },
-    mounted() {
-        this.cargarFiltros()
-        this.cargarEstadisticas()
+    async mounted() {
+        await this.cargarFiltros()
+        await this.cargarEstadisticas()
     },
 
     watch: {

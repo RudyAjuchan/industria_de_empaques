@@ -125,6 +125,8 @@ export default {
             const map = {
                 usuarios: 'Usuarios',
                 roles: 'Roles y permisos',
+                dashboard: 'Dashboards',
+                menu: 'Menú',
                 reportes: 'Reportes'
             }
 

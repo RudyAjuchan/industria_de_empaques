@@ -87,6 +87,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'promocion.editar',
             'promocion.borrar',
             'promocion.reporte',
+            /* PERMISOS PARA DASHBOARDS */
+            'dashboard.general.ver',
+            'dashboard.corporativo.ver',
+            'dashboard.corporativo.reporte',
             /* PERMISO PARA VER LAS VENTAS ACTIVAS SIN FINALIZAR */
             'produccion.activa',
             /* PERMISOS PARA SIDEBAR */
@@ -130,11 +134,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $asesorRole->givePermissionTo([
             'usuario.ver',
             'menu.inicio',
+            'dashboard.general.ver',
         ]);
 
         $produccion->givePermissionTo([
             'usuario.ver',
             'menu.inicio',
+            'dashboard.general.ver',
         ]);
     }
 }

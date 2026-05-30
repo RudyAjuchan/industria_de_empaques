@@ -267,12 +267,18 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* ESTADÍSTICAS PARA DASHBOARD */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/estadisticas-produccion', [EstadisticasProduccionController::class, 'estadisticasProduccion']);
-    Route::get('/estadisticas-por-pagina', [EstadisticasProduccionController::class, 'ventasPorPagina']);
-    Route::get('/estadisticas-por-tipo', [EstadisticasProduccionController::class, 'estadisticasPorTipo']);
-    Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion']);
-    Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF']);
-    Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel']);
+    Route::get('/estadisticas-produccion', [EstadisticasProduccionController::class, 'estadisticasProduccion'])
+        ->middleware('permission:dashboard.general.ver|dashboard.corporativo.ver');
+    Route::get('/estadisticas-por-pagina', [EstadisticasProduccionController::class, 'ventasPorPagina'])
+        ->middleware('permission:dashboard.corporativo.ver');
+    Route::get('/estadisticas-por-tipo', [EstadisticasProduccionController::class, 'estadisticasPorTipo'])
+        ->middleware('permission:dashboard.corporativo.ver');
+    Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion'])
+        ->middleware('permission:dashboard.general.ver|dashboard.corporativo.ver');
+    Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF'])
+        ->middleware('permission:dashboard.corporativo.reporte');
+    Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel'])
+        ->middleware('permission:dashboard.corporativo.reporte');
 });
 
 /* RUTAS PARA PAGOS */

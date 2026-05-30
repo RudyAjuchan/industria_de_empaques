@@ -44,6 +44,15 @@
                     </a>
                 @endcan
 
+                @can('dashboard.corporativo.ver')
+                    <a href="#" data-route="/dashboard-corporativo" data-title="Dashboard Corporativo">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-chart-box-outline"></i>
+                        </div>
+                        <div class="label">Dashboard Corporativo</div>
+                    </a>
+                @endcan
+
                 @can('menu.usuarios')
                     <a href="#" data-route="/usuarios" data-title="Usuarios">
                         <div class="ico" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 
 const InicioComponent = () => import('../components/Inicio.vue');
+const DashboardCorporativoComponent = () => import('../components/DashboardCorporativo.vue');
 const UsuarioComponent = () => import('../components/Usuarios/Usuario.vue');
 //COMPONENTES DE ROLES
 const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
@@ -59,7 +60,15 @@ const routes = [
         name: 'InicioVue',
         component: InicioComponent,
         meta: {
-            permission: 'menu.inicio'
+            permission: 'dashboard.general.ver'
+        }
+    },
+    {
+        path: '/dashboard-corporativo',
+        name: 'DashboardCorporativo',
+        component: DashboardCorporativoComponent,
+        meta: {
+            permission: 'dashboard.corporativo.ver'
         }
     },
     {

@@ -28,7 +28,7 @@ class RoleController extends Controller
         ]);
 
         // Asignar permiso automáticamente
-        $role->givePermissionTo('menu.inicio');
+        $role->givePermissionTo(['menu.inicio', 'dashboard.general.ver']);
 
         return $role;
     }

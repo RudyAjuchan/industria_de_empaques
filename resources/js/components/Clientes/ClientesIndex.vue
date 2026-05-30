@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('cliente.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -122,7 +122,7 @@
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar la página
+                    Eliminar cliente
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">
@@ -237,6 +237,7 @@ export default {
 
             await axios.get('/cliente', { params })
                 .then(res => this.clientes = res.data)
+                .catch(() => toast.error('No se pudieron cargar los clientes'))
                 .finally(() => this.loading = false)
         },
 

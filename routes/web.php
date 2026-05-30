@@ -102,7 +102,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA TIPO AGARRADOR */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/agarrador', [TipoAgarradorController::class, 'index'])->middleware('permission:agarrador.ver|venta.ver');
+    Route::get('/agarrador', [TipoAgarradorController::class, 'index'])->middleware('permission:agarrador.ver|venta.crear');
     Route::post('/agarrador', [TipoAgarradorController::class, 'store'])->middleware('permission:agarrador.crear|venta.crear');
     Route::put('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'update'])->middleware('permission:agarrador.editar');
     Route::delete('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'destroy'])->middleware('permission:agarrador.borrar');
@@ -114,8 +114,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA PÁGINAS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/pagina', [PaginaController::class, 'index'])->middleware('permission:pagina.ver|venta.ver');
-    Route::post('/pagina', [PaginaController::class, 'store'])->middleware('permission:pagina.crear|producto.crear');
+    Route::get('/pagina', [PaginaController::class, 'index'])->middleware('permission:pagina.ver|venta.crear');
+    Route::post('/pagina', [PaginaController::class, 'store'])->middleware('permission:pagina.crear|producto.crear|venta.crear');
     Route::put('/pagina/{pagina}', [PaginaController::class, 'update'])->middleware('permission:pagina.editar');
     Route::delete('/pagina/{pagina}', [PaginaController::class, 'destroy'])->middleware('permission:pagina.borrar');
     Route::get('/pagina/export/pdf', [PaginaController::class, 'exportPdf'])
@@ -126,7 +126,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA BANCOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.ver');
+    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.crear');
     Route::post('/banco', [BancoController::class, 'store'])->middleware('permission:banco.crear|venta.crear');
     Route::put('/banco/{banco}', [BancoController::class, 'update'])->middleware('permission:banco.editar');
     Route::delete('/banco/{banco}', [BancoController::class, 'destroy'])->middleware('permission:banco.borrar');
@@ -142,7 +142,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/departamentos', [UbicacionController::class, 'departamentos']);
     Route::get('/municipios/{departamento}', [UbicacionController::class, 'municipios']);
     Route::post('/cliente', [ClienteController::class, 'store'])->middleware('permission:cliente.crear|venta.crear');
-    Route::get('/cliente/{cliente}', [ClienteController::class, 'show'])->middleware('permission:cliente.ver');
+    Route::get('/cliente/{cliente}', [ClienteController::class, 'show'])->middleware('permission:cliente.ver|cliente.editar');
     Route::put('/cliente/{cliente}', [ClienteController::class, 'update'])->middleware('permission:cliente.editar');
     Route::delete('/cliente/{cliente}', [ClienteController::class, 'destroy'])->middleware('permission:cliente.borrar');
     Route::get('/cliente/export/pdf', [ClienteController::class, 'exportPdf'])
@@ -154,9 +154,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA PRODUCTOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
     // 1. RUTAS ESTÁTICAS (ORDENADAS PRIMERO)
-    Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.ver');
+    Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.crear');
     Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.ver');
-    Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.ver');
+    Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.crear|producto.editar|venta.crear');
     Route::get('/producto/estado-produccion', [ProductosController::class, 'getEstadosProduccion'])->middleware('permission:producto.crear|venta.crear');
     Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])->middleware('permission:producto.reporte');
     Route::get('/producto/export/excel', [ProductosController::class, 'exportExcel'])->middleware('permission:producto.reporte');

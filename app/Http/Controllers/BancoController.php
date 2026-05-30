@@ -49,7 +49,10 @@ class BancoController extends Controller
 
     public function destroy(Banco $banco)
     {
-        $banco->update(['estado' => 0]);
+        $banco->update([
+            'nombre' => substr($banco->nombre, 0, 230) . ' - eliminado ' . $banco->id,
+            'estado' => 0,
+        ]);
 
         return response()->json(['message' => 'Eliminado']);
     }

@@ -49,7 +49,10 @@ class TipoAgarradorController extends Controller
 
     public function destroy(TipoAgarrador $tipoAgarrador)
     {
-        $tipoAgarrador->update(['estado' => 0]);
+        $tipoAgarrador->update([
+            'nombre' => substr($tipoAgarrador->nombre, 0, 230) . ' - eliminado ' . $tipoAgarrador->id,
+            'estado' => 0,
+        ]);
 
         return response()->json(['message' => 'Eliminado']);
     }

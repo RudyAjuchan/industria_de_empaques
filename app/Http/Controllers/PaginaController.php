@@ -95,7 +95,10 @@ class PaginaController extends Controller
 
     public function destroy(Pagina $pagina)
     {
-        $pagina->update(['estado' => 0]);
+        $pagina->update([
+            'nombre' => substr($pagina->nombre, 0, 230) . ' - eliminado ' . $pagina->id,
+            'estado' => 0,
+        ]);
 
         return response()->json(['message' => 'Eliminado']);
     }

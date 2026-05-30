@@ -20,15 +20,19 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function __construct($search = null)
     {
+        $search = is_string($search) ? trim($search) : $search;
         $this->search = ($search === 'null' || $search === '') ? null : $search;
     }
 
     public function collection(): Collection
     {
         return Producto::query()
+            ->with('paginas')
             ->when($this->search, function ($q) {
-                $q->where('nombre', 'like', "%{$this->search}%")
-                    ->orWhere('tipo', 'like', "%{$this->search}%");
+                $q->where(function ($sub) {
+                    $sub->where('nombre', 'like', "%{$this->search}%")
+                        ->orWhere('tipo', 'like', "%{$this->search}%");
+                });
             })
             ->where('estado', 1)
             ->orderBy('id')

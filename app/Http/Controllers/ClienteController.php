@@ -6,6 +6,7 @@ use App\Exports\ClienteExport;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Arr;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ClienteController extends Controller
@@ -73,8 +74,8 @@ class ClienteController extends Controller
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
 
-            'emails' => 'nullable|array',
-            'emails.*' => 'nullable|email|max:255',
+            'emails' => 'required|array|min:1',
+            'emails.*' => 'required|email|max:255',
 
             'telefonos' => 'required|array',
             'telefonos.*.telefono_pais' => 'nullable|string',
@@ -83,11 +84,9 @@ class ClienteController extends Controller
             'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
 
-        if(!empty($data['emails'])){
-            $data['email'] = $data['emails'][0];
-        }
+        $data['email'] = $data['emails'][0];
 
-        $cliente = Cliente::create($data);
+        $cliente = Cliente::create(Arr::except($data, ['emails', 'telefonos']));
 
         // Emails
         if (!empty($data['emails'])) {
@@ -138,7 +137,7 @@ class ClienteController extends Controller
             'direccion' => 'nullable|string',
             'nit' => 'nullable|string|max:50',
 
-            'emails' => 'nullable|array',
+            'emails' => 'required|array|min:1',
             'emails.*' => 'required|email|max:255',
 
             'telefonos' => 'required|array',
@@ -148,11 +147,9 @@ class ClienteController extends Controller
             'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
         ]);
 
-        if(!empty($data['emails'])){
-            $data['email'] = $data['emails'][0];
-        }
+        $data['email'] = $data['emails'][0];
 
-        $cliente->update($data);
+        $cliente->update(Arr::except($data, ['emails', 'telefonos']));
 
         $cliente->emails()->delete();
         foreach ($data['emails'] ?? [] as $email) {

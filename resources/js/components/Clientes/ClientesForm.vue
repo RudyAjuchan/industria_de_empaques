@@ -231,7 +231,7 @@ export default {
                     this.selectedDepartamento = cliente.municipio.departamento.id
                     await this.fetchMunicipios(this.selectedDepartamento);
                 } else {
-                    if(cliente.pais != '' || cliente.pais != null){
+                    if (cliente.pais !== '' && cliente.pais !== null) {
                         selected = this.phoneCountries.find(
                             c => c.name === cliente.pais
                         )
@@ -266,6 +266,16 @@ export default {
             if (val) {
                 this.fetchMunicipios(val)
             }
+        },
+        'form.pais'(pais) {
+            if (pais === 'Guatemala') {
+                this.fetchDepartamentos()
+                return
+            }
+
+            this.selectedDepartamento = null
+            this.form.municipios_id = null
+            this.municipios = []
         }
     },
 
@@ -285,7 +295,7 @@ export default {
                     municipios_id: null,
                     pais: 'Guatemala',
                     estado_pais: '',
-                    ciudad: '',
+                    ciudad_pais: '',
                     emails: [],
                     telefonos: [],
                 }
@@ -336,6 +346,11 @@ export default {
         async fetchMunicipios(departamentoId) {
             const { data } = await axios.get(`/municipios/${departamentoId}`)
             this.municipios = data
+        },
+
+        async fetchDepartamentos() {
+            const { data } = await axios.get('/departamentos')
+            this.departamentos = data
         },
 
         addEmail() {
@@ -396,8 +411,7 @@ export default {
     async mounted() {
         this.phoneCountries = getPhoneCountries();
         if (this.form.telefono_pais_iso === 'GT') {
-            const { data } = await axios.get('/departamentos')
-            this.departamentos = data
+            await this.fetchDepartamentos()
         }
     }
 }

@@ -8,7 +8,6 @@
 
 <script>
 import ClienteForm from './ClientesForm.vue'
-import { toast } from 'vue3-toastify'
 
 export default {
     name: 'cliente.create',

@@ -23,8 +23,13 @@ export default {
 
     async mounted() {
         const { id } = this.$route.params
-        const { data } = await axios.get(`/cliente/${id}`)
-        this.cliente = data
+        try {
+            const { data } = await axios.get(`/cliente/${id}`)
+            this.cliente = data
+        } catch (err) {
+            toast.error('No se pudo cargar el cliente')
+            this.$router.push('/clientes')
+        }
     },
 
     methods: {

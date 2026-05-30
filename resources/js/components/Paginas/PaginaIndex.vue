@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('pagina.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -35,7 +35,7 @@
             </v-row>
         </div>
 
-        <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
+        <v-data-table :headers="headers" :items="paginas" :loading="loading" fixed-header height="400px"
             :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search"
             v-if="can('pagina.ver')">
             <template v-slot:[`item.actions`]="{ item }">
@@ -116,11 +116,9 @@ export default {
     },
     data() {
         return {
-            roles: [],
+            paginas: [],
             loading: false,
             deleting: false,
-            showPermissions: false,
-            selectedRole: null,
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
@@ -146,7 +144,8 @@ export default {
         async fetchPagina() {
             this.loading = true
             await axios.get('/pagina')
-                .then(res => this.roles = res.data)
+                .then(res => this.paginas = res.data)
+                .catch(() => toast.error('No se pudieron cargar las páginas'))
                 .finally(() => this.loading = false)
         },
 
@@ -182,7 +181,7 @@ export default {
 
         onSaved(tipo) {
             this.fetchPagina();
-            toast.success('Página guardado')
+            toast.success('Página guardada')
         },
 
         async confirmDelete() {
@@ -194,7 +193,7 @@ export default {
                 this.deleteDialog = false
                 this.toDelete = null
                 await this.fetchPagina()
-                toast.success('Página eliminado')
+                toast.success('Página eliminada')
             } catch (err) {
                 this.deleteDialog = false;
                 this.informationDialog = true;

@@ -26,7 +26,10 @@ class ProductosController extends Controller
         $query = Producto::with(['paginas'])->where('estado', 1);
 
         if ($search) {
-            $query->where('nombre', 'like', "%{$search}%");
+            $query->where(function ($sub) use ($search) {
+                $sub->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('tipo', 'like', "%{$search}%");
+            });
         }
 
         $allowedSorts = ['id', 'nombre', 'created_at', 'updated_at'];
@@ -76,6 +79,9 @@ class ProductosController extends Controller
             'estados_produccion.*.orden' => 'required|integer',
 
             'main_index' => 'required|integer',
+            'imagenes_ordenadas' => 'nullable|array',
+            'imagenes_ordenadas.*.tipo' => 'required_with:imagenes_ordenadas|in:nueva,existente',
+            'imagenes_ordenadas.*.file' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:51200',
         ]);
 
         DB::beginTransaction();
@@ -160,6 +166,10 @@ class ProductosController extends Controller
             'estados_produccion' => 'required|array|min:1',
             'estados_produccion.*.id' => 'required|exists:estado_produccions,id',
             'estados_produccion.*.orden' => 'required|integer',
+            'imagenes_ordenadas' => 'nullable|array',
+            'imagenes_ordenadas.*.id' => 'nullable|exists:producto_imagens,id',
+            'imagenes_ordenadas.*.tipo' => 'required_with:imagenes_ordenadas|in:nueva,existente',
+            'imagenes_ordenadas.*.file' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:51200',
         ]);
 
         DB::beginTransaction();
@@ -220,7 +230,7 @@ class ProductosController extends Controller
                     $esMain = ($index == $request->main_index);
 
                     if ($imgData['tipo'] === 'existente') {
-                        ProductoImagen::where('id', $imgData['id'])->update([
+                        $producto->imagenes()->where('id', $imgData['id'])->update([
                             'orden' => $index,
                             'is_main' => $esMain,
                         ]);
@@ -284,8 +294,10 @@ class ProductosController extends Controller
                 $q->where('is_main', true);
             }])
             ->when($search, function ($query) use ($search) {
-                $query->where('nombre', 'like', '%' . $search . '%')
-                    ->orWhere('tipo', 'like', '%' . $search . '%');
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('nombre', 'like', '%' . $search . '%')
+                        ->orWhere('tipo', 'like', '%' . $search . '%');
+                });
             })
             ->where('estado', 1)
             ->orderBy('id')

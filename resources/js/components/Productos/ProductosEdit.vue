@@ -8,6 +8,7 @@
 <script>
 import axios from 'axios'
 import ProductosForm from './ProductosForm.vue'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'producto.edit',
@@ -21,15 +22,20 @@ export default {
     },
 
     async mounted() {
-        const { data } = await axios.get(`/producto/${this.$route.params.id}`)
-        this.producto = data
+        try {
+            const { data } = await axios.get(`/producto/${this.$route.params.id}`)
+            this.producto = data
+        } catch (err) {
+            toast.error('No se pudo cargar el producto')
+            this.$router.push('/productos')
+        }
     },
 
     methods: {
         onSaved() {
             this.$router.push({
                 path: '/productos',
-                query: { toast: 'saved' }
+                query: { toast: 'updated' }
             })
         }
     }

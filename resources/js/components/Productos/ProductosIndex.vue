@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('producto.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -123,8 +123,6 @@ export default {
             productos: [],
             loading: false,
             deleting: false,
-            showPermissions: false,
-            selectedRole: null,
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
@@ -187,19 +185,24 @@ export default {
             // sincronizamos options cuando viene del data-table
             this.options = options
 
-            const { data } = await axios.get('/producto', {
-                params: {
-                    page: options.page,
-                    per_page: options.itemsPerPage,
-                    search: this.search,
-                    sort_by: options.sortBy?.[0]?.key,
-                    sort_order: options.sortBy?.[0]?.order,
-                }
-            })
+            try {
+                const { data } = await axios.get('/producto', {
+                    params: {
+                        page: options.page,
+                        per_page: options.itemsPerPage,
+                        search: this.search,
+                        sort_by: options.sortBy?.[0]?.key,
+                        sort_order: options.sortBy?.[0]?.order,
+                    }
+                })
 
-            this.productos = data.data
-            this.total = data.total
-            this.loading = false
+                this.productos = data.data
+                this.total = data.total
+            } catch (err) {
+                toast.error('No se pudieron cargar los productos')
+            } finally {
+                this.loading = false
+            }
         },
 
         openDelete(item) {

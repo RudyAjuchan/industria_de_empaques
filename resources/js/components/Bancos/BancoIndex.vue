@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('banco.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -35,7 +35,7 @@
             </v-row>
         </div>
 
-        <v-data-table :headers="headers" :items="roles" :loading="loading" fixed-header height="400px"
+        <v-data-table :headers="headers" :items="bancos" :loading="loading" fixed-header height="400px"
             :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search"
             v-if="can('banco.ver')">
             <template v-slot:[`item.actions`]="{ item }">
@@ -116,11 +116,9 @@ export default {
     },
     data() {
         return {
-            roles: [],
+            bancos: [],
             loading: false,
             deleting: false,
-            showPermissions: false,
-            selectedRole: null,
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
@@ -146,7 +144,8 @@ export default {
         async fetchBanco() {
             this.loading = true
             await axios.get('/banco')
-                .then(res => this.roles = res.data)
+                .then(res => this.bancos = res.data)
+                .catch(() => toast.error('No se pudieron cargar los bancos'))
                 .finally(() => this.loading = false)
         },
 

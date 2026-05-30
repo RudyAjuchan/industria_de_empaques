@@ -19,6 +19,7 @@ class ClienteExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
     public function __construct($search = null)
     {
+        $search = is_string($search) ? trim($search) : $search;
         $this->search = ($search === "null" || $search === '') ? null : $search;
     }
 
@@ -37,6 +38,8 @@ class ClienteExport implements FromCollection, WithHeadings, WithMapping, WithSt
                         ->orWhere('dpi', 'like', "%{$search}%")
                         ->orWhere('nit', 'like', "%{$search}%")
                         ->orWhere('direccion', 'like', "%{$search}%")
+                        ->orWhere('estado_pais', 'like', "%{$search}%")
+                        ->orWhere('ciudad_pais', 'like', "%{$search}%")
 
                         // Emails
                         ->orWhereHas('emails', function ($e) use ($search) {

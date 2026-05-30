@@ -66,6 +66,10 @@
                     <div class="text-subtitle-2 mb-2">
                         Estados de producción
                     </div>
+                    <v-alert v-if="errors.estados_produccion" type="error" variant="tonal" density="compact"
+                        class="mb-2">
+                        {{ errors.estados_produccion }}
+                    </v-alert>
 
                     <draggable v-model="form.estados_produccion" item-key="id" handle=".drag-handle">
                         <template #item="{ element, index }">
@@ -103,6 +107,10 @@
                         :server="server" accepted-file-types="image/jpeg, image/png, image/webp" :files="files"
                         @updatefiles="handleFilePond" label-max-file-size-exceeded="El archivo es demasiado grande"
                         label-max-file-size="Máximo permitido: {filesize}" max-file-size="50MB" />
+                    <v-alert v-if="errors.imagenes_ordenadas" type="error" variant="tonal" density="compact"
+                        class="mt-2">
+                        {{ errors.imagenes_ordenadas }}
+                    </v-alert>
                 </v-col>
             </v-row>
             <v-col cols="12">
@@ -210,15 +218,12 @@ export default {
     },
 
     methods: {
-        handleFilePond(files) {
-            this.files = files
-        },
-
         async submit() {
             this.loading = true
             const formData = new FormData()
 
             Object.entries(this.form).forEach(([key, value]) => {
+                if (Array.isArray(value)) return
 
                 if (key === 'precio_base' && value !== null) {
                     value = value.toString().replace(',', '.')
@@ -272,6 +277,15 @@ export default {
             } catch (err) {
                 toast.error('Hubo un inconveniente al realizar la petición')
                 this.errors = err.response?.data?.errors || {}
+                const errorKeys = Object.keys(this.errors)
+
+                if (errorKeys.some(key => key.startsWith('estados_produccion.'))) {
+                    this.errors.estados_produccion = 'Selecciona al menos un estado de producción válido'
+                }
+
+                if (errorKeys.some(key => key.startsWith('imagenes_ordenadas.'))) {
+                    this.errors.imagenes_ordenadas = 'Una o más imágenes no cumplen con el formato permitido'
+                }
             } finally {
                 this.loading = false
             }
@@ -305,7 +319,7 @@ export default {
         onPaginaSave(pagina) {
             this.paginas.push(pagina)
             this.form.paginas_id = pagina.id
-            toast.success('Pagina guardado')
+            toast.success('Página guardada')
         },
 
         async fetchEstadosProduccion() {
@@ -341,7 +355,7 @@ export default {
             return this.estadosProduccionDisponibles.filter(
                 estado => !seleccionados.includes(estado.id)
             )
-}
+        }
     },
 
     watch: {
@@ -357,6 +371,10 @@ export default {
                         fuelle: '',
                         tipo: '',
                         paginas_id: null,
+                        tipo_producto: 'personalizado',
+                        precio_base: null,
+                        descripcion: '',
+                        ecommerce: false,
                         estados_produccion: [],
                     }
                     this.files = []

@@ -6,7 +6,7 @@
 
         <h2 class="mb-4">Tracking de la venta <v-chip color="">{{ venta.numero_completo }}</v-chip></h2>
         <v-row class="mb-3 justify-end">
-            <v-btn color="red" variant="tonal" prepend-icon="mdi-file-pdf-box" class="mr-2" @click="exportPdf">
+            <v-btn color="error" variant="tonal" prepend-icon="mdi-file-pdf-box" class="mr-2" @click="exportPdf">
                 PDF
             </v-btn>
 

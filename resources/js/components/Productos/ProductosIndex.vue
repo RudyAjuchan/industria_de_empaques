@@ -48,7 +48,7 @@
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
+                    <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact"
                         v-if="can('producto.borrar')">
                         <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
@@ -104,7 +104,7 @@
 
                 <v-card-actions class="px-4 pb-4">
                     <v-spacer />
-                    <v-btn variant="tonal" color="sucess" @click="informationDialog = false">Aceptar</v-btn>
+                    <v-btn variant="tonal" color="success" @click="informationDialog = false">Aceptar</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

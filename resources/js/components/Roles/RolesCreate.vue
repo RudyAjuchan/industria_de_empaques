@@ -5,11 +5,11 @@
         <v-form @submit.prevent="store" class="py-4">
             <v-text-field label="Nombre del rol" variant="outlined" density="compact" v-model="form.name" required />
             <v-row class="ga-2 mt-5">
-                <v-btn color="green" variant="tonal" type="submit" :loading="loading">
+                <v-btn color="success" variant="tonal" type="submit" :loading="loading">
                     Guardar
                 </v-btn>
     
-                <v-btn text @click="$router.back()" color="red" variant="tonal">Cancelar</v-btn>
+                <v-btn text @click="$router.back()" color="error" variant="tonal">Cancelar</v-btn>
             </v-row>
         </v-form>
     </v-container>

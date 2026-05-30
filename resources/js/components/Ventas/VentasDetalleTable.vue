@@ -115,7 +115,7 @@
 
                                 <v-img :src="img.preview || img.url" width="60" height="60" cover class="rounded" />
 
-                                <v-btn icon size="x-small" color="red" style="position:absolute; top:-6px; right:-6px"
+                                <v-btn icon size="x-small" color="error" style="position:absolute; top:-6px; right:-6px"
                                     @click="removeImagen(index, i)" :loading="loading">
                                     <v-icon size="12">mdi-close</v-icon>
                                 </v-btn>
@@ -167,7 +167,7 @@
 
                                 </div>
                                 
-                                <v-btn icon size="x-small" color="red" @click="removeDiseno(index)" :loading="loading">
+                                <v-btn icon size="x-small" color="error" @click="removeDiseno(index)" :loading="loading">
                                     <v-icon size="12">mdi-close</v-icon>
                                 </v-btn>
                                 <!-- acciones -->
@@ -189,7 +189,7 @@
                     </td>
 
                     <td class="text-center">
-                        <v-btn icon size="small" color="red" @click="eliminarFila(index)" :loading="loading" :disabled="modo=='editar'">
+                        <v-btn icon size="small" color="error" @click="eliminarFila(index)" :loading="loading" :disabled="modo=='editar'">
                             <v-icon>mdi-delete</v-icon>
                         </v-btn>
                     </td>

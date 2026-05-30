@@ -49,7 +49,7 @@
                         <v-icon>mdi-shield-key</v-icon>
                     </v-btn>
 
-                    <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact"
+                    <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact"
                         v-if="can('rol.eliminar')">
                         <v-icon>mdi-delete</v-icon>
                     </v-btn>

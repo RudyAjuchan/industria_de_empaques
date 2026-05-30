@@ -60,7 +60,7 @@
             <v-card-actions class="px-4 pb-4">
                 <v-spacer />
 
-                <v-btn variant="tonal" color="red" @click="close">
+                <v-btn variant="tonal" color="error" @click="close">
                     Cancelar
                 </v-btn>
 

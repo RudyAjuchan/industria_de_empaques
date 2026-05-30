@@ -48,7 +48,7 @@ const vuetify = createVuetify({
             light: {
                 dark: false,
                 colors: {
-                    primary2: '#00432C',
+                    primary: '#00432C',
                     secondary: '#019EB1',   // Turquesa
                     accent: '#46BD01',      // Verde brillante
                     success: '#6FB408',

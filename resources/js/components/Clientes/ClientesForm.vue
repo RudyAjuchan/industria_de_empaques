@@ -157,7 +157,7 @@
 
         <v-row>
             <v-col cols="12" class="d-flex justify-end ga-2">
-                <v-btn variant="tonal" @click="$emit('cancel')" color="red">
+                <v-btn variant="tonal" @click="$emit('cancel')" color="error">
                     Cancelar
                 </v-btn>
                 <v-btn color="success" variant="tonal" type="submit" :loading="saving">

@@ -22,8 +22,8 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="text" @click="close">Cancelar</v-btn>
-                <v-btn color="primary" @click="save">Guardar</v-btn>
+                <v-btn variant="tonal" color="error" @click="close">Cancelar</v-btn>
+                <v-btn color="success" variant="tonal" @click="save">Guardar</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

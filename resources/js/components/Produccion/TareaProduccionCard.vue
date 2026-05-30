@@ -64,7 +64,7 @@
 
         <v-card-actions class="d-flex flex-column ga-2">
             <!-- INICIAR -->
-            <v-btn v-if="!tarea.proceso_estado" color="green" variant="tonal" block @click="$emit('iniciar', tarea)">
+            <v-btn v-if="!tarea.proceso_estado" color="success" variant="tonal" block @click="$emit('iniciar', tarea)">
                 Iniciar proceso
             </v-btn>
 

@@ -67,7 +67,7 @@
 
             <template v-slot:[`item.acciones`]="{ item }">
                 <div class="d-flex ga-1">
-                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="red" variant="tonal">
+                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="error" variant="tonal">
                         <v-tooltip activator="parent" location="top">Anular</v-tooltip>
                         <v-icon>mdi-cancel</v-icon>
                     </v-btn>
@@ -75,7 +75,7 @@
                         <v-tooltip activator="parent" location="top">Ver</v-tooltip>
                         <v-icon>mdi-eye</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="green" variant="tonal">
+                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="success" variant="tonal">
                         <v-tooltip activator="parent" location="top">Imprimir</v-tooltip>
                         <v-icon>mdi-printer</v-icon>
                     </v-btn>

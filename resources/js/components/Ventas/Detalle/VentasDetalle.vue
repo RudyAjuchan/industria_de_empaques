@@ -11,7 +11,7 @@
             <v-btn color="primary" variant="tonal" @click="imprimir" v-if="venta.estado!='pendiente'">
                 Imprimir
             </v-btn>
-            <v-btn color="red" variant="tonal" @click="regresar()">
+            <v-btn color="error" variant="tonal" @click="regresar()">
                 Regresar
             </v-btn>
         </v-row>

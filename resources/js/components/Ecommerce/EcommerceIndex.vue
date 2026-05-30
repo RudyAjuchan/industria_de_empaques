@@ -49,11 +49,11 @@
 
             <template v-slot:[`item.acciones`]="{ item }">
                 <div class="d-flex ga-1">
-                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="red" variant="tonal">
+                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="error" variant="tonal">
                         <v-tooltip activator="parent" location="top">Rechazar</v-tooltip>
                         <v-icon>mdi-cancel</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="aprobarCotizacion(item)" v-if="item.estado !== 'anulada'" color="green" variant="tonal">
+                    <v-btn icon size="small" @click="aprobarCotizacion(item)" v-if="item.estado !== 'anulada'" color="success" variant="tonal">
                         <v-tooltip activator="parent" location="top">Aprobar</v-tooltip>
                         <v-icon>mdi-check</v-icon>
                     </v-btn>

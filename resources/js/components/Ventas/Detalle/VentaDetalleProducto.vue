@@ -109,7 +109,7 @@
                                 <v-tooltip text="Eliminar">
                                     <template #activator="{ props }">
 
-                                        <v-btn v-bind="props" icon size="x-small" color="red"
+                                        <v-btn v-bind="props" icon size="x-small" color="error"
                                             @click="eliminarImagen(img.id)">
                                             <v-icon size="14">
                                                 mdi-delete
@@ -162,7 +162,7 @@
                             <v-tooltip text="Eliminar diseño">
                                 <template #activator="{ props }">
 
-                                    <v-btn v-bind="props" icon size="small" color="red" @click="eliminarDiseno">
+                                    <v-btn v-bind="props" icon size="small" color="error" @click="eliminarDiseno">
                                         <v-icon>
                                             mdi-delete
                                         </v-icon>

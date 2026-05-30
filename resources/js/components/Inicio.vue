@@ -31,11 +31,11 @@
                     Aplicar
                 </v-btn>
 
-                <v-btn color="red" variant="tonal" @click="exportPDF">
+                <v-btn color="error" variant="tonal" @click="exportPDF">
                     Exportar PDF
                 </v-btn>
 
-                <v-btn color="green" variant="tonal" @click="exportExcel">
+                <v-btn color="success" variant="tonal" @click="exportExcel">
                     Exportar Excel
                 </v-btn>
             </v-col>

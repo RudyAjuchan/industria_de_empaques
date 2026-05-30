@@ -112,10 +112,10 @@
                 <v-switch v-model="form.active" inset color="success" label="Activo" class="mt-2" />
                 <v-row>
                     <v-col cols="12" class="d-flex ga-2 mt-4 justify-center">
-                        <v-btn variant="tonal" color="red" @click="drawer = false">
+                        <v-btn variant="tonal" color="error" @click="drawer = false">
                             Cancelar
                         </v-btn>
-                        <v-btn :loading="saving" color="green" type="submit" variant="tonal">
+                        <v-btn :loading="saving" color="success" type="submit" variant="tonal">
                             Guardar
                         </v-btn>
                     </v-col>
@@ -154,7 +154,7 @@
 
                 <v-card-actions class="px-4 pb-4">
                     <v-spacer />
-                    <v-btn variant="tonal" color="sucess" @click="informationDialog = false">Aceptar</v-btn>
+                    <v-btn variant="tonal" color="success" @click="informationDialog = false">Aceptar</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

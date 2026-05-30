@@ -45,7 +45,7 @@
             <v-card-actions>
                 <v-spacer />
 
-                <v-btn variant="tonal" color="red" @click="cerrar" :loading="loading">
+                <v-btn variant="tonal" color="error" @click="cerrar" :loading="loading">
                     Cancelar
                 </v-btn>
 

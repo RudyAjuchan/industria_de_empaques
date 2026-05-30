@@ -11,8 +11,8 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="tonal" @click="close" color="red">Cancelar</v-btn>
-                <v-btn color="green" variant="tonal" :loading="saving" @click="save">
+                <v-btn variant="tonal" @click="close" color="error">Cancelar</v-btn>
+                <v-btn color="success" variant="tonal" :loading="saving" @click="save">
                     Guardar
                 </v-btn>
             </v-card-actions>

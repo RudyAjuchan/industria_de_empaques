@@ -14,10 +14,10 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="tonal" @click="cerrar" color="red">
+                <v-btn variant="tonal" @click="cerrar" color="error">
                     Cancelar
                 </v-btn>
-                <v-btn color="green" variant="tonal" :disabled="!proceso || loading" :loading="loading" @click="guardar">
+                <v-btn color="success" variant="tonal" :disabled="!proceso || loading" :loading="loading" @click="guardar">
                     Guardar
                 </v-btn>
             </v-card-actions>

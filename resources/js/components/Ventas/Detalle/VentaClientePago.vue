@@ -112,7 +112,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(p,index) in venta.pagos" :key="p.id">
                         <v-list-item-title>
-                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index>0" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="red" density="compact" icon="mdi-delete"></v-btn>
+                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index>0" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
                         <v-list-item-subtitle>
                             {{ p.banco?.nombre }}

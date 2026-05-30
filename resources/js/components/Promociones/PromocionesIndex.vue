@@ -34,7 +34,7 @@
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon @click="openDelete(item)" color="red" variant="tonal" density="compact">
+                    <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact">
                         <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
                 </v-row>

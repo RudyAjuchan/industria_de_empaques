@@ -12,7 +12,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(pago, index) in venta.pagos" :key="pago.id">
                         <v-list-item-title>
-                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index>0" @click="deleteDialog = true, idEliminar = pago.id" color="red" density="compact" icon="mdi-delete"></v-btn>
+                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index>0" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
 
                         <v-list-item-subtitle>
@@ -58,11 +58,11 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="tonal" color="red" @click="close">
+                <v-btn variant="tonal" color="error" @click="close">
                     Cancelar
                 </v-btn>
 
-                <v-btn color="green" variant="tonal" :loading="saving" @click="save">
+                <v-btn color="success" variant="tonal" :loading="saving" @click="save">
                     Guardar
                 </v-btn>
             </v-card-actions>

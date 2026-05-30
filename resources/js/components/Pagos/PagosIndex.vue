@@ -44,7 +44,7 @@
                 </v-chip>
             </template>
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn icon color="green" variant="tonal" density="compact" @click="abrirPago(item)">
+                <v-btn icon color="success" variant="tonal" density="compact" @click="abrirPago(item)">
                     <v-icon>mdi-cash-plus</v-icon>
                 </v-btn>
             </template>
@@ -105,7 +105,7 @@
 
                 <v-card-actions class="px-4 pb-4">
                     <v-spacer />
-                    <v-btn variant="tonal" color="sucess" @click="informationDialog = false">Aceptar</v-btn>
+                    <v-btn variant="tonal" color="success" @click="informationDialog = false">Aceptar</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

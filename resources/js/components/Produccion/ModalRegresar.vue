@@ -16,7 +16,7 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="tonal" color="red" @click="cerrar">
+                <v-btn variant="tonal" color="error" @click="cerrar">
                     Cancelar
                 </v-btn>
 

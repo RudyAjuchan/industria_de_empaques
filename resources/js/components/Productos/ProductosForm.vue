@@ -80,7 +80,7 @@
                                         item-title="nombre" item-value="id" density="compact" variant="outlined"
                                         hide-details class="flex-grow-1" />
 
-                                    <v-btn icon size="small" color="red" variant="text" @click="removeEstado(index)">
+                                    <v-btn icon size="small" color="error" variant="text" @click="removeEstado(index)">
                                         <v-icon>mdi-delete</v-icon>
                                     </v-btn>
                                 </div>
@@ -112,7 +112,7 @@
                             <v-card outlined class="pa-2" :color="index === mainIndex ? 'green-lighten-4' : ''">
                                 <v-img :src="filePreview(element)" height="120" contain />
     
-                                <v-btn block size="small" color="green" variant="tonal" class="mt-2"
+                                <v-btn block size="small" color="success" variant="tonal" class="mt-2"
                                     @click="setMain(index)">
                                     {{ index === mainIndex ? 'Principal' : 'Marcar principal' }}
                                 </v-btn>
@@ -127,7 +127,7 @@
     <v-divider class="my-4" />
 
     <v-row justify="end" class="ga-2">
-        <v-btn variant="tonal" color="red" type="button" @click="$emit('cancel')">
+        <v-btn variant="tonal" color="error" type="button" @click="$emit('cancel')">
             Cancelar
         </v-btn>
         <v-btn color="success" variant="tonal" type="submit" :loading="loading" @click="submit">

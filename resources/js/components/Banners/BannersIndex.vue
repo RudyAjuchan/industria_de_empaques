@@ -47,7 +47,7 @@
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon density="compact" color="red" variant="tonal" @click="eliminar(item)">
+                    <v-btn icon density="compact" color="error" variant="tonal" @click="eliminar(item)">
                         <v-icon>mdi-delete</v-icon>
                     </v-btn>
                 </template>
@@ -148,8 +148,8 @@
 
                 <v-card-actions class="pa-4">
                     <v-spacer />
-                    <v-btn variant="text" @click="dialog = false"> Cancelar </v-btn>
-                    <v-btn color="primary" :loading="loadingGuardar" @click="guardar">
+                    <v-btn variant="tonal" color="error" @click="dialog = false">Cancelar</v-btn>
+                    <v-btn color="success" variant="tonal" :loading="loadingGuardar" @click="guardar">
                         Guardar
                     </v-btn>
                 </v-card-actions>

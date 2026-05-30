@@ -81,10 +81,10 @@
             @papel-saved="onPapelSaved" :errors="errors" :modo="modo" @retry-upload="retryUpload" :loading="loading"/>
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
-                <v-btn color="green" variant="tonal" @click="guardarVenta" :loading="loading">
+                <v-btn color="success" variant="tonal" @click="guardarVenta" :loading="loading">
                     {{ modo === 'editar' ? 'Confirmar para venta' : 'Guardar Venta' }}
                 </v-btn>
-                <v-btn color="red" variant="tonal" @click="handleCancel" :loading="loading">
+                <v-btn color="error" variant="tonal" @click="handleCancel" :loading="loading">
                     Cancelar
                 </v-btn>
             </v-col>

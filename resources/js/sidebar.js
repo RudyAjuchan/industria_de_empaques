@@ -12,18 +12,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!nav) return
 
-    const setActiveFromPath = (path) => {
+    const setActiveFromRoute = (route) => {
         const links = nav.querySelectorAll('a[data-route]')
         let activeLink = null
+        const navRoute = route.meta?.navRoute || route.path
 
         links.forEach((a) => {
-            const isActive = a.dataset.route === path
+            const isActive = a.dataset.route === navRoute
             a.classList.toggle('is-active', isActive)
             if (isActive) activeLink = a
         })
 
-        if (activeLink && pageTitle) {
-            pageTitle.textContent = activeLink.dataset.title || ''
+        if (pageTitle) {
+            pageTitle.textContent = route.meta?.title || activeLink?.dataset.title || 'Dashboard'
         }
     }
 
@@ -37,10 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await router.isReady()
 
-    setActiveFromPath(router.currentRoute.value.path)
+    setActiveFromRoute(router.currentRoute.value)
 
     router.afterEach((to) => {
-        setActiveFromPath(to.path)
+        setActiveFromRoute(to)
     })
 })
 

@@ -67,7 +67,16 @@
                         <div class="ico" aria-hidden="true">
                             <i class="mdi mdi-star-outline"></i>
                         </div>
-                        <div class="label">Roles &amp; Permisos</div>
+                        <div class="label">Roles</div>
+                    </a>
+                @endcan
+
+                @can('rol.permisos')
+                    <a href="#" data-route="/permisos" data-title="Permisos">
+                        <div class="ico" aria-hidden="true">
+                            <i class="mdi mdi-shield-key-outline"></i>
+                        </div>
+                        <div class="label">Permisos</div>
                     </a>
                 @endcan
 

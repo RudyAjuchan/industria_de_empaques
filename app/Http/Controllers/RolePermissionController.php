@@ -15,10 +15,11 @@ class RolePermissionController extends Controller
     public function sync(Request $request, Role $role)
     {
         $data = $request->validate([
-            'permissions' => 'array'
+            'permissions' => ['array'],
+            'permissions.*' => ['exists:permissions,name'],
         ]);
 
-        $role->syncPermissions($data['permissions']);
+        $role->syncPermissions($data['permissions'] ?? []);
 
         return response()->json(['success' => true]);
     }

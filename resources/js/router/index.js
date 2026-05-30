@@ -7,6 +7,7 @@ const UsuarioComponent = () => import('../components/Usuarios/Usuario.vue');
 const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
 const RolesCreateComponent = () => import('../components/Roles/RolesCreate.vue');
 const RolesEditComponent = () => import('../components/Roles/RolesEdit.vue');
+const PermisosComponent = () => import('../components/Permisos/PermisosIndex.vue');
 
 const TipoPapelComponent = () => import('../components/TipoPapel/TipoPapelIndex.vue');
 const TipoAgarradorComponent = () => import('../components/Agarradores/AgarradoresIndex.vue');
@@ -60,7 +61,9 @@ const routes = [
         name: 'InicioVue',
         component: InicioComponent,
         meta: {
-            permission: 'dashboard.general.ver'
+            permission: 'dashboard.general.ver',
+            title: 'Dashboard',
+            navRoute: '/'
         }
     },
     {
@@ -68,7 +71,9 @@ const routes = [
         name: 'DashboardCorporativo',
         component: DashboardCorporativoComponent,
         meta: {
-            permission: 'dashboard.corporativo.ver'
+            permission: 'dashboard.corporativo.ver',
+            title: 'Dashboard Corporativo',
+            navRoute: '/dashboard-corporativo'
         }
     },
     {
@@ -76,7 +81,9 @@ const routes = [
         name: 'UsuarioVue',
         component: UsuarioComponent,
         meta: {
-            permission: 'menu.usuarios'
+            permission: 'menu.usuarios',
+            title: 'Usuarios',
+            navRoute: '/usuarios'
         }
     },
     {
@@ -84,7 +91,19 @@ const routes = [
         name: 'roles.index',
         component: RolesComponent,
         meta: {
-            permission: 'menu.permisos'
+            permission: 'menu.permisos',
+            title: 'Roles',
+            navRoute: '/roles'
+        }
+    },
+    {
+        path: '/permisos',
+        name: 'permisos.index',
+        component: PermisosComponent,
+        meta: {
+            permission: 'rol.permisos',
+            title: 'Permisos',
+            navRoute: '/permisos'
         }
     },
     {
@@ -92,7 +111,9 @@ const routes = [
         name: 'tipopapel.index',
         component: TipoPapelComponent,
         meta: {
-            permission: 'menu.tipo_papel'
+            permission: 'menu.tipo_papel',
+            title: 'Tipos de Papeles',
+            navRoute: '/tipo_papel'
         }
     },
     {
@@ -100,7 +121,9 @@ const routes = [
         name: 'agarradores.index',
         component: TipoAgarradorComponent,
         meta: {
-            permission: 'menu.agarrador'
+            permission: 'menu.agarrador',
+            title: 'Tipos de agarradores',
+            navRoute: '/agarrador'
         }
     },
     {
@@ -108,7 +131,9 @@ const routes = [
         name: 'pagina.index',
         component: PaginaComponent,
         meta: {
-            permission: 'menu.pagina'
+            permission: 'menu.pagina',
+            title: 'Páginas',
+            navRoute: '/paginas'
         }
     },
     {
@@ -116,7 +141,9 @@ const routes = [
         name: 'banco.index',
         component: BancoComponent,
         meta: {
-            permission: 'menu.banco'
+            permission: 'menu.banco',
+            title: 'Bancos',
+            navRoute: '/bancos'
         }
     },
     {
@@ -124,7 +151,9 @@ const routes = [
         name: 'cliente.index',
         component: ClienteComponent,
         meta: {
-            permission: 'menu.cliente'
+            permission: 'menu.cliente',
+            title: 'Clientes',
+            navRoute: '/clientes'
         }
     },
     {
@@ -132,7 +161,9 @@ const routes = [
         name: 'productos.index',
         component: productosComponent,
         meta: {
-            permission: 'menu.producto'
+            permission: 'menu.producto',
+            title: 'Productos',
+            navRoute: '/productos'
         }
     },
     {
@@ -140,7 +171,9 @@ const routes = [
         name: 'ventas.index',
         component: ventasComponent,
         meta: {
-            permission: 'menu.venta'
+            permission: 'menu.venta',
+            title: 'Ventas',
+            navRoute: '/ventas'
         }
     },
 
@@ -150,7 +183,9 @@ const routes = [
         name: 'roles.create',
         component: RolesCreateComponent,
         meta: {
-            permission: 'usuario.crear'
+            permission: 'rol.crear',
+            title: 'Nuevo rol',
+            navRoute: '/roles'
         }
     },
     {
@@ -158,7 +193,9 @@ const routes = [
         name: 'roles.edit',
         component: RolesEditComponent,
         meta: {
-            permission: 'usuario.editar'
+            permission: 'rol.editar',
+            title: 'Editar rol',
+            navRoute: '/roles'
         }
     },
     /* RUTAS PARA CLIENTES */
@@ -167,7 +204,9 @@ const routes = [
         name: 'cliente.create',
         component: ClienteCreateComponent,
         meta: {
-            permission: 'cliente.crear'
+            permission: 'cliente.crear',
+            title: 'Nuevo cliente',
+            navRoute: '/clientes'
         }
     },
     {
@@ -175,7 +214,9 @@ const routes = [
         name: 'cliente.edit',
         component: ClienteEditComponent,
         meta: {
-            permission: 'cliente.editar'
+            permission: 'cliente.editar',
+            title: 'Editar cliente',
+            navRoute: '/clientes'
         }
     },
     /* RUTAS PARA PRODUCTOS */
@@ -184,7 +225,9 @@ const routes = [
         name: 'producto.create',
         component: ProductosCreateComponent,
         meta: {
-            permission: 'producto.crear'
+            permission: 'producto.crear',
+            title: 'Nuevo producto',
+            navRoute: '/productos'
         }
     },
     {
@@ -192,7 +235,9 @@ const routes = [
         name: 'producto.edit',
         component: ProductosEditComponent,
         meta: {
-            permission: 'producto.editar'
+            permission: 'producto.editar',
+            title: 'Editar producto',
+            navRoute: '/productos'
         }
     },
     /* RUTAS PARA VENTAS */
@@ -201,7 +246,9 @@ const routes = [
         name: 'venta.create',
         component: ventasCreateComponent,
         meta: {
-            permission: 'venta.crear'
+            permission: 'venta.crear',
+            title: 'Nueva venta',
+            navRoute: '/ventas'
         }
     },
     {
@@ -209,7 +256,9 @@ const routes = [
         name: 'venta.detalle',
         component: ventasDetalleComponent,
         meta: {
-            permission: 'venta.ver'
+            permission: 'venta.ver',
+            title: 'Detalle de venta',
+            navRoute: '/ventas'
         }
     },
     /*  RUTAS PARA VER LOS ESTADOS */
@@ -218,7 +267,9 @@ const routes = [
         name: 'venta.tracking',
         component: trackingVentaComponent,
         meta: {
-            permission: ['venta.ver', 'produccion.activa']
+            permission: ['venta.ver', 'produccion.activa'],
+            title: 'Tracking de venta',
+            navRoute: '/ventas'
         }
     },
     /* RUTAS PARA LA PRODUCCIÓN (OPERARIOS) */
@@ -227,7 +278,9 @@ const routes = [
         name: 'produccion.operativa',
         component: operativaProduccionComponent,
         meta: { 
-            permission: 'produccion.ver' 
+            permission: 'produccion.ver',
+            title: 'Producción',
+            navRoute: '/produccion'
         }
     },
     /* RUTAS PARA VER LOS PRODUCTOS ACTIVOS */
@@ -236,7 +289,9 @@ const routes = [
         name: 'produccion.activa',
         component: produccionActivaComponent,
         meta: { 
-            permission: 'produccion.activa' 
+            permission: 'produccion.activa',
+            title: 'Productos Activos',
+            navRoute: '/produccion-activa'
         }
     },
     /* RUTAS PARA VER LAS COTIZACIONES */
@@ -245,7 +300,9 @@ const routes = [
         name: 'ecommerce.index',
         component: cotizacionesComponent,
         meta: { 
-            permission: 'ecommerce.ver' 
+            permission: 'ecommerce.ver',
+            title: 'Cotizaciones ecommerce',
+            navRoute: '/ecommerce'
         }
     },
     {
@@ -253,7 +310,9 @@ const routes = [
         name: 'ecommerce.editar',
         component: editarCotizacionComponent,
         meta: { 
-            permission: 'ecommerce.editar' 
+            permission: 'ecommerce.editar',
+            title: 'Editar cotización',
+            navRoute: '/ecommerce'
         }
     },
     /* RUTAS PARA PROMOCIONES */
@@ -262,7 +321,9 @@ const routes = [
         name: 'promociones.index',
         component: promocionesComponent,
         meta: { 
-            permission: 'promocion.ver' 
+            permission: 'promocion.ver',
+            title: 'Promociones',
+            navRoute: '/promociones'
         }
     },
     {
@@ -270,7 +331,9 @@ const routes = [
         name: 'ContabilidadVue',
         component: ventasContabilidadComponent,
         meta: { 
-            permission: 'menu.contabilidad' 
+            permission: 'menu.contabilidad',
+            title: 'Ventas Contabilidad',
+            navRoute: '/ventas_contabilidad'
         }
     },
     /* PARA PAGOS */
@@ -279,7 +342,9 @@ const routes = [
         name: 'pagos.index',
         component: pagosComponent,
         meta: {
-            permission: 'menu.pagos'
+            permission: 'menu.pagos',
+            title: 'Pagos',
+            navRoute: '/pagos'
         }
     },
     /* PARA BANNERS */
@@ -288,7 +353,9 @@ const routes = [
         name: 'banner.index',
         component: bannersComponent,
         meta: {
-            permission: 'menu.banner'
+            permission: 'menu.banner',
+            title: 'Banners',
+            navRoute: '/banners'
         }
     },
 ];

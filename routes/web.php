@@ -78,9 +78,6 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::put('/roles/{role}', [RoleController::class, 'update'])->middleware('permission:rol.editar');
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:rol.borrar');
 
-    // Permisos (solo lectura)
-    Route::get('/permissions', [RolePermissionController::class, 'index'])->middleware('permission:rol.ver');
-
     // Permisos por rol
     Route::get('/roles/{role}/permissions', [RolePermissionController::class, 'show'])->middleware('permission:rol.permisos');
     Route::post('/roles/{role}/permissions', [RolePermissionController::class, 'sync'])->middleware('permission:rol.permisos');

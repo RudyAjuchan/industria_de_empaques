@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona Roles y Permisos</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona los roles del sistema</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -44,27 +44,19 @@
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon @click="openPermissions(item)" color="orange" variant="tonal" density="compact"
-                        v-if="can('rol.permisos')">
-                        <v-icon>mdi-shield-key</v-icon>
-                    </v-btn>
-
                     <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact"
-                        v-if="can('rol.eliminar')">
+                        v-if="can('rol.borrar')">
                         <v-icon>mdi-delete</v-icon>
                     </v-btn>
                 </v-row>
             </template>
         </v-data-table>
 
-        <!-- DIALOG -->
-        <RolePermissions v-if="selectedRole" v-model="showPermissions" :role="selectedRole" />
-
         <!-- Delete confirm -->
         <v-dialog v-model="deleteDialog" max-width="420">
             <v-card rounded="xl">
                 <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar usuario
+                    Eliminar rol
                 </v-card-title>
 
                 <v-card-text class="text-body-2 text-medium-emphasis">
@@ -83,17 +75,12 @@
 
 <script>
 import axios from 'axios'
-import RolePermissions from './RolesPermission.vue'
 import { toast } from 'vue3-toastify'
 export default {
-    components: { RolePermissions },
-
     data() {
         return {
             roles: [],
             loading: false,
-            showPermissions: false,
-            selectedRole: null,
 
             headers: [
                 { title: 'Nombre', key: 'name' },
@@ -119,11 +106,6 @@ export default {
 
         edit(id) {
             this.$router.push(`/roles/${id}/edit`)
-        },
-
-        openPermissions(role) {
-            this.selectedRole = role
-            this.showPermissions = true
         },
 
         exportExcel() {

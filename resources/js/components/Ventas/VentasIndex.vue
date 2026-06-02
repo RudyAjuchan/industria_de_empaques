@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('venta.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -67,19 +67,19 @@
 
             <template v-slot:[`item.acciones`]="{ item }">
                 <div class="d-flex ga-1">
-                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="error" variant="tonal">
+                    <v-btn icon size="small" @click="anularVenta(item)" v-if="can('venta.borrar') && item.estado !== 'anulada'" color="error" variant="tonal">
                         <v-tooltip activator="parent" location="top">Anular</v-tooltip>
                         <v-icon>mdi-cancel</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="verDetalle(item)" color="primary" variant="tonal">
+                    <v-btn icon size="small" @click="verDetalle(item)" v-if="can('venta.ver')" color="primary" variant="tonal">
                         <v-tooltip activator="parent" location="top">Ver</v-tooltip>
                         <v-icon>mdi-eye</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="imprimirVenta(item.id)" color="success" variant="tonal">
+                    <v-btn icon size="small" @click="imprimirVenta(item.id)" v-if="can('venta.reporte')" color="success" variant="tonal">
                         <v-tooltip activator="parent" location="top">Imprimir</v-tooltip>
                         <v-icon>mdi-printer</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="verEstados(item.id)" color="orange" variant="tonal">
+                    <v-btn icon size="small" @click="verEstados(item.id)" v-if="can('venta.ver') || can('produccion.activa')" color="orange" variant="tonal">
                         <v-tooltip activator="parent" location="top">Ver estados</v-tooltip>
                         <v-icon>mdi-list-status</v-icon>
                     </v-btn>
@@ -99,6 +99,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ventas.index',
@@ -134,6 +135,8 @@ export default {
             try {
                 const { data } = await axios.get('/venta', { params: this.filters })
                 this.ventas = data
+            } catch (error) {
+                toast.error('No se pudieron cargar las ventas')
             } finally {
                 this.loading = false
             }
@@ -142,8 +145,13 @@ export default {
         async anularVenta(item) {
             if (!confirm('¿Deseas anular esta venta?')) return
 
-            await axios.delete(`/venta/${item.id}`)
-            this.getVentas()
+            try {
+                await axios.delete(`/venta/${item.id}`)
+                toast.success('Venta anulada correctamente')
+                this.getVentas()
+            } catch (error) {
+                toast.error('No se pudo anular la venta')
+            }
         },
         exportExcel() {
             const params = new URLSearchParams({

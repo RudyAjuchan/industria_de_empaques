@@ -256,7 +256,7 @@ const routes = [
         name: 'venta.detalle',
         component: ventasDetalleComponent,
         meta: {
-            permission: 'venta.ver',
+            permission: ['venta.ver', 'ecommerce.ver'],
             title: 'Detalle de venta',
             navRoute: '/ventas'
         }

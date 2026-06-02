@@ -8,7 +8,7 @@
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
-                    <v-menu>
+                    <v-menu v-if="can('pago.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
                                 Exportar
@@ -44,7 +44,7 @@
                 </v-chip>
             </template>
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn icon color="success" variant="tonal" density="compact" @click="abrirPago(item)">
+                <v-btn icon color="success" variant="tonal" density="compact" @click="abrirPago(item)" v-if="can('pago.crear')">
                     <v-icon>mdi-cash-plus</v-icon>
                 </v-btn>
             </template>
@@ -72,43 +72,6 @@
 
         <!-- DIALOG PARA GUARDAR -->
         <PagoDialog v-model="dialog" :venta="ventaSeleccionada" @saved="onSaved" :bancos="bancos"/>
-
-        <!-- DIALOG PARA ELIMINAR -->
-        <v-dialog v-model="deleteDialog" max-width="420">
-            <v-card rounded="xl">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Eliminar el pago
-                </v-card-title>
-
-                <v-card-text class="text-body-2 text-medium-emphasis">
-                    ¿Seguro que quieres eliminar a <b>{{ toDelete?.nombre }}</b>? Esta acción no se puede deshacer.
-                </v-card-text>
-
-                <v-card-actions class="px-4 pb-4">
-                    <v-spacer />
-                    <v-btn variant="tonal" @click="deleteDialog = false">Cancelar</v-btn>
-                    <v-btn color="error" :loading="deleting" @click="confirmDelete">Eliminar</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-        <!-- ifnormation -->
-        <v-dialog v-model="informationDialog" max-width="420">
-            <v-card rounded="xl">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                    Información
-                </v-card-title>
-
-                <v-card-text class="text-body-2 text-medium-emphasis">
-                    {{ message }}
-                </v-card-text>
-
-                <v-card-actions class="px-4 pb-4">
-                    <v-spacer />
-                    <v-btn variant="tonal" color="success" @click="informationDialog = false">Aceptar</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-container>
 </template>
 
@@ -127,9 +90,6 @@ export default {
         return {
             pagos: [],
             loading: false,
-            deleting: false,
-            showPermissions: false,
-            selectedRole: null,
 
             headers: [
                 { title: 'Número', key: 'numero_completo' },
@@ -144,13 +104,6 @@ export default {
             ],
             search: null,
             dialog: false,
-            selected: null,
-            toDelete: null,
-            deleteDialog: false,
-            informationDialog: false,
-            message: "",
-
-            dialog: false,
             ventaSeleccionada: null,
             bancos: [],
         }
@@ -164,26 +117,26 @@ export default {
     methods: {
         async fetchPagos() {
             this.loading = true
-            await axios.get('/pagos')
-                .then(res => this.pagos = res.data)
-                .finally(() => this.loading = false)
+            try {
+                const { data } = await axios.get('/pagos')
+                this.pagos = data
+            } catch (error) {
+                toast.error('No se pudieron cargar los pagos')
+            } finally {
+                this.loading = false
+            }
         },
 
         async fetchBancos(){
             this.loading = true
-            await axios.get('/banco')
-                .then(res => this.bancos = res.data)
-                .finally(() => this.loading = false)
-        },
-
-        edit(item) {
-            this.selected = item
-            this.dialog = true
-        },
-
-        openDelete(item) {
-            this.toDelete = item
-            this.deleteDialog = true
+            try {
+                const { data } = await axios.get('/banco')
+                this.bancos = data
+            } catch (error) {
+                toast.error('No se pudieron cargar los bancos')
+            } finally {
+                this.loading = false
+            }
         },
 
         exportExcel() {
@@ -201,34 +154,9 @@ export default {
             window.open(`/pagos/export/pdf?${params.toString()}`, '_blank')
         },
 
-        create() {
-            this.selected = null
-            this.dialog = true
-        },
-
-        onSaved(tipo) {
-            console.log("si pasa")
+        onSaved() {
             this.fetchPagos();
-            toast.success('Banco guardado')
-        },
-
-        async confirmDelete() {
-            if (!this.toDelete) return
-            this.deleting = true
-
-            try {
-                await axios.delete(`/banco/${this.toDelete.id}`)
-                this.deleteDialog = false
-                this.toDelete = null
-                await this.fetchPagos()
-                toast.success('Banco eliminado')
-            } catch (err) {
-                this.deleteDialog = false;
-                this.informationDialog = true;
-                this.message = err.response.data.message
-            } finally {
-                this.deleting = false
-            }
+            toast.success('Pago registrado correctamente')
         },
 
         formatDate(date) {

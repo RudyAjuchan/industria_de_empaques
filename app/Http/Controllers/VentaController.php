@@ -15,6 +15,7 @@ use App\Models\Pagina;
 use App\Models\Pago;
 use App\Models\ProcesoEstadoProduccion;
 use App\Models\Producto;
+use App\Models\Promocion;
 use App\Models\Venta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -117,15 +118,7 @@ class VentaController extends Controller
 
                 $total = $precio * $item['cantidad'];
 
-                if (!empty($item['promocion_aplicada'])) {
-                    $promo = $item['promocion_aplicada'];
-
-                    if ($promo['tipo'] === 'porcentaje') {
-                        $total -= $total * ($promo['valor'] / 100);
-                    } else {
-                        $total -= $promo['valor'];
-                    }
-                }
+                $total = $this->aplicarPromocionProducto($total, $item['productos_id']);
 
                 return $total;
             });
@@ -186,14 +179,16 @@ class VentaController extends Controller
             // =========================
             // SI TIENE DEPOSITO DEBE GUARDARSE EN PAGOS
             // =========================
-            Pago::create([
-                'ventas_id' => $venta->id,
-                'monto' => $deposito,
-                'metodo_pago' => $data['tipo_pago'],
-                'referencia' => $data['no_deposito'] ?? null,
-                'users_id' => Auth::user()->id,
-                'bancos_id' => $data['bancos_id'],
-            ]);
+            if ($deposito > 0) {
+                Pago::create([
+                    'ventas_id' => $venta->id,
+                    'monto' => $deposito,
+                    'metodo_pago' => $data['tipo_pago'],
+                    'referencia' => $data['no_deposito'] ?? null,
+                    'users_id' => Auth::user()->id,
+                    'bancos_id' => $data['bancos_id'],
+                ]);
+            }
 
             // =========================
             // DETALLES
@@ -209,15 +204,8 @@ class VentaController extends Controller
 
                 $totalItem = $precio * $item['cantidad'];
 
-                if (!empty($item['promocion_aplicada'])) {
-                    $promo = $item['promocion_aplicada'];
-
-                    if ($promo['tipo'] === 'porcentaje') {
-                        $totalItem -= $totalItem * ($promo['valor'] / 100);
-                    } else {
-                        $totalItem -= $promo['valor'];
-                    }
-                }
+                $promocionAplicada = $this->promocionProducto($item['productos_id']);
+                $totalItem = $this->aplicarPromocion($totalItem, $promocionAplicada);
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
@@ -230,7 +218,7 @@ class VentaController extends Controller
                     'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
 
                     'logo_path' => $item['logo_path'] ?? null,
-                    'promocion_aplicada' => $item['promocion_aplicada'] ?? null,
+                    'promocion_aplicada' => $promocionAplicada,
 
                     'precio' => $precio,
                     'cantidad' => $item['cantidad'],
@@ -349,12 +337,18 @@ class VentaController extends Controller
      */
     public function destroy(Venta $venta)
     {
+        $estado = $venta->estado === 'pendiente'
+            ? 'rechazada'
+            : 'anulada';
+
         $venta->update([
-            'estado' => 'anulada'
+            'estado' => $estado
         ]);
 
         return response()->json([
-            'message' => 'Venta anulada correctamente'
+            'message' => $estado === 'rechazada'
+                ? 'Cotización rechazada correctamente'
+                : 'Venta anulada correctamente'
         ]);
     }
 
@@ -544,14 +538,7 @@ class VentaController extends Controller
 
                 $total = $precio * $item['cantidad'];
 
-                if (!empty($item['promocion_aplicada'])) {
-                    $promo = $item['promocion_aplicada'];
-                    if ($promo['tipo'] === 'porcentaje') {
-                        $total -= $total *($promo['valor'] / 100);
-                    } else {
-                        $total -= $promo['valor'];
-                    }
-                }
+                $total = $this->aplicarPromocionProducto($total, $item['productos_id']);
                 return $total;
             });
             $costoLogo = $data['costo_logo'] ?? 0;
@@ -606,16 +593,15 @@ class VentaController extends Controller
             | PAGOS
             |--------------------------------------------------------------------------
             */
-            $pago =
-                $venta->pagos()->first();
-            if ($pago) {
+            $pago = $venta->pagos()->oldest()->first();
+            if ($deposito > 0 && $pago) {
                 $pago->update([
                     'monto' => $deposito,
                     'metodo_pago' => $data['tipo_pago'],
                     'referencia' => $data['no_deposito'] ?? null,
                     'bancos_id' => $data['bancos_id'],
                 ]);
-            } else {
+            } elseif ($deposito > 0) {
                 $venta->pagos()->create([
                     'monto' => $deposito,
                     'metodo_pago' => $data['tipo_pago'],
@@ -623,6 +609,8 @@ class VentaController extends Controller
                     'users_id' => Auth::id(),
                     'bancos_id' => $data['bancos_id'],
                 ]);
+            } elseif ($pago) {
+                $pago->delete();
             }
 
             /*
@@ -665,15 +653,8 @@ class VentaController extends Controller
                 $precio = $producto->tipo_producto === 'simple' ? $producto->precio_base : $item['precio'];
                 $totalItem =
                     $precio * $item['cantidad'];
-                if (!empty($item['promocion_aplicada'])) {
-                    $promo = $item['promocion_aplicada'];
-
-                    if ( $promo['tipo'] === 'porcentaje' ) {
-                        $totalItem -= $totalItem * ($promo['valor'] / 100);
-                    } else {
-                        $totalItem -= $promo['valor'];
-                    }
-                }
+                $promocionAplicada = $this->promocionProducto($item['productos_id']);
+                $totalItem = $this->aplicarPromocion($totalItem, $promocionAplicada);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -690,7 +671,7 @@ class VentaController extends Controller
                         'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ( $item['detalle_impresion'] ?? '' ),
                         'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ( $item['nombre_logo'] ?? ''),
                         'archivo_diseno_path' => $item['archivo_diseno_path'] ?? null,
-                        'promocion_aplicada' => $item['promocion_aplicada']?? null,
+                        'promocion_aplicada' => $promocionAplicada,
                         'precio' => $precio,
                         'cantidad' => $item['cantidad'],
                         'total' => $totalItem,
@@ -787,6 +768,48 @@ class VentaController extends Controller
                 'venta' => $venta
             ]);
         });
+    }
+
+    private function promocionProducto(int $productoId): ?array
+    {
+        $promocion = Promocion::vigente()
+            ->where('aplica_a', 'producto')
+            ->whereHas('productos', function ($query) use ($productoId) {
+                $query->where('productos.id', $productoId);
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$promocion) {
+            return null;
+        }
+
+        return [
+            'id' => $promocion->id,
+            'nombre' => $promocion->nombre,
+            'tipo' => $promocion->tipo,
+            'valor' => $promocion->valor,
+        ];
+    }
+
+    private function aplicarPromocionProducto(float $total, int $productoId): float
+    {
+        return $this->aplicarPromocion($total, $this->promocionProducto($productoId));
+    }
+
+    private function aplicarPromocion(float $total, ?array $promocion): float
+    {
+        if (!$promocion) {
+            return $total;
+        }
+
+        if ($promocion['tipo'] === 'porcentaje') {
+            $total -= $total * ($promocion['valor'] / 100);
+        } else {
+            $total -= $promocion['valor'];
+        }
+
+        return max(0, $total);
     }
 
     public function exportContabilidad(Request $request)

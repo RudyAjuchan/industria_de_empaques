@@ -93,8 +93,26 @@ class PagoController extends Controller
         );
     }
 
-    public function delete(Request $request){
-        Pago::destroy($request->id);
-        return response()->json(['message' => 'Pago eliminado']);
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:pagos,id',
+        ]);
+
+        $pago = Pago::findOrFail($request->id);
+        $primerPagoId = Pago::where('ventas_id', $pago->ventas_id)
+            ->oldest()
+            ->oldest('id')
+            ->value('id');
+
+        if ($pago->id === $primerPagoId) {
+            return response()->json([
+                'message' => 'No se puede eliminar el pago inicial de la venta'
+            ], 422);
+        }
+
+        $pago->delete();
+
+        return response()->json(['message' => 'Pago eliminado correctamente']);
     }
 }

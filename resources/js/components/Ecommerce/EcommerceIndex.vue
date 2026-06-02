@@ -3,7 +3,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
             <v-row>
                 <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona las ventas</div>
+                    <div class="text-body-2 text-medium-emphasis">Gestiona las cotizaciones ecommerce</div>
                 </v-col>
                 <v-col cols="6" class="d-flex ga-2 align-center justify-end">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
@@ -34,7 +34,7 @@
                 </v-col>
             </v-row>
         </div>
-        <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('venta.ver')" fixed-header height="400px"
+        <v-data-table :headers="headers" :items="ventas" :loading="loading" class="elevation-1" v-if="can('ecommerce.ver')" fixed-header height="400px"
             :header-props="{ class: 'bg-teal-lighten-2' }" density="compact" :search="search">
 
             <template v-slot:[`item.created_at`]="{ item }">
@@ -49,11 +49,11 @@
 
             <template v-slot:[`item.acciones`]="{ item }">
                 <div class="d-flex ga-1">
-                    <v-btn icon size="small" @click="anularVenta(item)" v-if="item.estado !== 'anulada'" color="error" variant="tonal">
+                    <v-btn icon size="small" @click="anularVenta(item)" v-if="can('ecommerce.borrar') && item.estado !== 'anulada' && item.estado !== 'rechazada'" color="error" variant="tonal">
                         <v-tooltip activator="parent" location="top">Rechazar</v-tooltip>
                         <v-icon>mdi-cancel</v-icon>
                     </v-btn>
-                    <v-btn icon size="small" @click="aprobarCotizacion(item)" v-if="item.estado !== 'anulada'" color="success" variant="tonal">
+                    <v-btn icon size="small" @click="aprobarCotizacion(item)" v-if="can('ecommerce.editar') && item.estado !== 'anulada' && item.estado !== 'rechazada'" color="success" variant="tonal">
                         <v-tooltip activator="parent" location="top">Aprobar</v-tooltip>
                         <v-icon>mdi-check</v-icon>
                     </v-btn>
@@ -77,6 +77,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ventas.index',
@@ -103,16 +104,23 @@ export default {
             try {
                 const { data } = await axios.get('/ventas/cotizaciones')
                 this.ventas = data
+            } catch (error) {
+                toast.error('No se pudieron cargar las cotizaciones')
             } finally {
                 this.loading = false
             }
         },
 
         async anularVenta(item) {
-            if (!confirm('¿Deseas anular esta venta?')) return
+            if (!confirm('¿Deseas rechazar esta cotización?')) return
 
-            await axios.delete(`/venta/${item.id}`)
-            this.getVentas()
+            try {
+                await axios.delete(`/venta/${item.id}`)
+                toast.success('Cotización rechazada correctamente')
+                this.getVentas()
+            } catch (error) {
+                toast.error('No se pudo rechazar la cotización')
+            }
         },
         exportExcel(){
             const params = new URLSearchParams({

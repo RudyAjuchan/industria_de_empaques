@@ -126,7 +126,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA BANCOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.crear');
+    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.crear|pago.crear');
     Route::post('/banco', [BancoController::class, 'store'])->middleware('permission:banco.crear|venta.crear');
     Route::put('/banco/{banco}', [BancoController::class, 'update'])->middleware('permission:banco.editar');
     Route::delete('/banco/{banco}', [BancoController::class, 'destroy'])->middleware('permission:banco.borrar');
@@ -176,15 +176,15 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/ecommerce/{id}', [VentaController::class, 'getVenta'])->middleware('permission:ecommerce.editar');
     Route::get('/produccionActiva', [VentaController::class, 'ventas_activas'])->middleware('permission:venta.ver|produccion.activa');
     Route::post('/venta', [VentaController::class, 'store'])->middleware('permission:venta.crear');
-    Route::post('/venta/delete-imagen', [VentaController::class, 'deleteLogo'])->middleware('permission:venta.crear|permission:ecommerce.editar');
-    Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa');
-    Route::post('/s3/presigned-url', [VentaController::class, 'generatePresignedUrl'])->middleware('permission:venta.crear');
-    Route::post('/detalle/{id}/guardar-diseno', [VentaController::class, 'guardarDiseno'])->middleware('permission:venta.crear');
-    Route::post('/detalle-venta/{detalle}/imagenes', [VentaController::class, 'subirImagenes'])->middleware('permission:venta.crear');
-    Route::delete('/detalle-imagen/{imagen}', [VentaController::class, 'eliminarImagen'])->middleware('permission:venta.borrar');
-    Route::delete('/detalle/{detalle}/diseno', [VentaController::class, 'eliminarDiseno'])->middleware('permission:venta.borrar');
+    Route::post('/venta/delete-imagen', [VentaController::class, 'deleteLogo'])->middleware('permission:venta.crear|ecommerce.editar');
+    Route::get('/venta/{venta}', [VentaController::class, 'show'])->middleware('permission:venta.ver|produccion.activa|ecommerce.ver');
+    Route::post('/s3/presigned-url', [VentaController::class, 'generatePresignedUrl'])->middleware('permission:venta.crear|ecommerce.editar');
+    Route::post('/detalle/{id}/guardar-diseno', [VentaController::class, 'guardarDiseno'])->middleware('permission:venta.crear|ecommerce.editar');
+    Route::post('/detalle-venta/{detalle}/imagenes', [VentaController::class, 'subirImagenes'])->middleware('permission:venta.crear|ecommerce.editar');
+    Route::delete('/detalle-imagen/{imagen}', [VentaController::class, 'eliminarImagen'])->middleware('permission:venta.borrar|ecommerce.editar');
+    Route::delete('/detalle/{detalle}/diseno', [VentaController::class, 'eliminarDiseno'])->middleware('permission:venta.borrar|ecommerce.editar');
     
-    Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar');
+    Route::delete('/venta/{venta}', [VentaController::class, 'destroy'])->middleware('permission:venta.borrar|ecommerce.borrar');
     Route::get('/venta/{venta}/imprimir', [VentaController::class, 'imprimir'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/pdf', [VentaController::class, 'exportPdf'])->middleware('permission:venta.reporte');
     Route::get('/venta/export/excel', [VentaController::class, 'exportExcel'])->middleware('permission:venta.reporte');
@@ -211,9 +211,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get(
         '/venta/detalle/{detalleVenta}/tracking', [HistorialProduccionController::class, 'trackingDetalle'])->middleware('permission:venta.ver|produccion.activa');
 
-    Route::get('/venta/{venta}/tracking/pdf', [HistorialProduccionController::class, 'exportTrackingPdf'])->middleware('permission:venta.reporte|');
+    Route::get('/venta/{venta}/tracking/pdf', [HistorialProduccionController::class, 'exportTrackingPdf'])->middleware('permission:venta.reporte|produccion.activa');
 
-    Route::get('/venta/{venta}/tracking/excel', [HistorialProduccionController::class, 'exportTrackingExcel'])->middleware('permission:venta.reporte||produccion.activa');
+    Route::get('/venta/{venta}/tracking/excel', [HistorialProduccionController::class, 'exportTrackingExcel'])->middleware('permission:venta.reporte|produccion.activa');
 
 });
 
@@ -284,8 +284,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::post('/pagos/eliminar', [PagoController::class, 'delete'])->middleware('permission:pago.borrar');
     Route::get('/pagos/{venta}', [PagoController::class, 'show'])->middleware('permission:pago.ver');
     Route::get('/pagos', [PagoController::class, 'index'])->middleware('permission:pago.ver');
-    Route::get('/pagos/export/pdf', [PagoController::class, 'exportPDF'])->middleware('permission:pago.ver');
-    Route::get('/pagos/export/excel', [PagoController::class, 'exportExcel'])->middleware('permission:pago.ver');
+    Route::get('/pagos/export/pdf', [PagoController::class, 'exportPDF'])->middleware('permission:pago.reporte');
+    Route::get('/pagos/export/excel', [PagoController::class, 'exportExcel'])->middleware('permission:pago.reporte');
 });
 
 /* RUTAS PARA BANNERS */

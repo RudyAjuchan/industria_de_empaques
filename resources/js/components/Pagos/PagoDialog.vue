@@ -12,7 +12,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(pago, index) in venta.pagos" :key="pago.id">
                         <v-list-item-title>
-                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index>0" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
+                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index > 0 && can('pago.borrar')" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
 
                         <v-list-item-subtitle>
@@ -73,7 +73,7 @@
     <v-dialog v-model="deleteDialog" max-width="420">
         <v-card rounded="xl">
             <v-card-title class="text-subtitle-1 font-weight-bold">
-                Eliminar el banco
+                Eliminar pago
             </v-card-title>
 
             <v-card-text class="text-body-2 text-medium-emphasis">
@@ -157,8 +157,6 @@ export default {
             this.saving = true
 
             try {
-                let res
-
                 await axios.post('/pagos', {
                     ventas_id: this.venta.id,
                     monto: this.form.monto,
@@ -173,6 +171,11 @@ export default {
             } catch (e) {
                 if (e.response?.status === 422) {
                     this.errores = e.response.data.errors || {}
+                    if (!Object.keys(this.errores).length && e.response.data.message) {
+                        toast.error(e.response.data.message)
+                    }
+                } else {
+                    toast.error('Hubo un error inesperado al guardar el pago')
                 }
             } finally {
                 this.saving = false
@@ -213,7 +216,7 @@ export default {
             }catch(e){
                 this.saving = false
                 this.deleteDialog = false
-                toast.error('Hubo un error inesperado al eliminar')
+                toast.error(e.response?.data?.message || 'Hubo un error inesperado al eliminar')
             }
 
         }

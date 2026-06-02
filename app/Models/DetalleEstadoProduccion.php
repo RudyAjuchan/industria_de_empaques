@@ -12,14 +12,12 @@ class DetalleEstadoProduccion extends Model
         'estado_produccions_id',
         'tipo',
         'nombre',
-        'valor_string',
-        'valor_double',
-        'valor_integer',
-        'valor_date',
+        'label',
+        'requerido',
     ];
 
     protected $casts = [
-        'nombre_date' => 'date',
+        'requerido' => 'boolean',
     ];
 
     // Estado al que pertenece

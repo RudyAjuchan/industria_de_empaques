@@ -9,11 +9,18 @@ use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoProduccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProduccionController extends Controller
 {
     public function estadosAnteriores(HistorialEstadoProduccion $tarea)
     {
+        if (!$this->usuarioPuedeTrabajarEstado($tarea->estado_produccions_id)) {
+            return response()->json([
+                'message' => 'No puedes consultar estados de esta área'
+            ], 403);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | DETALLE Y PRODUCTO
@@ -86,17 +93,42 @@ class ProduccionController extends Controller
             'observacion' => 'nullable|string'
         ]);
 
+        DB::beginTransaction();
+
+        try {
+            $detalleVenta = DetalleVenta::with([
+                'venta',
+                'producto.estadosProduccion'
+            ])
+                ->whereKey($detalleVenta->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
         /*
         |--------------------------------------------------------------------------
         | ESTADO ACTUAL ACTIVO
         |--------------------------------------------------------------------------
         */
-        $estadoActivo = $detalleVenta->getEstadoActual();
+        $estadoActivo = $detalleVenta->historialEstados()
+            ->whereNull('fecha_fin')
+            ->orderByDesc('fecha_inicio')
+            ->lockForUpdate()
+            ->first();
 
         if (!$estadoActivo) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'No hay estado activo para regresar'
             ], 422);
+        }
+
+        if (!$this->usuarioPuedeTrabajarEstado($estadoActivo->estado_produccions_id)) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'No puedes registrar producción en esta área'
+            ], 403);
         }
 
         $estadoActual = EstadoProduccion::find(
@@ -137,6 +169,8 @@ class ProduccionController extends Controller
 
         // El producto no usa ese estado
         if (!$flujoDestino) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'El producto no utiliza ese estado'
             ], 422);
@@ -144,6 +178,8 @@ class ProduccionController extends Controller
 
         // El estado actual no existe en flujo
         if (!$flujoActual) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'El estado actual no pertenece al flujo del producto'
             ], 422);
@@ -154,6 +190,8 @@ class ProduccionController extends Controller
             $flujoDestino->pivot->orden >=
             $flujoActual->pivot->orden
         ) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'Solo se puede regresar a estados anteriores'
             ], 422);
@@ -161,6 +199,8 @@ class ProduccionController extends Controller
 
         // No permitir regresar desde el primero
         if ($flujoActual->pivot->orden == 1) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'No se puede regresar desde el primer estado'
             ], 422);
@@ -171,7 +211,12 @@ class ProduccionController extends Controller
         | CERRAR PROCESO ACTIVO
         |--------------------------------------------------------------------------
         */
-        $procesoActivo = $detalleVenta->getProcesoActivo();
+        $procesoActivo = $detalleVenta->historialEstados()
+            ->whereNotNull('proceso_estado_produccions_id')
+            ->whereNull('fecha_fin')
+            ->orderByDesc('fecha_inicio')
+            ->lockForUpdate()
+            ->first();
 
         if ($procesoActivo) {
             $procesoActivo->update([
@@ -224,9 +269,19 @@ class ProduccionController extends Controller
         */
         $detalleVenta->venta->recalcularEstadoProduccion();
 
+        DB::commit();
+
         return response()->json([
             'message' => 'Estado regresado correctamente'
         ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al regresar estado',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function camposFinalizacion(DetalleVenta $detalleVenta)
@@ -247,4 +302,10 @@ class ProduccionController extends Controller
         return response()->json($campos);
     }
 
+    private function usuarioPuedeTrabajarEstado(int $estadoProduccionId): bool
+    {
+        return EstadoProduccion::whereKey($estadoProduccionId)
+            ->where('users_id', Auth::id())
+            ->exists();
+    }
 }

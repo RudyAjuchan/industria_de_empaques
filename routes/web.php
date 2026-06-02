@@ -217,19 +217,6 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 });
 
-/* RUTAS DE PRODUCCIÓN (OPERATIVAS) */
-Route::middleware(['auth', 'force.password'])->group(function () {
-
-    // Cola de trabajo por estado
-    Route::get('/produccion/estado/{estadoProduccion}', [ColaProduccionController::class, 'colaPorEstado'])->middleware('permission:produccion.ver');
-
-    // Cambiar subestado
-    Route::post('/produccion/detalle/{detalleVenta}/proceso', [EstadoProduccionController::class, 'cambiarProceso'])->middleware('permission:produccion.editar');
-
-    // Cambiar estado (avanzar o retroceder)
-    Route::post('/produccion/detalle/{detalleVenta}/estado', [EstadoProduccionController::class, 'cambiarEstado'])->middleware('permission:produccion.editar');
-});
-
 /* RUTAS OPERATIVAS DE PRODUCCIÓN */
 Route::middleware(['auth', 'force.password'])->group(function () {
 
@@ -244,12 +231,15 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
     //OBTENER PROCESOS DEL ESTADO DEL DETALLE VENTA.
     Route::get('/produccion/estado/{estadoProduccion}/procesos', [EstadoProduccionController::class, 'procesos'])->middleware('permission:produccion.ver');
+    // Cola de trabajo por estado
+    Route::get('/produccion/estado/{estadoProduccion}', [ColaProduccionController::class, 'colaPorEstado'])->middleware('permission:produccion.ver');
+
     /* RUTAS PARA REGRESAR DE UN ESTADO */
     Route::get('/produccion/estados-anteriores/{tarea}', [ProduccionController::class, 'estadosAnteriores'])->middleware('permission:produccion.editar');
     Route::post('/produccion/detalle/{detalleVenta}/regresar', [ProduccionController::class, 'regresarEstado'])->middleware('permission:produccion.editar');
     
     // Obtener campos dinámicos del estado activo
-    Route::get('/produccion/{detalleVenta}/campos-finalizacion', [ProduccionOperativaController::class, 'camposFinalizacion']);
+    Route::get('/produccion/{detalleVenta}/campos-finalizacion', [ProduccionOperativaController::class, 'camposFinalizacion'])->middleware('permission:produccion.ver|produccion.editar');
 
 });
 

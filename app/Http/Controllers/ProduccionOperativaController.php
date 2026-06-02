@@ -8,10 +8,13 @@ use App\Models\DetalleVenta;
 use App\Models\EstadoProduccion;
 use App\Models\HistorialEstadoCampo;
 use App\Models\HistorialEstadoProduccion;
+use App\Models\ProcesoEstadoProduccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class ProduccionOperativaController extends Controller
 {
@@ -60,62 +63,124 @@ class ProduccionOperativaController extends Controller
             'observacion' => 'nullable|string'
         ]);
 
-        // Puede ser null si ya estamos en proceso
-        $estadoActivo = $detalleVenta->getEstadoActivo();
+        DB::beginTransaction();
 
-        // Proceso activo (si existe)
-        $procesoActivo = $detalleVenta->getProcesoActivo();
+        try {
+            $detalleVenta = DetalleVenta::with('venta')
+                ->whereKey($detalleVenta->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Caso inválido: no hay estado en cola NI proceso en curso
-        if (!$estadoActivo && !$procesoActivo) {
+            // Puede ser null si ya estamos en proceso
+            $estadoActivo = $detalleVenta->historialEstados()
+                ->where('tipo_evento', 'entrada_estado')
+                ->whereNull('fecha_fin')
+                ->lockForUpdate()
+                ->first();
+
+            // Proceso activo (si existe)
+            $procesoActivo = $detalleVenta->historialEstados()
+                ->whereNotNull('proceso_estado_produccions_id')
+                ->whereNull('fecha_fin')
+                ->orderByDesc('fecha_inicio')
+                ->lockForUpdate()
+                ->first();
+
+            // Caso inválido: no hay estado en cola NI proceso en curso
+            if (!$estadoActivo && !$procesoActivo) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'El producto no tiene un estado válido para iniciar o cambiar proceso'
+                ], 422);
+            }
+
+            // Determinar el estado real (desde donde se trabaja)
+            $estadoProduccionId = $estadoActivo
+                ? $estadoActivo->estado_produccions_id
+                : $procesoActivo->estado_produccions_id;
+
+            if (!$this->usuarioPuedeTrabajarEstado($estadoProduccionId)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'No puedes registrar producción en esta área'
+                ], 403);
+            }
+
+            if (!$this->procesoPerteneceAlEstado($request->proceso_estado_produccions_id, $estadoProduccionId)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'El proceso seleccionado no pertenece al estado actual'
+                ], 422);
+            }
+
+            if (
+                $procesoActivo &&
+                (int) $procesoActivo->proceso_estado_produccions_id ===
+                (int) $request->proceso_estado_produccions_id
+            ) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'El proceso seleccionado ya está activo'
+                ]);
+            }
+
+            // Cerrar espera SOLO si existe
+            if ($estadoActivo) {
+                $estadoActivo->update([
+                    'fecha_fin' => now()
+                ]);
+            }
+
+            // Cerrar proceso activo SOLO si existe
+            if ($procesoActivo) {
+                $procesoActivo->update([
+                    'fecha_fin' => now()
+                ]);
+            }
+
+            // Crear nuevo proceso
+            HistorialEstadoProduccion::create([
+                'detalle_ventas_id' => $detalleVenta->id,
+                'estado_produccions_id' => $estadoProduccionId,
+                'proceso_estado_produccions_id' => $request->proceso_estado_produccions_id,
+                'users_id' => Auth::id(),
+                'fecha_inicio' => now(),
+                'observacion' => $request->observacion,
+                'tipo_evento' => $procesoActivo
+                    ? 'cambio_proceso'
+                    : 'inicio_proceso',
+            ]);
+
+            $detalleVenta->venta->recalcularEstadoProduccion();
+
+            DB::commit();
+
             return response()->json([
-                'message' => 'El producto no tiene un estado válido para iniciar o cambiar proceso'
-            ], 422);
-        }
-
-        // Determinar el estado real (desde donde se trabaja)
-        $estadoProduccionId = $estadoActivo
-            ? $estadoActivo->estado_produccions_id
-            : $procesoActivo->estado_produccions_id;
-
-        //Cerrar espera SOLO si existe
-        if ($estadoActivo) {
-            $estadoActivo->update([
-                'fecha_fin' => now()
+                'message' => 'Proceso actualizado correctamente'
             ]);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al iniciar proceso',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        //Cerrar proceso activo SOLO si existe
-
-        if ($procesoActivo) {
-            $procesoActivo->update([
-                'fecha_fin' => now()
-            ]);
-        }
-        //Crear nuevo proceso
-
-        HistorialEstadoProduccion::create([
-            'detalle_ventas_id' => $detalleVenta->id,
-            'estado_produccions_id' => $estadoProduccionId,
-            'proceso_estado_produccions_id' => $request->proceso_estado_produccions_id,
-            'users_id' => Auth::id(),
-            'fecha_inicio' => now(),
-            'observacion' => $request->observacion,
-            'tipo_evento' => $procesoActivo
-                ? 'cambio_proceso'
-                : 'inicio_proceso',
-        ]);
-
-        $detalleVenta->venta->recalcularEstadoProduccion();
-
-        return response()->json([
-            'message' => 'Proceso actualizado correctamente'
-        ]);
     }
 
 
     public function finalizarProceso(Request $request, DetalleVenta $detalleVenta)
     {
+        $ventaParaNotificar = null;
+
         DB::beginTransaction();
 
         try {
@@ -125,22 +190,42 @@ class ProduccionOperativaController extends Controller
             | CARGAR RELACIONES
             |--------------------------------------------------------------------------
             */
-            $detalle = $detalleVenta->load([
+            $detalle = DetalleVenta::with([
                 'venta.pagos',
                 'producto.estadosProduccion'
-            ]);
+            ])
+                ->whereKey($detalleVenta->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             /*
             |--------------------------------------------------------------------------
-            | OBTENER ESTADO ACTIVO
+            | OBTENER PROCESO ACTIVO
             |--------------------------------------------------------------------------
             */
-            $estadoActivo = $detalleVenta->getEstadoActual();
+            $procesoActivo = $detalle->historialEstados()
+                ->whereNotNull('proceso_estado_produccions_id')
+                ->whereNull('fecha_fin')
+                ->orderByDesc('fecha_inicio')
+                ->lockForUpdate()
+                ->first();
 
-            if (!$estadoActivo) {
+            if (!$procesoActivo) {
+                DB::rollBack();
+
                 return response()->json([
-                    'message' => 'No hay estado activo'
+                    'message' => 'Debe iniciar un proceso antes de finalizar'
                 ], 422);
+            }
+
+            $estadoActivo = $procesoActivo;
+
+            if (!$this->usuarioPuedeTrabajarEstado($estadoActivo->estado_produccions_id)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'No puedes registrar producción en esta área'
+                ], 403);
             }
 
             /*
@@ -151,7 +236,7 @@ class ProduccionOperativaController extends Controller
             $camposDefinidos = DetalleEstadoProduccion::where(
                 'estado_produccions_id',
                 $estadoActivo->estado_produccions_id
-            )->get();
+            )->get()->keyBy('id');
 
             /*
             |--------------------------------------------------------------------------
@@ -188,6 +273,20 @@ class ProduccionOperativaController extends Controller
 
             $request->validate($rules, [], $attributes);
 
+            $camposRecibidos = $request->input('campos') ?? [];
+            $camposInvalidos = array_diff(
+                array_map('intval', array_keys($camposRecibidos)),
+                $camposDefinidos->keys()->map(fn ($id) => (int) $id)->all()
+            );
+
+            if (!empty($camposInvalidos)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Uno o más campos no pertenecen al estado actual'
+                ], 422);
+            }
+
             /*
             |--------------------------------------------------------------------------
             | ESTADO ACTUAL
@@ -202,7 +301,7 @@ class ProduccionOperativaController extends Controller
             | FLUJO REAL DEL PRODUCTO
             |--------------------------------------------------------------------------
             */
-            $flujo = $detalleVenta->producto
+            $flujo = $detalle->producto
                 ->estadosProduccion
                 ->sortBy('pivot.orden')
                 ->values();
@@ -214,6 +313,7 @@ class ProduccionOperativaController extends Controller
             );
 
             if (!$flujoActual) {
+                DB::rollBack();
 
                 return response()->json([
                     'message' => 'El estado actual no pertenece al flujo del producto'
@@ -245,6 +345,7 @@ class ProduccionOperativaController extends Controller
                 $pendiente = $venta->total - $pagado;
 
                 if ($pendiente > 0) {
+                    DB::rollBack();
 
                     return response()->json([
                         'message' => 'La venta tiene un saldo pendiente'
@@ -255,20 +356,6 @@ class ProduccionOperativaController extends Controller
             /*
             |--------------------------------------------------------------------------
             | CERRAR PROCESO ACTIVO
-            |--------------------------------------------------------------------------
-            */
-            $procesoActivo = $detalleVenta->getProcesoActivo();
-
-            if ($procesoActivo) {
-
-                $procesoActivo->update([
-                    'fecha_fin' => now()
-                ]);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | CERRAR ESTADO ACTUAL
             |--------------------------------------------------------------------------
             */
             $estadoActivo->update([
@@ -283,7 +370,7 @@ class ProduccionOperativaController extends Controller
             |--------------------------------------------------------------------------
             */
             $eventoFinalizacion = HistorialEstadoProduccion::create([
-                'detalle_ventas_id' => $detalleVenta->id,
+                'detalle_ventas_id' => $detalle->id,
                 'estado_produccions_id' => $estadoActivo->estado_produccions_id,
                 'users_id' => Auth::id(),
                 'fecha_inicio' => now(),
@@ -300,7 +387,7 @@ class ProduccionOperativaController extends Controller
             if ($siguienteEstado) {
 
                 HistorialEstadoProduccion::create([
-                    'detalle_ventas_id' => $detalleVenta->id,
+                    'detalle_ventas_id' => $detalle->id,
                     'estado_produccions_id' => $siguienteEstado->id,
                     'fecha_inicio' => now(),
                     'tipo_evento' => 'entrada_estado',
@@ -316,7 +403,7 @@ class ProduccionOperativaController extends Controller
 
                 foreach ($request->campos as $campoId => $valor) {
 
-                    $campo = DetalleEstadoProduccion::find($campoId);
+                    $campo = $camposDefinidos->get((int) $campoId);
 
                     if (!$campo) {
                         continue;
@@ -354,9 +441,9 @@ class ProduccionOperativaController extends Controller
             | RECALCULAR ESTADO DE VENTA
             |--------------------------------------------------------------------------
             */
-            $detalleVenta->venta->recalcularEstadoProduccion();
+            $detalle->venta->recalcularEstadoProduccion();
 
-            $venta = $detalleVenta->venta->fresh();
+            $venta = $detalle->venta->fresh();
 
             /*
             |--------------------------------------------------------------------------
@@ -364,25 +451,37 @@ class ProduccionOperativaController extends Controller
             |--------------------------------------------------------------------------
             */
             if ($venta->estado_produccion === 'finalizada') {
-
-                $venta->load('cliente', 'pagos');
-
-                Mail::to($venta->cliente->email)
-                    ->send(
-                        new VentaFinalizadaMail(
-                            $venta->cliente,
-                            $venta
-                        )
-                    );
+                $ventaParaNotificar = $venta->load('cliente', 'pagos');
             }
 
             DB::commit();
+
+            if ($ventaParaNotificar) {
+                try {
+                    Mail::to($ventaParaNotificar->cliente->email)
+                        ->send(
+                            new VentaFinalizadaMail(
+                                $ventaParaNotificar->cliente,
+                                $ventaParaNotificar
+                            )
+                        );
+                } catch (\Throwable $mailException) {
+                    Log::warning('No se pudo enviar correo de venta finalizada', [
+                        'venta_id' => $ventaParaNotificar->id,
+                        'error' => $mailException->getMessage(),
+                    ]);
+                }
+            }
 
             return response()->json([
                 'message' => $siguienteEstado
                     ? 'Producto enviado al siguiente estado'
                     : 'Producto finalizado completamente'
             ]);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            throw $e;
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -395,23 +494,44 @@ class ProduccionOperativaController extends Controller
     }
 
     public function camposFinalizacion(DetalleVenta $detalleVenta)
-{
-    $estadoActivo = $detalleVenta->getEstadoActual();
+    {
+        $estadoActivo = $detalleVenta->getEstadoActual();
 
-    if (!$estadoActivo) {
+        if (!$estadoActivo) {
+            return response()->json([
+                'message' => 'No hay estado activo'
+            ], 422);
+        }
+
+        if (!$this->usuarioPuedeTrabajarEstado($estadoActivo->estado_produccions_id)) {
+            return response()->json([
+                'message' => 'No puedes consultar campos de esta área'
+            ], 403);
+        }
+
+        $campos = DetalleEstadoProduccion::where(
+            'estado_produccions_id',
+            $estadoActivo->estado_produccions_id
+        )->get();
+
         return response()->json([
-            'message' => 'No hay estado activo'
-        ], 422);
+            'estado_id' => $estadoActivo->estado_produccions_id,
+            'campos' => $campos
+        ]);
     }
 
-    $campos = DetalleEstadoProduccion::where(
-        'estado_produccions_id',
-        $estadoActivo->estado_produccions_id
-    )->get();
+    private function usuarioPuedeTrabajarEstado(int $estadoProduccionId): bool
+    {
+        return EstadoProduccion::whereKey($estadoProduccionId)
+            ->where('users_id', Auth::id())
+            ->exists();
+    }
 
-    return response()->json([
-        'estado_id' => $estadoActivo->estado_produccions_id,
-        'campos' => $campos
-    ]);
-}
+    private function procesoPerteneceAlEstado(int $procesoId, int $estadoProduccionId): bool
+    {
+        return ProcesoEstadoProduccion::whereKey($procesoId)
+            ->where('estado_produccions_id', $estadoProduccionId)
+            ->where('estado', 1)
+            ->exists();
+    }
 }

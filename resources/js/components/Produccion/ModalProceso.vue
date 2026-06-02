@@ -7,7 +7,7 @@
 
             <v-card-text>
                 <v-select v-model="proceso" :items="procesos" item-title="nombre" item-value="id" label="Proceso"
-                    required variant="outlined" density="compact" />
+                    required variant="outlined" density="compact" :loading="loadingProcesos" />
 
                 <v-textarea v-model="observacion" label="Observación" rows="3" variant="outlined" density="compact" />
             </v-card-text>
@@ -28,6 +28,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ModalProceso',
@@ -44,7 +45,8 @@ export default {
             procesos: [],
             proceso: null,
             observacion: '',
-            loading: false
+            loading: false,
+            loadingProcesos: false
         }
     },
 
@@ -73,11 +75,20 @@ export default {
             // Procesos del estado actual
             const estadoId = this.tarea.estado_produccions_id
 
-            const { data } = await axios.get(
-                `/produccion/estado/${estadoId}/procesos`
-            )
+            this.loadingProcesos = true
 
-            this.procesos = data
+            try {
+                const { data } = await axios.get(
+                    `/produccion/estado/${estadoId}/procesos`
+                )
+
+                this.procesos = data
+            } catch (error) {
+                this.procesos = []
+                toast.error(error.response?.data?.message || 'No se pudieron cargar los procesos')
+            } finally {
+                this.loadingProcesos = false
+            }
         },
 
         async guardar() {
@@ -94,6 +105,8 @@ export default {
 
                 this.$emit('guardado')
                 this.cerrar()
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'No se pudo guardar el proceso')
             } finally {
                 this.loading = false
             }

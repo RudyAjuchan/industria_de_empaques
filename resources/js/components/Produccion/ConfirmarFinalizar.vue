@@ -93,12 +93,14 @@ export default {
             this.observacion = ''
             this.camposDefinidos = []
             this.valoresCampos = {}
+            this.errores = {}
         },
 
         async confirmar() {
             if (!this.tarea) return
 
             this.loading = true
+            this.errores = {}
 
             try {
                 await axios.post(
@@ -111,16 +113,20 @@ export default {
 
                 this.$emit('confirmado')
                 this.cerrar()
-            }catch (error) {
+            } catch (error) {
 
                 if (error.response?.status === 422) {
-                    if(error.response.data.message  == 'La venta tiene un saldo pendiente'){
+                    if (error.response.data.message == 'La venta tiene un saldo pendiente') {
                         toast.error(error.response.data.message, {
                             autoClose: 5000
                         })
-                    }else{
+                    } else if (error.response.data.errors) {
                         this.errores = error.response.data.errors
+                    } else {
+                        toast.error(error.response.data.message || 'No se pudo finalizar el proceso')
                     }
+                } else {
+                    toast.error(error.response?.data?.message || 'No se pudo finalizar el proceso')
                 }
 
             } finally {
@@ -129,17 +135,23 @@ export default {
         },
 
         async cargarCampos() {
-            const { data } = await axios.get(
-                `/produccion/${this.tarea.detalle_ventas_id}/campos-finalizacion`
-            )
+            try {
+                const { data } = await axios.get(
+                    `/produccion/${this.tarea.detalle_ventas_id}/campos-finalizacion`
+                )
 
-            this.camposDefinidos = data.campos || []
+                this.camposDefinidos = data.campos || []
 
-            this.valoresCampos = {}
+                this.valoresCampos = {}
 
-            this.camposDefinidos.forEach(campo => {
-                this.valoresCampos[campo.id] = null
-            })
+                this.camposDefinidos.forEach(campo => {
+                    this.valoresCampos[campo.id] = null
+                })
+            } catch (error) {
+                this.camposDefinidos = []
+                this.valoresCampos = {}
+                toast.error(error.response?.data?.message || 'No se pudieron cargar los campos de finalización')
+            }
         }
     },
 

@@ -5,7 +5,7 @@
         </v-btn>
 
         <h2 class="mb-4">Tracking de la venta <v-chip color="">{{ venta.numero_completo }}</v-chip></h2>
-        <v-row class="mb-3 justify-end">
+        <v-row class="mb-3 justify-end" v-if="can('venta.reporte') || can('produccion.activa')">
             <v-btn color="error" variant="tonal" prepend-icon="mdi-file-pdf-box" class="mr-2" @click="exportPdf">
                 PDF
             </v-btn>
@@ -32,6 +32,7 @@
 <script>
 import axios from 'axios'
 import ProductoTrackingCard from './ProductoTrackingCard.vue'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'venta.tracking',
@@ -53,6 +54,8 @@ export default {
             this.detalles = data.detalles
             this.estados = data.estados
             this.venta = data.venta
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'No se pudo cargar el tracking de la venta')
         } finally {
             this.loading = false
         }

@@ -4,12 +4,9 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\{
     FromCollection,
-    WithHeadings,
-    WithStyles,
-    WithMapping,
-    ShouldAutoSize
+    ShouldAutoSize,
+    WithHeadings
 };
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class TrackingVentaExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
@@ -31,8 +28,8 @@ class TrackingVentaExport implements FromCollection, WithHeadings, ShouldAutoSiz
                         'Producto' => $detalle->producto->nombre,
                         'Cantidad' => $detalle->cantidad,
                         'Evento' => $h->tipo_evento,
-                        'Estado' => $h->estado_produccion->nombre ?? '-',
-                        'Proceso' => $h->proceso_estado->nombre ?? '-',
+                        'Estado' => $h->estadoProduccion->nombre ?? '-',
+                        'Proceso' => $h->procesoEstado->nombre ?? '-',
                         'Responsable' => $h->usuario->name ?? 'Sistema',
                         'Inicio' => $h->fecha_inicio,
                         'Fin' => $h->fecha_fin,

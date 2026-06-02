@@ -7,8 +7,8 @@
 
             <v-card-text>
 
-                <v-select v-model="estadoDestino" variant="outlined" density="compact" :items="estadosDisponibles" item-title="nombre" item-value="id"
-                    label="Seleccionar estado" />
+                <v-select v-model="estadoDestino" variant="outlined" density="compact" :items="estadosDisponibles"
+                    item-title="nombre" item-value="id" label="Seleccionar estado" :loading="loadingEstados" />
 
                 <v-textarea v-model="observacion" variant="outlined" density="compact" label="Observación" rows="3" />
 
@@ -16,11 +16,11 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="tonal" color="error" @click="cerrar">
+                <v-btn variant="tonal" color="error" @click="cerrar" :disabled="loading">
                     Cancelar
                 </v-btn>
 
-                <v-btn color="success" variant="tonal" :disabled="!estadoDestino" @click="confirmar">
+                <v-btn color="success" variant="tonal" :disabled="!estadoDestino || loading" :loading="loading" @click="confirmar">
                     Confirmar
                 </v-btn>
             </v-card-actions>
@@ -28,6 +28,8 @@
     </v-dialog>
 </template>
 <script>
+import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'ModalRegresar',
@@ -44,7 +46,9 @@ export default {
             dialog: this.modelValue,
             estadosDisponibles: [],
             estadoDestino: null,
-            observacion: ''
+            observacion: '',
+            loading: false,
+            loadingEstados: false,
         }
     },
 
@@ -61,25 +65,41 @@ export default {
     methods: {
 
         async cargarEstados() {
-            const { data } = await axios.get(
-                `/produccion/estados-anteriores/${this.tarea.id}`
-            )
+            this.loadingEstados = true
 
-            this.estadosDisponibles = data
+            try {
+                const { data } = await axios.get(
+                    `/produccion/estados-anteriores/${this.tarea.id}`
+                )
+
+                this.estadosDisponibles = data
+            } catch (error) {
+                this.estadosDisponibles = []
+                toast.error(error.response?.data?.message || 'No se pudieron cargar los estados anteriores')
+            } finally {
+                this.loadingEstados = false
+            }
         },
 
         async confirmar() {
+            this.loading = true
 
-            await axios.post(
-                `/produccion/detalle/${this.tarea.detalle_ventas_id}/regresar`,
-                {
-                    estado_destino_id: this.estadoDestino,
-                    observacion: this.observacion
-                }
-            )
+            try {
+                await axios.post(
+                    `/produccion/detalle/${this.tarea.detalle_ventas_id}/regresar`,
+                    {
+                        estado_destino_id: this.estadoDestino,
+                        observacion: this.observacion
+                    }
+                )
 
-            this.$emit('confirmado')
-            this.cerrar()
+                this.$emit('confirmado')
+                this.cerrar()
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'No se pudo regresar el estado')
+            } finally {
+                this.loading = false
+            }
         },
 
         cerrar() {

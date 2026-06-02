@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ClienteResetPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -47,5 +48,10 @@ class Cliente extends Authenticatable
     public function municipio()
     {
         return $this->belongsTo(Municipio::class, 'municipios_id');
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ClienteResetPasswordNotification($token));
     }
 }

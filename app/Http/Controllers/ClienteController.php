@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Password;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ClienteController extends Controller
@@ -172,6 +173,29 @@ class ClienteController extends Controller
 
         return response()->json([
             'message' => 'Cliente eliminado'
+        ]);
+    }
+
+    public function sendPasswordReset(Cliente $cliente)
+    {
+        if (!$cliente->email) {
+            return response()->json([
+                'message' => 'El cliente no tiene correo principal.'
+            ], 422);
+        }
+
+        $status = Password::broker('clientes')->sendResetLink([
+            'email' => $cliente->email,
+        ]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json([
+                'message' => __($status)
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Correo de restablecimiento enviado.'
         ]);
     }
 

@@ -100,6 +100,12 @@
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
+                    <v-btn icon @click="sendPasswordReset(item)" color="teal" variant="tonal" density="compact"
+                        :loading="resettingPasswordId === item.id" :disabled="!item.email"
+                        v-if="can('cliente.editar')">
+                        <v-icon>mdi-lock-reset</v-icon>
+                    </v-btn>
+
                     <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact"
                         v-if="can('cliente.borrar')">
                         <v-icon>mdi-delete-outline</v-icon>
@@ -171,6 +177,7 @@ export default {
             clientes: [],
             loading: false,
             deleting: false,
+            resettingPasswordId: null,
             showPermissions: false,
             selectedRole: null,
 
@@ -259,6 +266,19 @@ export default {
                 search: this.search
             })
             window.open(`/cliente/export/pdf?${params.toString()}`, '_blank')
+        },
+
+        async sendPasswordReset(item) {
+            this.resettingPasswordId = item.id
+
+            try {
+                const { data } = await axios.post(`/cliente/${item.id}/password-reset`)
+                toast.success(data.message || 'Correo de restablecimiento enviado')
+            } catch (err) {
+                toast.error(err.response?.data?.message || 'No se pudo enviar el correo de restablecimiento')
+            } finally {
+                this.resettingPasswordId = null
+            }
         },
 
         async confirmDelete() {

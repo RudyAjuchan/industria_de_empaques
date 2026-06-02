@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ClienteAuthController;
 use App\Http\Controllers\Api\Ecommerce\CatalogoController;
 use App\Http\Controllers\Api\Ecommerce\CheckoutController;
 use App\Http\Controllers\Api\Ecommerce\ProductoController;
+use App\Http\Controllers\Auth\ClientePasswordResetController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EstadisticasProduccionController;
@@ -145,6 +146,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/cliente/{cliente}', [ClienteController::class, 'show'])->middleware('permission:cliente.ver|cliente.editar');
     Route::put('/cliente/{cliente}', [ClienteController::class, 'update'])->middleware('permission:cliente.editar');
     Route::delete('/cliente/{cliente}', [ClienteController::class, 'destroy'])->middleware('permission:cliente.borrar');
+    Route::post('/cliente/{cliente}/password-reset', [ClienteController::class, 'sendPasswordReset'])->middleware('permission:cliente.editar');
     Route::get('/cliente/export/pdf', [ClienteController::class, 'exportPdf'])
     ->middleware('permission:cliente.reporte');
     Route::get('/cliente/export/excel', [ClienteController::class, 'exportExcel'])
@@ -298,6 +300,11 @@ Route::prefix('api')->group(function () {
     Route::post('/cliente/login', [ClienteAuthController::class, 'login']);
     Route::post('/cliente/logout', [ClienteAuthController::class, 'logout']);
     Route::post('/cliente/register', [ClienteAuthController::class, 'register']);
+    Route::post('/cliente/password/email', [ClientePasswordResetController::class, 'sendResetLink']);
+    Route::get('/cliente/reset-password/{token}', [ClientePasswordResetController::class, 'create'])
+        ->name('cliente.password.reset');
+    Route::post('/cliente/reset-password', [ClientePasswordResetController::class, 'reset'])
+        ->name('cliente.password.store');
     Route::post('/contacto', [ClienteAuthController::class, 'enviarContacto']);
 
     Route::put('/cliente/update', [ClienteAuthController::class, 'update'])

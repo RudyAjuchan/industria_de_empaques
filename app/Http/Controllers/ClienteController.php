@@ -184,6 +184,12 @@ class ClienteController extends Controller
             ], 422);
         }
 
+        if (!$cliente->estado) {
+            return response()->json([
+                'message' => 'No se puede enviar el restablecimiento a un cliente inactivo.'
+            ], 422);
+        }
+
         $status = Password::broker('clientes')->sendResetLink([
             'email' => $cliente->email,
         ]);

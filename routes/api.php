@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Api\Ecommerce\CatalogoController;
-use App\Http\Controllers\Api\Ecommerce\CheckoutController;
-use App\Http\Controllers\Api\Ecommerce\ProductoController;
-use App\Http\Controllers\Auth\ClienteAuthController;
-use App\Http\Controllers\PaginaController;
-use App\Http\Controllers\UbicacionController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\ClientePasswordResetController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/cliente/password/email', [ClientePasswordResetController::class, 'sendResetLink']);
+Route::get('/cliente/reset-password/{token}', [ClientePasswordResetController::class, 'create'])
+    ->name('cliente.password.reset');
+Route::post('/cliente/reset-password', [ClientePasswordResetController::class, 'reset'])
+    ->name('cliente.password.store');

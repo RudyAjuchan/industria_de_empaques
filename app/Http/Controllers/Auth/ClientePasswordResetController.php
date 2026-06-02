@@ -21,21 +21,18 @@ class ClientePasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::broker('clientes')->sendResetLink(
-            $request->only('email')
-        );
+        $cliente = Cliente::where('email', $request->email)
+            ->where('estado', 1)
+            ->first();
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            return response()->json([
-                'message' => __($status),
-                'errors' => [
-                    'email' => [__($status)],
-                ],
-            ], 422);
+        if ($cliente) {
+            Password::broker('clientes')->sendResetLink(
+                $request->only('email')
+            );
         }
 
         return response()->json([
-            'message' => 'Correo de restablecimiento enviado.',
+            'message' => 'Si el correo existe, enviaremos un enlace para restablecer la contraseña.',
         ]);
     }
 

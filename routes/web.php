@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\ClienteAuthController;
 use App\Http\Controllers\Api\Ecommerce\CatalogoController;
 use App\Http\Controllers\Api\Ecommerce\CheckoutController;
 use App\Http\Controllers\Api\Ecommerce\ProductoController;
-use App\Http\Controllers\Auth\ClientePasswordResetController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EstadisticasProduccionController;
@@ -300,11 +299,6 @@ Route::prefix('api')->group(function () {
     Route::post('/cliente/login', [ClienteAuthController::class, 'login']);
     Route::post('/cliente/logout', [ClienteAuthController::class, 'logout']);
     Route::post('/cliente/register', [ClienteAuthController::class, 'register']);
-    Route::post('/cliente/password/email', [ClientePasswordResetController::class, 'sendResetLink']);
-    Route::get('/cliente/reset-password/{token}', [ClientePasswordResetController::class, 'create'])
-        ->name('cliente.password.reset');
-    Route::post('/cliente/reset-password', [ClientePasswordResetController::class, 'reset'])
-        ->name('cliente.password.store');
     Route::post('/contacto', [ClienteAuthController::class, 'enviarContacto']);
 
     Route::put('/cliente/update', [ClienteAuthController::class, 'update'])

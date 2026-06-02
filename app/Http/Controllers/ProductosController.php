@@ -44,7 +44,17 @@ class ProductosController extends Controller
 
     public function productosProm(Request $request)
     {
-        $productos = Producto::where('estado', 1)->get();
+        $productos = Producto::with('paginas:id,nombre')
+            ->where('estado', 1)
+            ->orderBy('nombre')
+            ->get([
+                'id',
+                'nombre',
+                'tipo',
+                'tipo_producto',
+                'paginas_id',
+                'ecommerce',
+            ]);
 
         return $productos;
     }

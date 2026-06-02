@@ -1,45 +1,45 @@
 {
-  "_AgarradorDialog-BX9dIuwg.js": {
-    "file": "assets/AgarradorDialog-BX9dIuwg.js",
+  "_AgarradorDialog-gkXZRUP1.js": {
+    "file": "assets/AgarradorDialog-gkXZRUP1.js",
     "name": "AgarradorDialog",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_BancoDialog-DrQ2BiI0.js": {
-    "file": "assets/BancoDialog-DrQ2BiI0.js",
+  "_BancoDialog-BqauHYu1.js": {
+    "file": "assets/BancoDialog-BqauHYu1.js",
     "name": "BancoDialog",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_ClientesForm-BO5dBAHv.js": {
-    "file": "assets/ClientesForm-BO5dBAHv.js",
+  "_ClientesForm-DoEitv0S.js": {
+    "file": "assets/ClientesForm-DoEitv0S.js",
     "name": "ClientesForm",
     "imports": [
       "resources/js/app.js",
       "__commonjsHelpers-DaWZu8wl.js"
     ]
   },
-  "_PaginaDialog-Dq9lfTo7.js": {
-    "file": "assets/PaginaDialog-Dq9lfTo7.js",
+  "_PaginaDialog-DUUpueDv.js": {
+    "file": "assets/PaginaDialog-DUUpueDv.js",
     "name": "PaginaDialog",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_ProductosForm-Cdu4Q_-k.js": {
-    "file": "assets/ProductosForm-Cdu4Q_-k.js",
+  "_ProductosForm-Bhkrsbl0.js": {
+    "file": "assets/ProductosForm-Bhkrsbl0.js",
     "name": "ProductosForm",
     "imports": [
       "resources/js/app.js",
-      "_filepond-CXoiLhUU.js",
+      "_filepond-C0W0zfhx.js",
       "__commonjsHelpers-DaWZu8wl.js",
-      "_PaginaDialog-Dq9lfTo7.js"
+      "_PaginaDialog-DUUpueDv.js"
     ]
   },
-  "_TipoPapelDialog-oemu2xrI.js": {
-    "file": "assets/TipoPapelDialog-oemu2xrI.js",
+  "_TipoPapelDialog-CH4ATIfR.js": {
+    "file": "assets/TipoPapelDialog-CH4ATIfR.js",
     "name": "TipoPapelDialog",
     "imports": [
       "resources/js/app.js"
@@ -49,8 +49,8 @@
     "file": "assets/_commonjsHelpers-DaWZu8wl.js",
     "name": "_commonjsHelpers"
   },
-  "_filepond-CXoiLhUU.js": {
-    "file": "assets/filepond-CXoiLhUU.js",
+  "_filepond-C0W0zfhx.js": {
+    "file": "assets/filepond-C0W0zfhx.js",
     "name": "filepond",
     "imports": [
       "resources/js/app.js"
@@ -105,7 +105,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DlMdqtBR.js",
+    "file": "assets/app-EJrFgrEd.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -155,59 +155,59 @@
     ]
   },
   "resources/js/components/Agarradores/AgarradoresIndex.vue": {
-    "file": "assets/AgarradoresIndex-DTNE5izL.js",
+    "file": "assets/AgarradoresIndex-B3M31mLx.js",
     "name": "AgarradoresIndex",
     "src": "resources/js/components/Agarradores/AgarradoresIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AgarradorDialog-BX9dIuwg.js"
+      "_AgarradorDialog-gkXZRUP1.js"
     ]
   },
   "resources/js/components/Bancos/BancoIndex.vue": {
-    "file": "assets/BancoIndex-CvfjQcn9.js",
+    "file": "assets/BancoIndex-5Xc_sEVG.js",
     "name": "BancoIndex",
     "src": "resources/js/components/Bancos/BancoIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_BancoDialog-DrQ2BiI0.js"
+      "_BancoDialog-BqauHYu1.js"
     ]
   },
   "resources/js/components/Banners/BannersIndex.vue": {
-    "file": "assets/BannersIndex-DRIv6u18.js",
+    "file": "assets/BannersIndex-CbocYmbY.js",
     "name": "BannersIndex",
     "src": "resources/js/components/Banners/BannersIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_filepond-CXoiLhUU.js"
+      "_filepond-C0W0zfhx.js"
     ]
   },
   "resources/js/components/Clientes/ClientesCreate.vue": {
-    "file": "assets/ClientesCreate-yCy3mjn0.js",
+    "file": "assets/ClientesCreate-CWGXMTBK.js",
     "name": "ClientesCreate",
     "src": "resources/js/components/Clientes/ClientesCreate.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ClientesForm-BO5dBAHv.js",
+      "_ClientesForm-DoEitv0S.js",
       "resources/js/app.js",
       "__commonjsHelpers-DaWZu8wl.js"
     ]
   },
   "resources/js/components/Clientes/ClientesEdit.vue": {
-    "file": "assets/ClientesEdit-BFoygLhE.js",
+    "file": "assets/ClientesEdit-CYiTs92p.js",
     "name": "ClientesEdit",
     "src": "resources/js/components/Clientes/ClientesEdit.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ClientesForm-BO5dBAHv.js",
+      "_ClientesForm-DoEitv0S.js",
       "resources/js/app.js",
       "__commonjsHelpers-DaWZu8wl.js"
     ]
   },
   "resources/js/components/Clientes/ClientesIndex.vue": {
-    "file": "assets/ClientesIndex-4k_Jue1Z.js",
+    "file": "assets/ClientesIndex-CKyDo-HE.js",
     "name": "ClientesIndex",
     "src": "resources/js/components/Clientes/ClientesIndex.vue",
     "isDynamicEntry": true,
@@ -216,7 +216,7 @@
     ]
   },
   "resources/js/components/Contabilidad/ContabilidadIndex.vue": {
-    "file": "assets/ContabilidadIndex-4UuspBfk.js",
+    "file": "assets/ContabilidadIndex-9pm7L0co.js",
     "name": "ContabilidadIndex",
     "src": "resources/js/components/Contabilidad/ContabilidadIndex.vue",
     "isDynamicEntry": true,
@@ -225,7 +225,7 @@
     ]
   },
   "resources/js/components/DashboardCorporativo.vue": {
-    "file": "assets/DashboardCorporativo-BWZRxTBK.js",
+    "file": "assets/DashboardCorporativo-CT73ZOht.js",
     "name": "DashboardCorporativo",
     "src": "resources/js/components/DashboardCorporativo.vue",
     "isDynamicEntry": true,
@@ -235,7 +235,7 @@
     ]
   },
   "resources/js/components/Ecommerce/EcommerceIndex.vue": {
-    "file": "assets/EcommerceIndex-Cq0R6Wht.js",
+    "file": "assets/EcommerceIndex-hZ7b-5YG.js",
     "name": "EcommerceIndex",
     "src": "resources/js/components/Ecommerce/EcommerceIndex.vue",
     "isDynamicEntry": true,
@@ -244,7 +244,7 @@
     ]
   },
   "resources/js/components/Inicio.vue": {
-    "file": "assets/Inicio-Cnpr_Q6c.js",
+    "file": "assets/Inicio-BAIgl2GR.js",
     "name": "Inicio",
     "src": "resources/js/components/Inicio.vue",
     "isDynamicEntry": true,
@@ -256,17 +256,17 @@
     ]
   },
   "resources/js/components/Paginas/PaginaIndex.vue": {
-    "file": "assets/PaginaIndex-EYSsYdUV.js",
+    "file": "assets/PaginaIndex-CYXrwsHW.js",
     "name": "PaginaIndex",
     "src": "resources/js/components/Paginas/PaginaIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_PaginaDialog-Dq9lfTo7.js"
+      "_PaginaDialog-DUUpueDv.js"
     ]
   },
   "resources/js/components/Pagos/PagosIndex.vue": {
-    "file": "assets/PagosIndex-CZnhqZEK.js",
+    "file": "assets/PagosIndex-JIgumtUh.js",
     "name": "PagosIndex",
     "src": "resources/js/components/Pagos/PagosIndex.vue",
     "isDynamicEntry": true,
@@ -275,7 +275,7 @@
     ]
   },
   "resources/js/components/Permisos/PermisosIndex.vue": {
-    "file": "assets/PermisosIndex-BblD2Rg-.js",
+    "file": "assets/PermisosIndex-CQzK1PKh.js",
     "name": "PermisosIndex",
     "src": "resources/js/components/Permisos/PermisosIndex.vue",
     "isDynamicEntry": true,
@@ -284,7 +284,7 @@
     ]
   },
   "resources/js/components/Produccion/OperativaProduccion.vue": {
-    "file": "assets/OperativaProduccion-DFJdnBDd.js",
+    "file": "assets/OperativaProduccion-SkcWgzGp.js",
     "name": "OperativaProduccion",
     "src": "resources/js/components/Produccion/OperativaProduccion.vue",
     "isDynamicEntry": true,
@@ -293,7 +293,7 @@
     ]
   },
   "resources/js/components/Produccion/ProduccionActiva.vue": {
-    "file": "assets/ProduccionActiva-DhWzAQZT.js",
+    "file": "assets/ProduccionActiva-CXxKWRFv.js",
     "name": "ProduccionActiva",
     "src": "resources/js/components/Produccion/ProduccionActiva.vue",
     "isDynamicEntry": true,
@@ -302,33 +302,33 @@
     ]
   },
   "resources/js/components/Productos/ProductosCreate.vue": {
-    "file": "assets/ProductosCreate-D2jvUk2g.js",
+    "file": "assets/ProductosCreate-D7OcAYwX.js",
     "name": "ProductosCreate",
     "src": "resources/js/components/Productos/ProductosCreate.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ProductosForm-Cdu4Q_-k.js",
+      "_ProductosForm-Bhkrsbl0.js",
       "resources/js/app.js",
-      "_filepond-CXoiLhUU.js",
+      "_filepond-C0W0zfhx.js",
       "__commonjsHelpers-DaWZu8wl.js",
-      "_PaginaDialog-Dq9lfTo7.js"
+      "_PaginaDialog-DUUpueDv.js"
     ]
   },
   "resources/js/components/Productos/ProductosEdit.vue": {
-    "file": "assets/ProductosEdit-zpkXNsl7.js",
+    "file": "assets/ProductosEdit-C5_mDmie.js",
     "name": "ProductosEdit",
     "src": "resources/js/components/Productos/ProductosEdit.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ProductosForm-Cdu4Q_-k.js",
-      "_filepond-CXoiLhUU.js",
+      "_ProductosForm-Bhkrsbl0.js",
+      "_filepond-C0W0zfhx.js",
       "__commonjsHelpers-DaWZu8wl.js",
-      "_PaginaDialog-Dq9lfTo7.js"
+      "_PaginaDialog-DUUpueDv.js"
     ]
   },
   "resources/js/components/Productos/ProductosIndex.vue": {
-    "file": "assets/ProductosIndex-DIiAQ388.js",
+    "file": "assets/ProductosIndex-wYUUmL0k.js",
     "name": "ProductosIndex",
     "src": "resources/js/components/Productos/ProductosIndex.vue",
     "isDynamicEntry": true,
@@ -337,7 +337,7 @@
     ]
   },
   "resources/js/components/Promociones/PromocionesIndex.vue": {
-    "file": "assets/PromocionesIndex-SY8GGrjU.js",
+    "file": "assets/PromocionesIndex-BqZedz2D.js",
     "name": "PromocionesIndex",
     "src": "resources/js/components/Promociones/PromocionesIndex.vue",
     "isDynamicEntry": true,
@@ -346,7 +346,7 @@
     ]
   },
   "resources/js/components/Roles/RolesCreate.vue": {
-    "file": "assets/RolesCreate-D3sIklGJ.js",
+    "file": "assets/RolesCreate-7tKBJCku.js",
     "name": "RolesCreate",
     "src": "resources/js/components/Roles/RolesCreate.vue",
     "isDynamicEntry": true,
@@ -355,7 +355,7 @@
     ]
   },
   "resources/js/components/Roles/RolesEdit.vue": {
-    "file": "assets/RolesEdit-jpEENm3Q.js",
+    "file": "assets/RolesEdit-DjAh0InN.js",
     "name": "RolesEdit",
     "src": "resources/js/components/Roles/RolesEdit.vue",
     "isDynamicEntry": true,
@@ -364,7 +364,7 @@
     ]
   },
   "resources/js/components/Roles/RolesIndex.vue": {
-    "file": "assets/RolesIndex-DJxgFjIh.js",
+    "file": "assets/RolesIndex-J09VmvWE.js",
     "name": "RolesIndex",
     "src": "resources/js/components/Roles/RolesIndex.vue",
     "isDynamicEntry": true,
@@ -373,17 +373,17 @@
     ]
   },
   "resources/js/components/TipoPapel/TipoPapelIndex.vue": {
-    "file": "assets/TipoPapelIndex-CbcURmYn.js",
+    "file": "assets/TipoPapelIndex-DrrCGh2g.js",
     "name": "TipoPapelIndex",
     "src": "resources/js/components/TipoPapel/TipoPapelIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_TipoPapelDialog-oemu2xrI.js"
+      "_TipoPapelDialog-CH4ATIfR.js"
     ]
   },
   "resources/js/components/Usuarios/Usuario.vue": {
-    "file": "assets/Usuario-CkspIthC.js",
+    "file": "assets/Usuario-Do3FVXyY.js",
     "name": "Usuario",
     "src": "resources/js/components/Usuarios/Usuario.vue",
     "isDynamicEntry": true,
@@ -392,7 +392,7 @@
     ]
   },
   "resources/js/components/Ventas/Detalle/VentasDetalle.vue": {
-    "file": "assets/VentasDetalle-C0ij2jNN.js",
+    "file": "assets/VentasDetalle-CNB_DRVr.js",
     "name": "VentasDetalle",
     "src": "resources/js/components/Ventas/Detalle/VentasDetalle.vue",
     "isDynamicEntry": true,
@@ -404,7 +404,7 @@
     ]
   },
   "resources/js/components/Ventas/Estado/TrackingVentas.vue": {
-    "file": "assets/TrackingVentas-HpJBNsSz.js",
+    "file": "assets/TrackingVentas-CqnlCXKT.js",
     "name": "TrackingVentas",
     "src": "resources/js/components/Ventas/Estado/TrackingVentas.vue",
     "isDynamicEntry": true,
@@ -413,45 +413,45 @@
     ]
   },
   "resources/js/components/Ventas/VentasCreate.vue": {
-    "file": "assets/VentasCreate-BUYwm2GW.js",
+    "file": "assets/VentasCreate-DAalnV4U.js",
     "name": "VentasCreate",
     "src": "resources/js/components/Ventas/VentasCreate.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/components/Ventas/VentasForm.vue",
       "resources/js/app.js",
-      "_AgarradorDialog-BX9dIuwg.js",
-      "_TipoPapelDialog-oemu2xrI.js",
-      "_ProductosForm-Cdu4Q_-k.js",
-      "_filepond-CXoiLhUU.js",
+      "_AgarradorDialog-gkXZRUP1.js",
+      "_TipoPapelDialog-CH4ATIfR.js",
+      "_ProductosForm-Bhkrsbl0.js",
+      "_filepond-C0W0zfhx.js",
       "__commonjsHelpers-DaWZu8wl.js",
-      "_PaginaDialog-Dq9lfTo7.js",
-      "_BancoDialog-DrQ2BiI0.js",
-      "_ClientesForm-BO5dBAHv.js"
+      "_PaginaDialog-DUUpueDv.js",
+      "_BancoDialog-BqauHYu1.js",
+      "_ClientesForm-DoEitv0S.js"
     ]
   },
   "resources/js/components/Ventas/VentasForm.vue": {
-    "file": "assets/VentasForm-j764Tg8z.js",
+    "file": "assets/VentasForm-DkTV65lQ.js",
     "name": "VentasForm",
     "src": "resources/js/components/Ventas/VentasForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AgarradorDialog-BX9dIuwg.js",
-      "_TipoPapelDialog-oemu2xrI.js",
-      "_ProductosForm-Cdu4Q_-k.js",
-      "_filepond-CXoiLhUU.js",
-      "_BancoDialog-DrQ2BiI0.js",
-      "_ClientesForm-BO5dBAHv.js",
+      "_AgarradorDialog-gkXZRUP1.js",
+      "_TipoPapelDialog-CH4ATIfR.js",
+      "_ProductosForm-Bhkrsbl0.js",
+      "_filepond-C0W0zfhx.js",
+      "_BancoDialog-BqauHYu1.js",
+      "_ClientesForm-DoEitv0S.js",
       "__commonjsHelpers-DaWZu8wl.js",
-      "_PaginaDialog-Dq9lfTo7.js"
+      "_PaginaDialog-DUUpueDv.js"
     ],
     "css": [
       "assets/VentasForm-DHM1vSyD.css"
     ]
   },
   "resources/js/components/Ventas/VentasIndex.vue": {
-    "file": "assets/VentasIndex-BH0acAKd.js",
+    "file": "assets/VentasIndex-B1ODYar1.js",
     "name": "VentasIndex",
     "src": "resources/js/components/Ventas/VentasIndex.vue",
     "isDynamicEntry": true,

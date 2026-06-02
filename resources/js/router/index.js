@@ -321,7 +321,7 @@ const routes = [
         name: 'promociones.index',
         component: promocionesComponent,
         meta: { 
-            permission: 'promocion.ver',
+            permission: 'menu.promocion',
             title: 'Promociones',
             navRoute: '/promociones'
         }

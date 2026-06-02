@@ -145,6 +145,14 @@ class Venta extends Model
 
     public function getSaldoPendienteAttribute()
     {
+        if (array_key_exists('total_pagado', $this->attributes)) {
+            return $this->total - $this->attributes['total_pagado'];
+        }
+
+        if ($this->relationLoaded('pagos')) {
+            return $this->total - $this->pagos->sum('monto');
+        }
+
         $pagado = $this->pagos()->sum('monto');
         return $this->total - $pagado;
     }
@@ -152,6 +160,14 @@ class Venta extends Model
 
     public function getTotalPagadoAttribute()
     {
+        if (array_key_exists('total_pagado', $this->attributes)) {
+            return $this->attributes['total_pagado'];
+        }
+
+        if ($this->relationLoaded('pagos')) {
+            return $this->pagos->sum('monto');
+        }
+
         return $this->pagos()->sum('monto');
     }
 }

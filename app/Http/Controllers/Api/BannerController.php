@@ -38,10 +38,10 @@ class BannerController extends Controller
             'producto_id' => 'nullable|required_if:tipo_redireccion,producto|exists:productos,id',
             'tipo_producto' => 'nullable|required_if:tipo_redireccion,tipo|string',
             'promocion_id' => 'nullable|required_if:tipo_redireccion,promocion|exists:promocions,id',
-            'orden' => 'nullable|integer|min:1',
-            'activo' => 'nullable',
+            'orden' => 'nullable|integer|min:0',
+            'activo' => 'nullable|boolean',
             'fecha_inicio' => 'nullable|date',
-            'fecha_fin' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
 
         /*
@@ -63,11 +63,11 @@ class BannerController extends Controller
         $banner = Banner::create([
             'imagen' => $path,
             'tipo_redireccion' => $request->tipo_redireccion,
-            'productos_id' => $request->producto_id,
-            'tipo_producto' => $request->tipo_producto,
-            'promocions_id' => $request->promocion_id,
+            'productos_id' => $request->tipo_redireccion === 'producto' ? $request->producto_id : null,
+            'tipo_producto' => $request->tipo_redireccion === 'tipo' ? $request->tipo_producto : null,
+            'promocions_id' => $request->tipo_redireccion === 'promocion' ? $request->promocion_id : null,
             'orden' => $request->orden ?? 0,
-            'activo' => $request->activo ?? true,
+            'activo' => $request->boolean('activo', true),
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_fin' => $request->fecha_fin,
         ]);
@@ -106,10 +106,10 @@ class BannerController extends Controller
             'producto_id' => 'nullable|required_if:tipo_redireccion,producto|exists:productos,id',
             'tipo_producto' => 'nullable|required_if:tipo_redireccion,tipo|string',
             'promocion_id' => 'nullable|required_if:tipo_redireccion,promocion|exists:promocions,id',
-            'orden' => 'nullable|integer|min:1',
-            'activo' => 'nullable',
+            'orden' => 'nullable|integer|min:0',
+            'activo' => 'nullable|boolean',
             'fecha_inicio' => 'nullable|date',
-            'fecha_fin' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
 
         /*
@@ -135,11 +135,11 @@ class BannerController extends Controller
         $banner->update([
             'imagen' => $banner->imagen,
             'tipo_redireccion' => $request->tipo_redireccion,
-            'productos_id' => $request->producto_id,
-            'tipo_producto' => $request->tipo_producto,
-            'promocions_id' => $request->promocion_id,
+            'productos_id' => $request->tipo_redireccion === 'producto' ? $request->producto_id : null,
+            'tipo_producto' => $request->tipo_redireccion === 'tipo' ? $request->tipo_producto : null,
+            'promocions_id' => $request->tipo_redireccion === 'promocion' ? $request->promocion_id : null,
             'orden' => $request->orden ?? 0,
-            'activo' => $request->activo ?? true,
+            'activo' => $request->boolean('activo', true),
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_fin' => $request->fecha_fin,
         ]);

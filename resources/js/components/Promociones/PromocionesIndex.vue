@@ -15,7 +15,7 @@
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
 
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="create" variant="tonal" :loading="loading">
+                    <v-btn color="primary" prepend-icon="mdi-plus" @click="create" variant="tonal" :loading="loading" v-if="can('promocion.crear')">
                         Nueva
                     </v-btn>
 
@@ -25,16 +25,16 @@
 
         <!-- TABLA -->
         <v-data-table :headers="headers" :items="promociones" :loading="loading" fixed-header height="400px"
-            density="compact" :search="search" :header-props="{ class: 'bg-teal-lighten-2' }">
+            density="compact" :search="search" :header-props="{ class: 'bg-teal-lighten-2' }" v-if="can('promocion.ver')">
 
             <!-- ACCIONES -->
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
-                    <v-btn icon @click="edit(item)" color="primary" variant="tonal" density="compact">
+                    <v-btn icon @click="edit(item)" color="primary" variant="tonal" density="compact" v-if="can('promocion.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact">
+                    <v-btn icon @click="openDelete(item)" color="error" variant="tonal" density="compact" v-if="can('promocion.borrar')">
                         <v-icon>mdi-delete-outline</v-icon>
                     </v-btn>
                 </v-row>
@@ -149,9 +149,14 @@ export default {
 
         async fetchPromociones() {
             this.loading = true
-            await axios.get('/promocion')
-                .then(res => this.promociones = res.data)
-                .finally(() => this.loading = false)
+            try {
+                const { data } = await axios.get('/promocion')
+                this.promociones = data
+            } catch (error) {
+                toast.error('No se pudieron cargar las promociones')
+            } finally {
+                this.loading = false
+            }
         },
 
         create() {
@@ -186,7 +191,7 @@ export default {
                 await this.fetchPromociones()
                 toast.success('Promoción eliminada')
             } catch (err) {
-                console.error(err)
+                toast.error(err.response?.data?.message || 'No se pudo eliminar la promoción')
             } finally {
                 this.deleting = false
             }
@@ -195,7 +200,7 @@ export default {
         formatDate(date) {
             if (!date) return ''
 
-            const [year, month, day] = date.split('-')
+            const [year, month, day] = date.split('T')[0].split('-')
             return `${day}/${month}/${year}`
         },
 

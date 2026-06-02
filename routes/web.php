@@ -155,7 +155,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 Route::middleware(['auth', 'force.password'])->group(function () {
     // 1. RUTAS ESTÁTICAS (ORDENADAS PRIMERO)
     Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.crear');
-    Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.ver');
+    Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.editar|promocion.ver');
     Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.crear|producto.editar|venta.crear');
     Route::get('/producto/estado-produccion', [ProductosController::class, 'getEstadosProduccion'])->middleware('permission:producto.crear|venta.crear');
     Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])->middleware('permission:producto.reporte');
@@ -255,7 +255,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA LAS PROMOCIONES U OFERTAS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/promocion',[PromocionController::class, 'index'])->middleware('permission:promocion.ver');
+    Route::get('/promocion',[PromocionController::class, 'index'])->middleware('permission:promocion.ver|banner.crear|banner.editar');
     Route::get('/promocion/{promocion}',[PromocionController::class, 'show'])->middleware('permission:promocion.ver');
     Route::post('/promocion',[PromocionController::class, 'store'])->middleware('permission:promocion.crear');
     Route::put('/promocion/{promocion}',[PromocionController::class, 'update'])->middleware('permission:promocion.editar');
@@ -291,8 +291,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 /* RUTAS PARA BANNERS */
 Route::middleware(['auth', 'force.password'])->group(function () {
     Route::post('/banners', [BannerController::class, 'store'])->middleware('permission:banner.crear');
-    Route::get('/prod/search', [BannerController::class, 'buscar'])->middleware('permission:banner.crear');
-    Route::get('/prod/tipos', [BannerController::class, 'getTiposProd'])->middleware('permission:banner.crear');
+    Route::get('/prod/search', [BannerController::class, 'buscar'])->middleware('permission:banner.crear|banner.editar');
+    Route::get('/prod/tipos', [BannerController::class, 'getTiposProd'])->middleware('permission:banner.crear|banner.editar');
     Route::get('/banners', [BannerController::class, 'index'])->middleware('permission:banner.ver');
     Route::delete('/banners/{banner}', [BannerController::class, 'destroy'])->middleware('permission:banner.borrar');
     Route::put('/banners/{banner}', [BannerController::class, 'update'])->middleware('permission:banner.editar');

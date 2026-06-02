@@ -14,10 +14,11 @@ class PagoController extends Controller
 {
     public function index(){
         return Venta::with('pagos.banco', 'vendedor', 'cliente')
-        ->get()
-        ->where('estado', 'emitida')
-        ->filter(fn ($v) => $v->saldo_pendiente > 0)
-        ->values();
+            ->withSum('pagos as total_pagado', 'monto')
+            ->where('estado', 'emitida')
+            ->get()
+            ->filter(fn ($v) => $v->saldo_pendiente > 0)
+            ->values();
     }
     public function store(Request $request)
     {
@@ -56,6 +57,7 @@ class PagoController extends Controller
     public function show($ventaId)
     {
         return Pago::where('ventas_id', $ventaId)
+            ->with('banco')
             ->latest()
             ->get();
     }

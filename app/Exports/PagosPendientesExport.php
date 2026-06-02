@@ -30,7 +30,8 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
     }
     public function collection()
     {
-        return Venta::with(['pagos', 'cliente', 'vendedor'])
+        return Venta::with(['pagos.banco', 'cliente', 'vendedor'])
+            ->withSum('pagos as total_pagado', 'monto')
             ->where('estado', 'emitida')
             ->when($this->search, function ($q) {
                 $q->where(function ($q2) {

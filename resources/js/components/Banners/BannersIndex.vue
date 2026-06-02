@@ -12,14 +12,14 @@
             </v-col>
 
             <v-col cols="12" md="6" class="d-flex justify-end align-center">
-                <v-btn color="primary" variant="tonal" prepend-icon="mdi-plus" rounded="lg" @click="abrirDialog">
+                <v-btn color="primary" variant="tonal" prepend-icon="mdi-plus" rounded="lg" @click="abrirDialog" v-if="can('banner.crear')">
                     Nuevo Banner
                 </v-btn>
             </v-col>
         </v-row>
 
         <!-- Tabla -->
-        <v-card>
+        <v-card v-if="can('banner.ver')">
             <v-data-table :headers="headers" :items="banners" :loading="loading" fixed-header height="400px"
             :header-props="{ class: 'bg-teal-lighten-2' }" density="compact">
                 <!-- Imagen -->
@@ -43,11 +43,11 @@
 
                 <!-- Acciones -->
                 <template v-slot:[`item.actions`]="{ item }">
-                    <v-btn icon variant="tonal" color="primary" density="compact" @click="editar(item)">
+                    <v-btn icon variant="tonal" color="primary" density="compact" @click="editar(item)" v-if="can('banner.editar')">
                         <v-icon>mdi-pencil</v-icon>
                     </v-btn>
 
-                    <v-btn icon density="compact" color="error" variant="tonal" @click="eliminar(item)">
+                    <v-btn icon density="compact" color="error" variant="tonal" @click="eliminar(item)" v-if="can('banner.borrar')">
                         <v-icon>mdi-delete</v-icon>
                     </v-btn>
                 </template>
@@ -97,13 +97,13 @@
 
                                 <!-- Item listado -->
                                 <template v-slot:item="{ props, item }">
-                                    <v-list-item v-bind="props" :title="item.raw.nombre" :subtitle="item.raw.codigo" />
+                                    <v-list-item v-bind="props" :title="item.raw.nombre" :subtitle="`ID ${item.raw.id}`" />
                                 </template>
 
                                 <!-- Seleccionado -->
                                 <template v-slot:selection="{ item }">
                                     <span>
-                                        {{ item.raw.codigo }} - {{ item.raw.nombre }}
+                                        {{ item.raw.id }} - {{ item.raw.nombre }}
                                     </span>
                                 </template>
                             </v-autocomplete>
@@ -134,12 +134,12 @@
                         <!-- Fecha inicio -->
                         <v-col cols="12" md="6">
                             <v-text-field v-model="form.fecha_inicio" type="date" label="Fecha inicio"
-                                variant="outlined" />
+                                variant="outlined" :error-messages="errors.fecha_inicio" />
                         </v-col>
 
                         <!-- Fecha fin -->
                         <v-col cols="12" md="6">
-                            <v-text-field v-model="form.fecha_fin" type="date" label="Fecha fin" variant="outlined" />
+                            <v-text-field v-model="form.fecha_fin" type="date" label="Fecha fin" variant="outlined" :error-messages="errors.fecha_fin" />
                         </v-col>
                     </v-row>
                 </v-card-text>
@@ -149,7 +149,7 @@
                 <v-card-actions class="pa-4">
                     <v-spacer />
                     <v-btn variant="tonal" color="error" @click="dialog = false">Cancelar</v-btn>
-                    <v-btn color="success" variant="tonal" :loading="loadingGuardar" @click="guardar">
+                    <v-btn color="success" variant="tonal" :loading="loadingGuardar" @click="guardar" v-if="editando ? can('banner.editar') : can('banner.crear')">
                         Guardar
                     </v-btn>
                 </v-card-actions>
@@ -179,8 +179,6 @@ export default {
 
             banners: [],
             promociones: [],
-            tiposProducto: [],
-
             headers: [
                 { title: "Imagen", key: "imagen" },
                 { title: "Tipo redirección", key: "tipo_redireccion" },
@@ -255,6 +253,7 @@ export default {
         abrirDialog() {
             this.resetForm();
             this.editando = false;
+            this.errors = {};
             this.dialog = true;
         },
 
@@ -268,6 +267,7 @@ export default {
         async guardar() {
             try {
                 this.loadingGuardar = true;
+                this.errors = {};
 
                 const formData = new FormData();
 
@@ -316,18 +316,19 @@ export default {
             this.form.tipo_redireccion = item.tipo_redireccion;
             this.form.producto_id = item.productos_id;
             this.form.tipo_producto = item.tipo_producto;
-            this.form.promocion_id = item.promocion_id;
+            this.form.promocion_id = item.promocions_id;
             this.form.orden = item.orden;
             this.form.activo = item.activo;
-            this.form.fecha_inicio = item.fecha_inicio;
-            this.form.fecha_fin = item.fecha_fin;
+            this.form.fecha_inicio = this.formatDate(item.fecha_inicio);
+            this.form.fecha_fin = this.formatDate(item.fecha_fin);
+            this.errors = {};
 
-            this.productos = [
-                    {
-                        id: item.producto?.id,
-                        nombre: item.producto?.nombre
-                    }
-                ];
+            this.productos = item.producto
+                ? [{
+                    id: item.producto.id,
+                    nombre: item.producto.nombre
+                }]
+                : [];
 
             this.dialog = true;
         },
@@ -338,9 +339,10 @@ export default {
             try {
                 await axios.delete(`/banners/${item.id}`);
                 this.obtenerBanners();
-                toast.error('Se ha eliminado el banner')
+                toast.success('Se ha eliminado el banner')
             } catch (error) {
                 console.error(error);
+                toast.error('No se pudo eliminar el banner')
             }
         },
 
@@ -358,6 +360,7 @@ export default {
                 fecha_inicio: null,
                 fecha_fin: null,
             };
+            this.errors = {};
         },
 
         async buscarProductos(search = '') {
@@ -388,6 +391,11 @@ export default {
             } finally {
                 this.loadingTipos = false
             }
+        },
+
+        formatDate(date) {
+            if (!date) return null
+            return date.split('T')[0] || date.split(' ')[0]
         }
     },
 

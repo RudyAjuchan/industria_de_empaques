@@ -15,22 +15,14 @@ class PromocionController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'nombre' => 'required',
-            'titulo' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string',
-            'tipo' => 'required|in:porcentaje,monto',
-            'valor' => 'required|numeric|min:0',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'aplica_a' => 'required|in:producto,carrito',
-            'productos'    => 'required_if:aplica_a,producto|array'
-        ]);
+        $data = $this->validatedData($request);
+        $productos = $data['productos'] ?? [];
+        unset($data['productos']);
 
         $promo = Promocion::create($data);
 
-        if ($data['aplica_a'] === 'producto' && !empty($data['productos'])) {
-            $promo->productos()->sync($data['productos']);
+        if ($data['aplica_a'] === 'producto' && !empty($productos)) {
+            $promo->productos()->sync($productos);
         }
 
         return response()->json($promo->load('productos'));
@@ -45,27 +37,47 @@ class PromocionController extends Controller
     {
         $promo = Promocion::findOrFail($id);
 
-        $data = $request->validate([
-            'nombre' => 'required',
-            'titulo' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string',
-            'tipo' => 'required|in:porcentaje,monto',
-            'valor' => 'required|numeric|min:0',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'aplica_a' => 'required|in:producto,carrito',
-            'productos' => 'array'
-        ]);
+        $data = $this->validatedData($request);
+        $productos = $data['productos'] ?? [];
+        unset($data['productos']);
 
         $promo->update($data);
 
         if ($data['aplica_a'] === 'producto') {
-            $promo->productos()->sync($data['productos'] ?? []);
+            $promo->productos()->sync($productos);
         } else {
             $promo->productos()->detach();
         }
 
         return response()->json($promo->load('productos'));
+    }
+
+    private function validatedData(Request $request): array
+    {
+        return $request->validate([
+            'nombre' => 'required|string|max:255',
+            'titulo' => 'nullable|string|max:255',
+            'descripcion' => 'nullable|string',
+            'tipo' => 'required|in:porcentaje,monto',
+            'valor' => [
+                'required',
+                'numeric',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->tipo === 'porcentaje' && ($value < 1 || $value > 100)) {
+                        $fail('El porcentaje debe estar entre 1 y 100.');
+                    }
+
+                    if ($request->tipo === 'monto' && $value < 0.01) {
+                        $fail('El monto debe ser mayor a 0.');
+                    }
+                },
+            ],
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            'aplica_a' => 'required|in:producto,carrito',
+            'productos' => 'required_if:aplica_a,producto|array|min:1',
+            'productos.*' => 'exists:productos,id',
+        ]);
     }
 
     public function destroy($id)

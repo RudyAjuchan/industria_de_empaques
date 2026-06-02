@@ -76,6 +76,7 @@
 
 <script>
 import axios from 'axios'
+import { toast } from 'vue3-toastify'
 
 export default {
     name: 'PromocionDialog',
@@ -159,6 +160,8 @@ export default {
         },
 
         initForm() {
+            this.errors = {}
+
             if (this.promocion) {
                 this.form = {
                     ...this.promocion,
@@ -178,9 +181,8 @@ export default {
             try {
                 const res = await axios.get('/productoPromocion')
                 this.productos = res.data
-                console.log(this.productos);
             } catch (err) {
-                console.error(err)
+                toast.error('No se pudieron cargar los productos')
             }
         },
 
@@ -201,6 +203,9 @@ export default {
 
             } catch (err) {
                 this.errors = err.response?.data?.errors || {}
+                if (!Object.keys(this.errors).length) {
+                    toast.error(err.response?.data?.message || 'No se pudo guardar la promoción')
+                }
             } finally {
                 this.loading = false
             }

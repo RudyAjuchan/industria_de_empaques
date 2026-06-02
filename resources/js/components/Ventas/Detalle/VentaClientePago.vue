@@ -112,7 +112,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(p,index) in venta.pagos" :key="p.id">
                         <v-list-item-title>
-                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index>0" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="error" density="compact" icon="mdi-delete"></v-btn>
+                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index > 0 && can('pago.borrar')" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
                         <v-list-item-subtitle>
                             {{ p.banco?.nombre }}
@@ -138,7 +138,7 @@
     <v-dialog v-model="deleteDialog" max-width="420">
         <v-card rounded="xl">
             <v-card-title class="text-subtitle-1 font-weight-bold">
-                Eliminar el banco
+                Eliminar pago
             </v-card-title>
 
             <v-card-text class="text-body-2 text-medium-emphasis">
@@ -224,7 +224,7 @@ export default {
             }catch(e){
                 this.saving = false
                 this.deleteDialog = false
-                toast.error('Hubo un error inesperado al eliminar')
+                toast.error(e.response?.data?.message || 'Hubo un error inesperado al eliminar')
             }
 
         }

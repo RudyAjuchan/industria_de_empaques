@@ -12,6 +12,7 @@ use App\Models\Producto;
 use App\Models\Promocion;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
@@ -26,7 +27,18 @@ class CheckoutController extends Controller
                 throw new \Exception('No autenticado');
             }
 
-            $data = $request->all();
+            $data = $request->validate([
+                'detalle' => ['required', 'array', 'min:1'],
+                'detalle.*.productos_id' => ['required', 'integer', 'exists:productos,id'],
+                'detalle.*.cantidad' => ['required', 'integer', 'gt:0'],
+                'detalle.*.tipo_agarradors_id' => ['nullable', 'exists:tipo_agarradors,id'],
+                'detalle.*.tipo_papels_id' => ['nullable', 'exists:tipo_papels,id'],
+                'detalle.*.color_agarrador' => ['nullable', 'string', 'max:255'],
+                'detalle.*.detalle_impresion' => ['nullable', 'string'],
+                'detalle.*.nombre_logo' => ['nullable', 'string', 'max:255'],
+                'detalle.*.imagenes' => ['nullable', 'array'],
+                'detalle.*.imagenes.*' => ['string', 'max:2048'],
+            ]);
             $serie = 'WEB';
 
             $ultimoNumero = Venta::where('serie', $serie)
@@ -52,9 +64,35 @@ class CheckoutController extends Controller
                 'estado' => 'pendiente',
             ]);
 
-            foreach ($data['detalle'] as $item) {
+            foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::find($item['productos_id']);
+                $producto = Producto::where('estado', 1)
+                    ->where('ecommerce', 1)
+                    ->find($item['productos_id']);
+
+                if (!$producto) {
+                    throw ValidationException::withMessages([
+                        "detalle.$index.productos_id" => 'El producto no está disponible en ecommerce.',
+                    ]);
+                }
+
+                if ($producto->tipo_producto === 'personalizado') {
+                    $camposRequeridos = [
+                        'tipo_agarradors_id' => 'El tipo de agarrador es obligatorio.',
+                        'tipo_papels_id' => 'El tipo de papel es obligatorio.',
+                        'color_agarrador' => 'El color del agarrador es obligatorio.',
+                        'detalle_impresion' => 'El detalle de impresión es obligatorio.',
+                        'nombre_logo' => 'El nombre del logo es obligatorio.',
+                    ];
+
+                    foreach ($camposRequeridos as $campo => $mensaje) {
+                        if (empty($item[$campo])) {
+                            throw ValidationException::withMessages([
+                                "detalle.$index.$campo" => $mensaje,
+                            ]);
+                        }
+                    }
+                }
 
                 // PRECIO CORRECTO
                 $precio = $producto->tipo_producto === 'simple'
@@ -87,6 +125,8 @@ class CheckoutController extends Controller
                     } else {
                         $totalItem -= $promo->valor;
                     }
+
+                    $totalItem = max($totalItem, 0);
                 }
 
                 $subtotal += $totalItem;
@@ -159,7 +199,7 @@ class CheckoutController extends Controller
             Mail::to($cliente->email)
                 ->send(new CheckoutClienteMail($cliente, $venta));
 
-            Mail::to('rudyajuchansec44@gmail.com')
+            Mail::to(config('mail.admin_address'))
                 ->send(new CheckoutClienteMail($cliente, $venta));
 
             return response()->json([
@@ -178,8 +218,7 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'path' => $path,
-                // 3. La URL ahora debe ser de tu CloudFront
-                'url' => 'https://d2r0bm90jl3wk0.cloudfront.net/' . $path
+                'url' => Storage::disk('s3')->url($path)
             ]);
         }
 

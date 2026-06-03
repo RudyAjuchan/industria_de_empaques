@@ -80,8 +80,8 @@ class ClienteAuthController extends Controller
                 ]);
 
                 $cliente->telefonos()->create([
-                    'codigo_pais' => $data['telefono_codigo_pais'],
-                    'numero' => $data['telefono_numero'],
+                    'telefono_codigo_pais' => $data['telefono_codigo_pais'],
+                    'telefono_numero' => $data['telefono_numero'],
                 ]);
 
                 $cliente->emails()->create([
@@ -111,8 +111,8 @@ class ClienteAuthController extends Controller
                 $cliente->telefonos()->updateOrCreate(
                     [], // primer registro
                     [
-                        'codigo_pais' => $data['telefono_codigo_pais'],
-                        'numero' => $data['telefono_numero'],
+                        'telefono_codigo_pais' => $data['telefono_codigo_pais'],
+                        'telefono_numero' => $data['telefono_numero'],
                     ]
                 );
 
@@ -143,8 +143,8 @@ class ClienteAuthController extends Controller
                 $cliente->telefonos()->updateOrCreate(
                     [],
                     [
-                        'codigo_pais' => $data['telefono_codigo_pais'],
-                        'numero' => $data['telefono_numero'],
+                        'telefono_codigo_pais' => $data['telefono_codigo_pais'],
+                        'telefono_numero' => $data['telefono_numero'],
                     ]
                 );
 
@@ -249,7 +249,7 @@ class ClienteAuthController extends Controller
         ]);
 
         // Ejemplo: enviar correo
-        Mail::to('rudyajuchansec44@gmail.com')->send(new ContactoMail($data));
+        Mail::to(config('mail.admin_address'))->send(new ContactoMail($data));
 
         return response()->json(['message' => 'Mensaje enviado']);
     }

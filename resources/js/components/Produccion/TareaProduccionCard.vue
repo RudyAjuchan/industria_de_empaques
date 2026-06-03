@@ -177,7 +177,7 @@ export default {
 
     methods: {
         getImagenUrl(path) {
-            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+            return this.getFileUrl(path)
         },
 
         async descargarImagen(path) {
@@ -210,7 +210,12 @@ export default {
         },
 
         getDisenoUrl(path) {
-            return `https://d2r0bm90jl3wk0.cloudfront.net/${path}`
+            return this.getFileUrl(path)
+        },
+
+        getFileUrl(path) {
+            const baseUrl = import.meta.env.VITE_CDN_URL || ''
+            return `${baseUrl.replace(/\/$/, '')}/${path}`
         },
 
         descargarDiseno(path) {

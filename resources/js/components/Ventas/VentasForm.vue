@@ -487,8 +487,7 @@ export default {
                     imagenes: (item.imagenes || []).map(img => ({
                         id: img.id,
                         path: img.path,
-                        url:
-                            `https://d2r0bm90jl3wk0.cloudfront.net/${img.path}`,
+                        url: this.getFileUrl(img.path),
                         /*
                         |--------------------------------------------------------------------------
                         | FILEPOND
@@ -507,6 +506,11 @@ export default {
             this.setDataCliente(this.venta.cliente)
             this.agregarProductosSeleccionados()
             this.setDatosProductos()
+        },
+
+        getFileUrl(path) {
+            const baseUrl = import.meta.env.VITE_CDN_URL || ''
+            return `${baseUrl.replace(/\/$/, '')}/${path}`
         },
 
         agregarProductosSeleccionados() {
@@ -558,7 +562,6 @@ export default {
             }
         },
         async retryUpload(index) {
-            console.log("si pasa reintentar");
             const item = this.form.detalle[index]
 
             if (!item.archivo_diseno_file || !item.id) return

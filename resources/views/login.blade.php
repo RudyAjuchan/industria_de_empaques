@@ -42,13 +42,13 @@
                     <label class="block text-sm text-gray-700 mb-1">Usuario</label>
                     <input placeholder="Ingrese su usuario"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
-                        id="email" type="email" name="email" :value="old('email')" required autofocus>
+                        id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
                 <!-- CONTRASEÑA -->
                 <div>
                     <label class="block text-sm text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" placeholder="Ingrese su contraseña"
+                    <input placeholder="Ingrese su contraseña"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
                         id="password" type="password" name="password" required>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
@@ -57,7 +57,7 @@
                 <!-- OPCIONES -->
                 <div class="flex items-center justify-between text-sm">
                     <label class="flex items-center gap-2" for="remember_me">
-                        <input type="checkbox" class="accent-primary" name="remember">
+                        <input id="remember_me" type="checkbox" class="accent-primary" name="remember">
                         Recordar sesión
                     </label>
 

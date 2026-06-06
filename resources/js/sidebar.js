@@ -6,6 +6,17 @@ const backdrop = document.getElementById('backdrop');
 const btnLogout = document.getElementById('btnLogout');
 import router from './router/index'
 
+const logoutForm = btnLogout?.closest('form');
+
+if (logoutForm) {
+    logoutForm.addEventListener('submit', () => {
+        window.IS_LOGGING_OUT = true;
+        btnLogout.disabled = true;
+        btnLogout.setAttribute('aria-busy', 'true');
+        btnLogout.querySelector('span').textContent = 'Saliendo...';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const nav = document.getElementById('nav')
     const pageTitle = document.getElementById('pageTitle')

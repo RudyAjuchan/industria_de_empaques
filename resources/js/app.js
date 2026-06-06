@@ -30,8 +30,12 @@ axios.interceptors.response.use(
         const status = error.response?.status
 
         if (status === 419 || status === 401) {
-            alert('Tu sesión ha expirado')
-            window.location.href = '/login'
+            if (!window.IS_LOGGING_OUT && !window.SESSION_REDIRECTING) {
+                window.SESSION_REDIRECTING = true
+                alert('Tu sesión ha expirado')
+            }
+
+            window.location.replace('/login')
         }
 
         return Promise.reject(error)

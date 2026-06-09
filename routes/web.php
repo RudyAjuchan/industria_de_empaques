@@ -204,7 +204,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/client/search', [ClienteController::class, 'search'])
         ->middleware('permission:venta.crear');
     Route::post('/product/search', [ProductosController::class, 'search'])
-        ->middleware('permission:venta.crear');
+        ->middleware('permission:venta.crear|ecommerce.editar');
 
     Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:menu.contabilidad');
     Route::get('/ventas/contabilidad', [VentaController::class, 'contabilidad'])->middleware('permission:menu.contabilidad');

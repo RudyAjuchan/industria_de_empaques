@@ -11,7 +11,7 @@
 
         <tr>
             <th>CÓDIGO:</th>
-            <td colspan="2">{{ $item->producto->id ?? '-' }}</td>
+            <td colspan="2">{{ $item->producto->sku ?? $item->producto->id ?? '-' }}</td>
             <td colspan="3"></td>
         </tr>
         <tr>

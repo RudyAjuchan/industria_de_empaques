@@ -38,6 +38,7 @@ class StoreVentaRequest extends FormRequest
             'detalle.*.tipo_papels_id' => ['nullable', 'exists:tipo_papels,id'],
             'detalle.*.color_agarrador' => ['nullable', 'string'],
             'detalle.*.detalle_impresion' => ['nullable', 'string'],
+            'detalle.*.observaciones' => ['nullable', 'string'],
             'detalle.*.nombre_logo' => ['nullable', 'string'],
             'detalle.*.logo_path' => ['nullable', 'string'],
 

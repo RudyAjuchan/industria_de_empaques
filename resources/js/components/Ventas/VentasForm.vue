@@ -20,11 +20,6 @@
                 <v-text-field label="Vendedor" v-model="form.nombre_vendedor" variant="outlined" density="compact"
                     disabled hide-details="auto"></v-text-field>
             </v-col>
-            <v-col cols="4">
-                <v-autocomplete variant="outlined" density="compact" :items="paginas" item-title="nombre"
-                    item-value="id" hide-details="auto" label="Página"
-                    @update:model-value="listProducts"></v-autocomplete>
-            </v-col>
         </v-row>
 
         <v-row>
@@ -78,7 +73,8 @@
 
         <VentasDetalleTable v-if="ready && form.detalle" :productos="productos" :tiposAgarrador="tiposAgarrador" :tiposPapel="tiposPapel"
             v-model="form.detalle" @producto-saved="onProductoSaved" @agarrador-saved="onAgarradorSaved"
-            @papel-saved="onPapelSaved" :errors="errors" :modo="modo" @retry-upload="retryUpload" :loading="loading"/>
+            @papel-saved="onPapelSaved" @search-productos="buscarProductos" :errors="errors" :modo="modo"
+            @retry-upload="retryUpload" :loading="loading" :productos-loading="loadingProductos"/>
         <v-row class="mt-5">
             <v-col cols="4" class="ga-2 d-flex align-end">
                 <v-btn color="success" variant="tonal" @click="guardarVenta" :loading="loading">
@@ -135,7 +131,9 @@ export default {
             loading: false,
             searchCliente: '',
             loadingClientes: false,
+            loadingProductos: false,
             debounceCliente: null,
+            debounceProductos: null,
             clientes: [],
             cliente: {
                 nombre: null,
@@ -182,8 +180,6 @@ export default {
             hora: '',
             timer: null,
             user: window.AUTH_USER || {},
-            paginas_id: 1,
-            paginas: [],
             errors: {},
             modo: '',
             venta: null,
@@ -194,12 +190,11 @@ export default {
     methods: {
 
         async loadCatalogos() {
-            this.paginas = (await axios.get('/pagina')).data
             //this.clientes = (await axios.get('/cliente')).data
             this.bancos = (await axios.get('/banco')).data
-            //this.productos = (await axios.get('/product/search')).data.data
             this.tiposAgarrador = (await axios.get('/agarrador')).data
             this.tiposPapel = (await axios.get('/tipo-papel')).data
+            await this.buscarProductos('')
         },
 
         async guardarVenta() {
@@ -368,22 +363,34 @@ export default {
                 .map(d => d.productos_id)
                 .filter(Boolean)
         },
-        async listProducts(paginaId) {
-            const { data: productosPagina } = await axios.post('/product/search', { id: paginaId })
+        buscarProductos(q = '') {
+            clearTimeout(this.debounceProductos)
 
+            this.debounceProductos = setTimeout(async () => {
+                this.loadingProductos = true
+
+                try {
+                    const { data } = await axios.post('/product/search', { q })
+                    this.mergeProductos(data)
+                } finally {
+                    this.loadingProductos = false
+                }
+            }, q ? 350 : 0)
+        },
+
+        mergeProductos(nuevosProductos) {
             const seleccionados = this.form.detalle
-                .map(d => d.productos_id)
-                .filter(Boolean)
+                .map(d => d.producto)
+                .filter(p => p)
 
-            const productosExtra = this.productos
-                .filter(p => p && seleccionados.includes(p.id))
-
-            this.productos = [
-                ...productosPagina.filter(Boolean),
-                ...productosExtra.filter(
-                    p => !productosPagina.find(pp => pp.id === p.id)
-                )
+            const productos = [
+                ...nuevosProductos.filter(Boolean),
+                ...seleccionados,
             ]
+
+            this.productos = productos.filter((producto, index, arr) => (
+                producto && arr.findIndex(p => p.id === producto.id) === index
+            ))
         },
 
         openBancoDialog() {

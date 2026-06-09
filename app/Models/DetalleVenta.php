@@ -16,6 +16,7 @@ class DetalleVenta extends Model
         'proceso_estado_produccions_id',
         'color_agarrador',
         'detalle_impresion',
+        'observaciones',
         'nombre_logo',
         'logo_path',
         'precio',

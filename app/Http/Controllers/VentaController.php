@@ -215,6 +215,7 @@ class VentaController extends Controller
 
                     'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ($item['color_agarrador'] ?? ''),
                     'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ($item['detalle_impresion'] ?? ''),
+                    'observaciones' => $item['observaciones'] ?? null,
                     'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
 
                     'logo_path' => $item['logo_path'] ?? null,
@@ -459,7 +460,8 @@ class VentaController extends Controller
             'cliente.telefonos',
             'vendedor',
             'banco',
-            'detalles.producto',
+            'detalles.producto.paginas',
+            'detalles.producto.tipoCatalogo',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
             'detalles.imagenes',
@@ -474,6 +476,7 @@ class VentaController extends Controller
                 'tipo_papels_id' => $d->tipo_papels_id,
                 'color_agarrador' => $d->color_agarrador,
                 'detalle_impresion' => $d->detalle_impresion,
+                'observaciones' => $d->observaciones,
                 'nombre_logo' => $d->nombre_logo,
                 'logo_path' => $d->logo_path,
                 'precio' => $d->precio,
@@ -669,6 +672,7 @@ class VentaController extends Controller
                         'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
                         'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ( $item['color_agarrador'] ?? '' ),
                         'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ( $item['detalle_impresion'] ?? '' ),
+                        'observaciones' => $item['observaciones'] ?? null,
                         'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ( $item['nombre_logo'] ?? ''),
                         'archivo_diseno_path' => $item['archivo_diseno_path'] ?? null,
                         'promocion_aplicada' => $promocionAplicada,

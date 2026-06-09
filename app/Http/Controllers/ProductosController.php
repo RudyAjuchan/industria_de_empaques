@@ -31,6 +31,10 @@ class ProductosController extends Controller
                 $sub->where('nombre', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhere('tipo', 'like', "%{$search}%")
+                    ->orWhereHas('paginas', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhere('codigo', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('tipoCatalogo', function ($q) use ($search) {
                         $q->where('nombre', 'like', "%{$search}%")
                             ->orWhere('codigo', 'like', "%{$search}%");
@@ -366,8 +370,34 @@ class ProductosController extends Controller
 
     public function search(Request $request)
     {
-        return Producto::where('estado', 1)
-            ->where('paginas_id', $request->id)
+        $query = Producto::with(['paginas', 'tipoCatalogo'])
+            ->where('estado', 1);
+
+        if ($request->filled('id')) {
+            $query->where('paginas_id', $request->id);
+        }
+
+        if ($request->filled('q')) {
+            $search = trim($request->q);
+
+            $query->where(function ($sub) use ($search) {
+                $sub->where('sku', 'like', "%{$search}%")
+                    ->orWhere('nombre', 'like', "%{$search}%")
+                    ->orWhere('tipo', 'like', "%{$search}%")
+                    ->orWhere('tipo_producto', 'like', "%{$search}%")
+                    ->orWhereHas('paginas', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhere('codigo', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('tipoCatalogo', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhere('codigo', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->orderBy('nombre')
+            ->limit(50)
             ->get();
     }
 

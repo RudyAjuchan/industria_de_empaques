@@ -20,6 +20,7 @@
                     <th style="min-width: 120px">Tipo</th>
                     <th style="min-width: 120px">Color Agarrador</th>
                     <th style="min-width: 200px">Detalle Impresión</th>
+                    <th style="min-width: 220px">Observaciones</th>
                     <th style="min-width: 180px">Agarrador</th>
                     <th style="min-width: 180px">Papel</th>
                     <th style="min-width: 160px">Nom.Log</th>
@@ -39,7 +40,11 @@
                     <td>
                         <v-autocomplete :items="productos" :item-title="productoTitle" item-value="id"
                             v-model="item.productos_id" @update:modelValue="actualizarProducto(item)" dense
-                            hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'productos_id')">
+                            hide-details="auto" density="compact" variant="outlined" no-filter
+                            label="SKU, producto, tipo o página" :loading="productosLoading"
+                            no-data-text="Escribe para buscar productos"
+                            :error-messages="fieldError(index, 'productos_id')"
+                            @update:search="buscarProductos">
                             <template #append-inner>
                                 <v-btn icon size="small" variant="text" @click.stop="openProductoDialog(index)">
                                     <v-icon size="18">mdi-plus</v-icon>
@@ -59,6 +64,7 @@
                     <td v-if="item.producto?.tipo_producto === 'personalizado'"><v-text-field v-model="item.color_agarrador" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'color_agarrador')"/></td>
                     <td v-else>-</td>
                     <td><v-text-field v-model="item.detalle_impresion" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'detalle_impresion')"/></td>
+                    <td><v-textarea v-model="item.observaciones" dense hide-details="auto" density="compact" variant="outlined" rows="1" auto-grow :error-messages="fieldError(index, 'observaciones')"/></td>
                     <td v-if="item.producto?.tipo_producto === 'personalizado'">
                         <v-select :items="tiposAgarrador" item-title="nombre" item-value="id"
                             v-model="item.tipo_agarradors_id" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'tipo_agarradors_id')">
@@ -237,6 +243,7 @@ export default {
         errors: Object,
         modo: String,
         loading: Boolean,
+        productosLoading: Boolean,
     },
     components:{
         AgarradorDialog,
@@ -245,7 +252,7 @@ export default {
         FilePond,
     },
 
-    emits: ['update:modelValue', 'producto-saved', 'agarrador-saved', 'papel-saved', 'retry-upload'],
+    emits: ['update:modelValue', 'producto-saved', 'agarrador-saved', 'papel-saved', 'retry-upload', 'search-productos'],
 
     data() {
         return {
@@ -283,6 +290,7 @@ export default {
                 tipo_papels_id: null,
                 color_agarrador: '',
                 detalle_impresion: '',
+                observaciones: '',
                 nombre_logo: '',
                 precio: 0,
                 cantidad: 1,
@@ -367,9 +375,17 @@ export default {
         productoTitle(producto) {
             if (!producto) return ''
 
-            return producto.sku
-                ? `${producto.sku} - ${producto.nombre}`
-                : producto.nombre
+            return [
+                producto.sku,
+                producto.nombre,
+                producto.tipo,
+                producto.tipo_catalogo?.nombre,
+                producto.paginas?.nombre,
+            ].filter(Boolean).join(' - ')
+        },
+
+        buscarProductos(search) {
+            this.$emit('search-productos', search || '')
         },
 
         calcularFila(item) {

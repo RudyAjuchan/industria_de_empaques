@@ -23,6 +23,7 @@ use App\Http\Controllers\PromocionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\TipoAgarradorController;
+use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\TipoPapelController;
 use App\Http\Controllers\UbicacionController;
 use App\Http\Controllers\UsuarioController;
@@ -162,6 +163,10 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.crear');
     Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.editar|promocion.ver');
     Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.crear|producto.editar|venta.crear');
+    Route::get('/producto/tipos', [ProductosController::class, 'getTipos'])->middleware('permission:producto.crear|producto.editar|venta.crear');
+    Route::post('/producto/tipos', [TipoProductoController::class, 'store'])->middleware('permission:producto.crear|producto.editar');
+    Route::put('/producto/tipos/{tipoProducto}', [TipoProductoController::class, 'update'])->middleware('permission:producto.editar');
+    Route::delete('/producto/tipos/{tipoProducto}', [TipoProductoController::class, 'destroy'])->middleware('permission:producto.borrar');
     Route::get('/producto/estado-produccion', [ProductosController::class, 'getEstadosProduccion'])->middleware('permission:producto.crear|venta.crear');
     Route::get('/producto/export/pdf', [ProductosController::class, 'exportPdf'])->middleware('permission:producto.reporte');
     Route::get('/producto/export/excel', [ProductosController::class, 'exportExcel'])->middleware('permission:producto.reporte');

@@ -122,6 +122,7 @@ export default {
 
             headers: [
                 { title: 'Nombre', key: 'nombre' },
+                { title: 'Código', key: 'codigo' },
                 { title: 'Creado', key: 'created_at' },
                 { title: 'Actualizado', key: 'updated_at' },
                 { title: 'Acciones', key: 'actions', sortable: false }

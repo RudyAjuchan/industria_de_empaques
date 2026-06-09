@@ -37,7 +37,7 @@
                 <tr v-for="(item, index) in detalle" :key="index">
 
                     <td>
-                        <v-autocomplete :items="productos" item-title="nombre" item-value="id"
+                        <v-autocomplete :items="productos" :item-title="productoTitle" item-value="id"
                             v-model="item.productos_id" @update:modelValue="actualizarProducto(item)" dense
                             hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'productos_id')">
                             <template #append-inner>
@@ -362,6 +362,14 @@ export default {
             // RECALCULAR
             // ===============================
             this.calcularFila(item)
+        },
+
+        productoTitle(producto) {
+            if (!producto) return ''
+
+            return producto.sku
+                ? `${producto.sku} - ${producto.nombre}`
+                : producto.nombre
         },
 
         calcularFila(item) {

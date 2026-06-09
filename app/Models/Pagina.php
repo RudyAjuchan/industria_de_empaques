@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pagina extends Model
 {
-    protected $fillable = ['nombre', 'estado'];
+    protected $fillable = ['nombre', 'codigo', 'estado'];
 
     protected $casts = [
         'estado' => 'integer',

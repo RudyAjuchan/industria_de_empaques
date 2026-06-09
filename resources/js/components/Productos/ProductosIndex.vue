@@ -41,6 +41,11 @@
                 <v-img :src="item.imagen_principal_url || imagePlaceholder" width="52" height="52" aspect-ratio="1"
                     contain loading="lazy"/>
             </template>
+            <template v-slot:[`item.sku`]="{ item }">
+                <v-chip size="small" color="primary" variant="tonal">
+                    {{ item.sku || '—' }}
+                </v-chip>
+            </template>
             <template v-slot:[`item.actions`]="{ item }">
                 <v-row class="ga-2">
                     <v-btn icon @click="$router.push(`/producto/${item.id}/edit`)" color="primary" variant="tonal"
@@ -125,6 +130,7 @@ export default {
             deleting: false,
 
             headers: [
+                { title: 'SKU', key: 'sku' },
                 { title: 'Nombre', key: 'nombre' },
                 { title: 'Imagen', key: 'imagen', sortable: false },
                 { title: 'Alto', key: 'alto' },

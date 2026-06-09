@@ -31,6 +31,7 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
             ->when($this->search, function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('nombre', 'like', "%{$this->search}%")
+                        ->orWhere('sku', 'like', "%{$this->search}%")
                         ->orWhere('tipo', 'like', "%{$this->search}%");
                 });
             })
@@ -43,6 +44,7 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
     {
         return [
             'Código',
+            'SKU',
             'Nombre',
             'Alto',
             'Ancho',
@@ -58,6 +60,7 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
     {
         return [
             $producto->id,
+            $producto->sku,
             $producto->nombre,
             $producto->alto,
             $producto->ancho,

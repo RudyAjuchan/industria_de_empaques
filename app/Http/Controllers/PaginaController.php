@@ -66,17 +66,27 @@ class PaginaController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+        ]);
+
         $request->validate([
             'nombre' => 'required|string|max:255|unique:paginas,nombre',
-        ]);
+            'codigo' => 'required|string|min:2|max:10|regex:/^[A-Z0-9]+$/|unique:paginas,codigo',
+        ], $this->messages());
 
         return Pagina::create([
             'nombre' => $request->nombre,
+            'codigo' => $request->codigo,
         ]);
     }
 
     public function update(Request $request, Pagina $pagina)
     {
+        $request->merge([
+            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+        ]);
+
         $request->validate([
             'nombre' => [
                 'required',
@@ -84,19 +94,29 @@ class PaginaController extends Controller
                 'max:255',
                 Rule::unique('paginas', 'nombre')->ignore($pagina->id),
             ],
-        ]);
+            'codigo' => [
+                'required',
+                'string',
+                'min:2',
+                'max:10',
+                'regex:/^[A-Z0-9]+$/',
+                Rule::unique('paginas', 'codigo')->ignore($pagina->id),
+            ],
+        ], $this->messages());
 
         $pagina->update([
             'nombre' => $request->nombre,
+            'codigo' => $request->codigo,
         ]);
 
-        return response()->json(['message' => 'Actualizado']);
+        return response()->json($pagina);
     }
 
     public function destroy(Pagina $pagina)
     {
         $pagina->update([
             'nombre' => substr($pagina->nombre, 0, 230) . ' - eliminado ' . $pagina->id,
+            'codigo' => substr(($pagina->codigo ?? 'PG') . 'X' . $pagina->id, 0, 10),
             'estado' => 0,
         ]);
 
@@ -123,5 +143,20 @@ class PaginaController extends Controller
             new PaginaExport($search),
             'paginas.xlsx'
         );
+    }
+
+    private function normalizeCodigo(string $codigo): string
+    {
+        return strtoupper(preg_replace('/[^A-Z0-9]/', '', $codigo));
+    }
+
+    private function messages(): array
+    {
+        return [
+            'codigo.required' => 'El código es obligatorio.',
+            'codigo.regex' => 'El código solo puede contener letras mayúsculas y números, sin espacios.',
+            'codigo.unique' => 'Ya existe una página con ese código.',
+            'nombre.unique' => 'Ya existe una página con ese nombre.',
+        ];
     }
 }

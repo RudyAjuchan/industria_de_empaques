@@ -7,6 +7,7 @@ use App\Models\EstadoProduccion;
 use App\Models\Pagina;
 use App\Models\Producto;
 use App\Models\ProductoImagen;
+use App\Models\TipoProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -23,16 +24,21 @@ class ProductosController extends Controller
         $sortBy = $request->input('sort_by', 'id');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Producto::with(['paginas'])->where('estado', 1);
+        $query = Producto::with(['paginas', 'tipoCatalogo'])->where('estado', 1);
 
         if ($search) {
             $query->where(function ($sub) use ($search) {
                 $sub->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('tipo', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('tipo', 'like', "%{$search}%")
+                    ->orWhereHas('tipoCatalogo', function ($q) use ($search) {
+                        $q->where('nombre', 'like', "%{$search}%")
+                            ->orWhere('codigo', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $allowedSorts = ['id', 'nombre', 'created_at', 'updated_at'];
+        $allowedSorts = ['id', 'sku', 'nombre', 'created_at', 'updated_at'];
         if (!in_array($sortBy, $allowedSorts)) {
             $sortBy = 'id';
         }
@@ -44,13 +50,15 @@ class ProductosController extends Controller
 
     public function productosProm(Request $request)
     {
-        $productos = Producto::with('paginas:id,nombre')
+        $productos = Producto::with('paginas:id,nombre', 'tipoCatalogo:id,nombre,codigo')
             ->where('estado', 1)
             ->orderBy('nombre')
             ->get([
                 'id',
+                'sku',
                 'nombre',
                 'tipo',
+                'tipo_productos_id',
                 'tipo_producto',
                 'paginas_id',
                 'ecommerce',
@@ -66,6 +74,13 @@ class ProductosController extends Controller
             ->get();
     }
 
+    public function getTipos()
+    {
+        return TipoProducto::where('estado', 1)
+            ->orderBy('nombre')
+            ->get();
+    }
+
     public function store(Request $request)
     {
         $request->merge([
@@ -76,7 +91,7 @@ class ProductosController extends Controller
             'alto' => 'nullable|numeric',
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
-            'tipo' => 'required|string',
+            'tipo_productos_id' => 'required|exists:tipo_productos,id',
             'paginas_id' => 'required|exists:paginas,id',
 
             'tipo_producto' => 'required|in:personalizado,simple',
@@ -96,7 +111,20 @@ class ProductosController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
+            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo_productos_id', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
+
+            $tipoProducto = TipoProducto::findOrFail($data['tipo_productos_id']);
+            $pagina = Pagina::findOrFail($data['paginas_id']);
+
+            if (!$pagina->codigo || !$tipoProducto->codigo) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'La página y el tipo deben tener código para generar el SKU.',
+                ], 422);
+            }
+
+            $data['tipo'] = $tipoProducto->nombre;
+            $data['sku'] = $this->generateSku($pagina, $tipoProducto);
 
             if ($data['tipo_producto'] === 'simple') {
                 $data['alto'] = $data['ancho'] = $data['fuelle'] = null;
@@ -151,7 +179,8 @@ class ProductosController extends Controller
     {
         return $producto->load([
             'imagenes' => fn($q) => $q->orderBy('orden'),
-            'estadosProduccion'
+            'estadosProduccion',
+            'tipoCatalogo',
         ]);
     }
 
@@ -165,7 +194,7 @@ class ProductosController extends Controller
             'alto' => 'nullable|numeric',
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
-            'tipo' => 'nullable|string',
+            'tipo_productos_id' => 'required|exists:tipo_productos,id',
             'paginas_id' => 'required|exists:paginas,id',
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
@@ -189,13 +218,16 @@ class ProductosController extends Controller
                 'alto',
                 'ancho',
                 'fuelle',
-                'tipo',
+                'tipo_productos_id',
                 'paginas_id',
                 'tipo_producto',
                 'precio_base',
                 'descripcion',
                 'ecommerce',
             ]);
+
+            $tipoProducto = TipoProducto::findOrFail($data['tipo_productos_id']);
+            $data['tipo'] = $tipoProducto->nombre;
 
             // Lógica de tipo de producto
             if ($data['tipo_producto'] === 'simple') {
@@ -302,10 +334,11 @@ class ProductosController extends Controller
         $productos = Producto::query()
             ->with(['imagenes' => function ($q) {
                 $q->where('is_main', true);
-            }])
+            }, 'paginas', 'tipoCatalogo'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($sub) use ($search) {
                     $sub->where('nombre', 'like', '%' . $search . '%')
+                        ->orWhere('sku', 'like', '%' . $search . '%')
                         ->orWhere('tipo', 'like', '%' . $search . '%');
                 });
             })
@@ -333,10 +366,33 @@ class ProductosController extends Controller
 
     public function search(Request $request)
     {
-        return Producto::where('estado', 1)->where('paginas_id', $request->id)->get();
+        return Producto::where('estado', 1)
+            ->where('paginas_id', $request->id)
+            ->get();
     }
 
     public function getEstadosProduccion(){
         return EstadoProduccion::where('estado', 1)->get();
+    }
+
+    private function generateSku(Pagina $pagina, TipoProducto $tipoProducto): string
+    {
+        $prefix = $pagina->codigo . $tipoProducto->codigo;
+        $lastSku = Producto::where('sku', 'like', $prefix . '%')
+            ->orderByDesc('sku')
+            ->value('sku');
+
+        $next = 1;
+
+        if ($lastSku && preg_match('/(\d{4})$/', $lastSku, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        do {
+            $sku = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+            $next++;
+        } while (Producto::where('sku', $sku)->exists());
+
+        return $sku;
     }
 }

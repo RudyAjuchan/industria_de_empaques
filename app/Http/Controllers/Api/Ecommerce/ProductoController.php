@@ -26,7 +26,10 @@ class ProductoController extends Controller
         }
 
         if ($request->search) {
-            $query->where('nombre', 'like', '%' . $request->search . '%');
+            $query->where(function ($sub) use ($request) {
+                $sub->where('nombre', 'like', '%' . $request->search . '%')
+                    ->orWhere('sku', 'like', '%' . $request->search . '%');
+            });
         }
 
         $productos = $query->paginate(12);
@@ -183,12 +186,14 @@ class ProductoController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('id', 'LIKE', "%{$search}%")
+                        ->orWhere('sku', 'LIKE', "%{$search}%")
                         ->orWhere('nombre', 'LIKE', "%{$search}%")
                         ->orWhere('tipo', 'LIKE', "%{$search}%");
                 });
             })
             ->select(
                 'id',
+                'sku',
                 'nombre',
                 'tipo',
                 'precio_base'
@@ -198,6 +203,7 @@ class ProductoController extends Controller
             ->map(function ($producto) {
                 return [
                     'id' => $producto->id,
+                    'sku' => $producto->sku,
                     'nombre' => $producto->nombre,
                     'tipo' => $producto->tipo,
                     'precio' => $producto->precio_base,

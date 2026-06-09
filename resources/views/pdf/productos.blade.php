@@ -53,6 +53,7 @@
         <thead>
             <tr>
                 <th>Código</th>
+                <th>SKU</th>
                 <th>Imagen</th>
                 <th>Nombre</th>
                 <th>Alto</th>
@@ -67,6 +68,7 @@
             @foreach ($productos as $producto)
                 <tr>
                     <td>{{ $producto->id }}</td>
+                    <td>{{ $producto->sku }}</td>
                     <td>
                         @php
                             $img = optional($producto->imagenes->first())->path;

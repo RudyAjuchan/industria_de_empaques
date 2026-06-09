@@ -182,10 +182,11 @@ class BannerController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('productos.id', 'LIKE', "%{$search}%")
+                        ->orWhere('productos.sku', 'LIKE', "%{$search}%")
                         ->orWhere('productos.nombre', 'LIKE', "%{$search}%");
                 });
             })
-            ->selectRaw(" productos.id, CONCAT( productos.id, ' - ', productos.nombre, ' / ', productos.tipo, ' / ', paginas.nombre) as nombre, productos.tipo")
+            ->selectRaw(" productos.id, CONCAT(COALESCE(productos.sku, productos.id), ' - ', productos.nombre, ' / ', productos.tipo, ' / ', paginas.nombre) as nombre, productos.tipo")
             ->orderBy('productos.nombre')
             ->limit(20)
             ->get();

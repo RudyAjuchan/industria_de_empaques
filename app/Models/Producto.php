@@ -11,10 +11,12 @@ class Producto extends Model
 
     protected $fillable = [
         'nombre',
+        'sku',
         'alto',
         'ancho',
         'fuelle',
         'tipo',
+        'tipo_productos_id',
         'paginas_id',
         'estado',
         'tipo_producto',
@@ -46,6 +48,11 @@ class Producto extends Model
     public function paginas()
     {
         return $this->belongsTo(Pagina::class, 'paginas_id');
+    }
+
+    public function tipoCatalogo()
+    {
+        return $this->belongsTo(TipoProducto::class, 'tipo_productos_id');
     }
 
     public function detalles()

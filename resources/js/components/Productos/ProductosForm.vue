@@ -46,8 +46,24 @@
                 </v-col>
 
                 <v-col cols="12">
-                    <v-text-field v-model="form.tipo" variant="outlined" density="compact" :error-messages="errors.tipo"
-                        label="Tipo" />
+                    <v-autocomplete v-model="form.tipo_productos_id" variant="outlined" density="compact"
+                        :items="tiposProducto" item-title="nombre" item-value="id" :error-messages="errors.tipo_productos_id"
+                        label="Tipo">
+                        <template #append-inner>
+                            <v-btn icon size="small" variant="text" @click.stop="dialogTipoProducto = true">
+                                <v-icon size="18">mdi-plus</v-icon>
+                            </v-btn>
+                        </template>
+
+                        <template #item="{ props, item }">
+                            <v-list-item v-bind="props">
+                                <template #subtitle>
+                                    Código: {{ item.raw.codigo }}
+                                </template>
+                            </v-list-item>
+                        </template>
+                    </v-autocomplete>
+                    <TipoProductoDialog v-model="dialogTipoProducto" @saved="onTipoProductoSave" />
                 </v-col>
 
                 <v-col cols="12">
@@ -149,6 +165,7 @@ import axios from 'axios'
 import { FilePond } from '../../plugins/filepond'
 import draggable from 'vuedraggable'
 import DialogPagina from '../Paginas/PaginaDialog.vue'
+import TipoProductoDialog from './TipoProductoDialog.vue'
 import { toast } from 'vue3-toastify'
 
 export default {
@@ -158,6 +175,7 @@ export default {
         FilePond,
         draggable,
         DialogPagina,
+        TipoProductoDialog,
     },
 
     emits: ['saved', 'cancel'],
@@ -178,7 +196,7 @@ export default {
                 alto: '',
                 ancho: '',
                 fuelle: '',
-                tipo: '',
+                tipo_productos_id: null,
                 paginas_id: null,
                 // NUEVOS
                 tipo_producto: 'personalizado',
@@ -189,6 +207,7 @@ export default {
             },
             errors: {},
             paginas: [],
+            tiposProducto: [],
             estadosProduccionDisponibles: [],
             mainIndex: 0,
             server: {
@@ -209,11 +228,13 @@ export default {
                 }
             },
             dialogPagina: false,
+            dialogTipoProducto: false,
         }
     },
 
     mounted() {
         this.fetchPaginas();
+        this.fetchTiposProducto();
         this.fetchEstadosProduccion();
     },
 
@@ -275,7 +296,7 @@ export default {
                 this.$emit('saved', response.data)
 
             } catch (err) {
-                toast.error('Hubo un inconveniente al realizar la petición')
+                toast.error(err.response?.data?.message || 'Hubo un inconveniente al realizar la petición')
                 this.errors = err.response?.data?.errors || {}
                 const errorKeys = Object.keys(this.errors)
 
@@ -294,6 +315,11 @@ export default {
         async fetchPaginas() {
             const { data } = await axios.get(`/producto/paginas/`)
             this.paginas = data
+        },
+
+        async fetchTiposProducto() {
+            const { data } = await axios.get('/producto/tipos')
+            this.tiposProducto = data
         },
 
         handleFilePond(fileItems) {
@@ -320,6 +346,12 @@ export default {
             this.paginas.push(pagina)
             this.form.paginas_id = pagina.id
             toast.success('Página guardada')
+        },
+
+        onTipoProductoSave(tipoProducto) {
+            this.tiposProducto.push(tipoProducto)
+            this.form.tipo_productos_id = tipoProducto.id
+            toast.success('Tipo guardado')
         },
 
         async fetchEstadosProduccion() {
@@ -369,7 +401,7 @@ export default {
                         alto: '',
                         ancho: '',
                         fuelle: '',
-                        tipo: '',
+                        tipo_productos_id: null,
                         paginas_id: null,
                         tipo_producto: 'personalizado',
                         precio_base: null,
@@ -388,7 +420,7 @@ export default {
                     alto: producto.alto,
                     ancho: producto.ancho,
                     fuelle: producto.fuelle,
-                    tipo: producto.tipo,
+                    tipo_productos_id: producto.tipo_productos_id,
                     paginas_id: producto.paginas_id,
 
                     tipo_producto: producto.tipo_producto || 'personalizado',

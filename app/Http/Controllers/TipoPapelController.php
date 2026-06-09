@@ -50,7 +50,7 @@ class TipoPapelController extends Controller
 
     public function destroy(TipoPapel $tipoPapel)
     {
-        $tipoPapel->update(['estado' => 0]);
+        $tipoPapel->update(['estado' => 0, 'nombre' => $tipoPapel->nombre.' - eliminado']);
 
         return response()->json(['message' => 'Eliminado']);
     }

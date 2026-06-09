@@ -25,11 +25,14 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function collection(): Collection
     {
         return User::with('roles')
+            ->where('users.estado', 1)
             ->when($this->search, function ($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%");
+                $q->where(function ($query) {
+                    $query->where('users.name', 'like', "%{$this->search}%")
+                        ->orWhere('users.email', 'like', "%{$this->search}%");
+                });
             })
-            ->orderBy('name')
+            ->orderBy('users.name')
             ->get();
     }
 

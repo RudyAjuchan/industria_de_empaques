@@ -119,6 +119,7 @@ class UsuarioController extends Controller
         }
 
         $user->estado = 0;
+        $user->email = $user->email.' - eliminado';
         $user->updated_at = now();
         $user->save();
 
@@ -130,12 +131,14 @@ class UsuarioController extends Controller
         $search = $request->query('search');
 
         $users = User::with('roles')
+            ->where('users.estado', 1)
             ->when($search, function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $q->where(function ($query) use ($search) {
+                    $query->where('users.name', 'like', "%{$search}%")
+                        ->orWhere('users.email', 'like', "%{$search}%");
+                });
             })
-            ->where('estado', 1)
-            ->orderBy('name')
+            ->orderBy('users.name')
             ->get();
 
         return Pdf::loadView('pdf.usuarios', compact('users', 'search'))

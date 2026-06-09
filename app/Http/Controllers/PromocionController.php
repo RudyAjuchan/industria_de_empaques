@@ -75,7 +75,7 @@ class PromocionController extends Controller
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
             'aplica_a' => 'required|in:producto,carrito',
-            'productos' => 'required_if:aplica_a,producto|array|min:1',
+            'productos' => 'exclude_unless:aplica_a,producto|required|array|min:1',
             'productos.*' => 'exists:productos,id',
         ]);
     }

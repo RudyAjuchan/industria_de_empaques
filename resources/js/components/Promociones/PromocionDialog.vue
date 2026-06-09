@@ -397,11 +397,17 @@ export default {
 
             try {
                 this.normalizarProductosSeleccionados()
+                const payload = {
+                    ...this.form,
+                    productos: this.form.aplica_a === 'producto'
+                        ? this.form.productos
+                        : undefined,
+                }
 
                 if (this.form.id) {
-                    await axios.put(`/promocion/${this.form.id}`, this.form)
+                    await axios.put(`/promocion/${this.form.id}`, payload)
                 } else {
-                    await axios.post('/promocion', this.form)
+                    await axios.post('/promocion', payload)
                 }
 
                 this.$emit('saved')

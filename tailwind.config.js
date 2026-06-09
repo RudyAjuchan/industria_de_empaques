@@ -11,8 +11,18 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                primary: '#043C5D',
+                secondary: '#1c6a94',
+                brand: {
+                    navy: '#043C5D',
+                    blue: '#1c6a94',
+                },
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['IBM Plex Sans', ...defaultTheme.fontFamily.sans],
+                body: ['IBM Plex Sans', ...defaultTheme.fontFamily.sans],
+                title: ['Bebas Neue', 'cursive'],
             },
         },
     },

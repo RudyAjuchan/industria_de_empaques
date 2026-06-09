@@ -11,6 +11,10 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap"
         rel="stylesheet">
+    <style>
+        .font-title { font-family: 'Bebas Neue', cursive; }
+        .font-body { font-family: 'IBM Plex Sans', sans-serif; }
+    </style>
 </head>
 
 <body class="font-body min-h-screen bg-gray-100">
@@ -22,7 +26,7 @@
         <div class="w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-8">
 
             <!-- TITULO -->
-            <h1 class="text-4xl font-title text-primary text-center mb-2">
+            <h1 class="text-4xl font-title text-[#043C5D] text-center mb-2">
                 Bienvenido
             </h1>
             <!-- LOGO -->
@@ -41,7 +45,7 @@
                 <div>
                     <label class="block text-sm text-gray-700 mb-1">Usuario</label>
                     <input placeholder="Ingrese su usuario"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#043C5D] focus:border-[#043C5D] focus:outline-none"
                         id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
@@ -49,7 +53,7 @@
                 <div>
                     <label class="block text-sm text-gray-700 mb-1">Contraseña</label>
                     <input placeholder="Ingrese su contraseña"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#043C5D] focus:border-[#043C5D] focus:outline-none"
                         id="password" type="password" name="password" required>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
@@ -57,12 +61,12 @@
                 <!-- OPCIONES -->
                 <div class="flex items-center justify-between text-sm">
                     <label class="flex items-center gap-2" for="remember_me">
-                        <input id="remember_me" type="checkbox" class="accent-primary" name="remember">
+                        <input id="remember_me" type="checkbox" class="accent-[#043C5D]" name="remember">
                         Recordar sesión
                     </label>
 
                     @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="text-primary hover:underline">
+                        <a href="{{ route('password.request') }}" class="text-[#043C5D] hover:underline">
                             ¿Olvidé mi contraseña?
                         </a>
                     @endif

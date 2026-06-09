@@ -11,24 +11,28 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap"
         rel="stylesheet">
+    <style>
+        .font-title { font-family: 'Bebas Neue', cursive; }
+        .font-body { font-family: 'IBM Plex Sans', sans-serif; }
+    </style>
 </head>
 
 <body class="font-body min-h-screen bg-gray-100">
 
     <!-- CONTENEDOR -->
-    <div class="min-h-screen flex items-center justify-center bg-cover bg-center md:bg-[url('/img/Curvas.svg')] bg-none">
+    <div class="min-h-screen flex items-center justify-center bg-cover bg-center md:bg-[url('/img/Curvas2.svg')] bg-none">
 
         <!-- CARD -->
         <div class="w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-8">
 
             <!-- TITULO -->
-            <h1 class="text-3xl font-title text-primary text-center mb-2">
+            <h1 class="text-3xl font-title text-[#043C5D] text-center mb-2">
                 Recuperar contraseña
             </h1>
 
             <!-- LOGO -->
             <div class="flex justify-center mb-2">
-                <img src="/img/jeple_logo.png" class="h-20 object-contain">
+                <img src="/img/logo_empaque.png" alt="Logo Empresa" class="h-24 md:h-28 object-contain transition-all">
             </div>
 
             <!-- TEXTO -->
@@ -56,7 +60,7 @@
                         value="{{ old('email') }}"
                         required autofocus
                         placeholder="Ingresa tu correo"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#043C5D] focus:border-[#043C5D] focus:outline-none">
 
                     @error('email')
                         <p class="text-sm text-red-500 mt-2">{{ $message }}</p>
@@ -65,13 +69,13 @@
 
                 <!-- BOTÓN -->
                 <button type="submit"
-                    class="w-full bg-primary hover:bg-secondary text-gray-600 py-2 rounded-lg transition-all font-semibold shadow-md bg-gradient-to-r from-teal-200 to-lime-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200">
+                    class="w-full py-2 rounded-lg transition-all duration-300 font-semibold shadow-md text-white bg-gradient-to-r from-[#043C5D] to-[#1c6a94] hover:from-[#1c6a94] hover:to-[#043C5D] focus:ring-4 focus:outline-none focus:ring-[#4F6D7A]/40">
                     Enviar enlace de recuperación
                 </button>
 
                 <!-- VOLVER -->
                 <div class="text-center text-sm mt-3">
-                    <a href="{{ route('login') }}" class="text-primary hover:underline">
+                    <a href="{{ route('login') }}" class="text-[#043C5D] hover:underline">
                         ← Volver al login
                     </a>
                 </div>

@@ -7,6 +7,7 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -41,5 +42,11 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // Para peticiones web normales, Laravel redirigirá automáticamente a 'login'
+        });
+
+        $exceptions->render(function (TokenMismatchException $e, $request) {
+            if ($request->is('logout')) {
+                return redirect()->route('login');
+            }
         });
     })->create();

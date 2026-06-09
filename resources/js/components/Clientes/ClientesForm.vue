@@ -311,7 +311,10 @@ export default {
             this.errors = {}
             this.saving = true
 
-            this.normalizeContacts();
+            if (!this.normalizeContacts()) {
+                this.saving = false
+                return
+            }
 
             try {
                 let res
@@ -329,16 +332,16 @@ export default {
                 if (e) {
                     const emailErrors = Object.keys(e).filter(k => k.startsWith('emails.'))
                     if (emailErrors.length) {
-                        this.errors.emails = 'Uno o más correos no son válidos'
+                        this.errors.emails = this.getValidationMessages(e, emailErrors)
                     }
 
                     const phoneErrors = Object.keys(e).filter(k => k.startsWith('telefonos.'))
                     if (phoneErrors.length) {
-                        this.errors.telefonos = 'Uno o más teléfonos no son válidos'
+                        this.errors.telefonos = this.getValidationMessages(e, phoneErrors)
                     }
                 }
 
-                toast.error('Error al guardar el cliente')
+                toast.error(err.response?.data?.message || this.errors.emails || this.errors.telefonos || 'Error al guardar el cliente')
             } finally {
                 this.saving = false
             }
@@ -369,6 +372,13 @@ export default {
             const selected = this.phoneCountries.find(
                 c => c.iso === this.form.telefono_pais_iso
             )
+            this.errors.telefonos = null
+
+            if (this.isGuatemalaPhone(selected) && !/^\d{8}$/.test(this.form.telefono_numero)) {
+                this.errors.telefonos = 'El teléfono de Guatemala debe tener exactamente 8 dígitos.'
+                return
+            }
+
             this.form.telefono_codigo_pais = selected?.code || null
 
             this.form.telefonos.push({
@@ -397,6 +407,11 @@ export default {
                 c => c.iso === this.form.telefono_pais_iso
             )
             if (this.form.telefono_numero) {
+                if (this.isGuatemalaPhone(selected) && !/^\d{8}$/.test(this.form.telefono_numero)) {
+                    this.errors.telefonos = 'El teléfono de Guatemala debe tener exactamente 8 dígitos.'
+                    return false
+                }
+
                 this.form.telefonos.push({
                     telefono_pais: selected?.name || null,
                     telefono_codigo_pais: selected?.code || null,
@@ -405,6 +420,22 @@ export default {
 
                 this.form.telefono_numero = ''
             }
+
+            return true
+        },
+
+        getValidationMessages(errors, keys) {
+            return keys
+                .flatMap(key => errors[key] || [])
+                .filter(Boolean)
+                .join(' ')
+        },
+
+        isGuatemalaPhone(country) {
+            const name = country?.name?.toLowerCase()
+            const code = String(country?.code || '').replace(/\s+/g, '')
+
+            return country?.iso === 'GT' || name === 'guatemala' || code === '+502' || code === '502'
         },
     },
 

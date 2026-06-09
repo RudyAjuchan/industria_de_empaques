@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\ClienteExport;
 use App\Models\Cliente;
+use App\Models\Cliente_email;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Arr;
@@ -76,14 +77,14 @@ class ClienteController extends Controller
             'nit' => 'nullable|string|max:50',
 
             'emails' => 'required|array|min:1',
-            'emails.*' => 'required|email|max:255',
+            'emails.*' => $this->emailRules(),
 
             'telefonos' => 'required|array',
             'telefonos.*.telefono_pais' => 'nullable|string',
             'telefonos.*.telefono_pais_nombre' => 'nullable|string',
             'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
-            'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
-        ]);
+            'telefonos.*.telefono_numero' => $this->telefonoRules($request),
+        ], $this->validationMessages());
 
         $data['email'] = $data['emails'][0];
 
@@ -139,14 +140,14 @@ class ClienteController extends Controller
             'nit' => 'nullable|string|max:50',
 
             'emails' => 'required|array|min:1',
-            'emails.*' => 'required|email|max:255',
+            'emails.*' => $this->emailRules($cliente),
 
             'telefonos' => 'required|array',
             'telefonos.*.telefono_pais' => 'nullable|string',
             'telefonos.*.telefono_pais_nombre' => 'nullable|string',
             'telefonos.*.telefono_codigo_pais' => 'nullable|string|max:5',
-            'telefonos.*.telefono_numero' => 'nullable|digits_between:8,20',
-        ]);
+            'telefonos.*.telefono_numero' => $this->telefonoRules($request),
+        ], $this->validationMessages());
 
         $data['email'] = $data['emails'][0];
 
@@ -301,6 +302,73 @@ class ClienteController extends Controller
             'ciudad_pais',
             'estado_pais'
         ]);
+    }
+
+    private function emailRules(?Cliente $cliente = null): array
+    {
+        return [
+            'required',
+            'email',
+            'max:255',
+            'distinct',
+            'regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+            function (string $attribute, mixed $value, \Closure $fail) use ($cliente) {
+                $email = mb_strtolower(trim((string) $value));
+
+                $existsInClientes = Cliente::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->when($cliente, fn ($query) => $query->whereKeyNot($cliente->id))
+                    ->exists();
+
+                $existsInClienteEmails = Cliente_email::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->when($cliente, fn ($query) => $query->where('clientes_id', '!=', $cliente->id))
+                    ->exists();
+
+                if ($existsInClientes || $existsInClienteEmails) {
+                    $fail('Ya existe un cliente registrado con este correo.');
+                }
+            },
+        ];
+    }
+
+    private function telefonoRules(Request $request): array
+    {
+        return [
+            'nullable',
+            'digits_between:8,20',
+            function (string $attribute, mixed $value, \Closure $fail) use ($request) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                preg_match('/telefonos\.(\d+)\.telefono_numero/', $attribute, $matches);
+                $index = $matches[1] ?? null;
+                $telefono = $index !== null ? $request->input("telefonos.$index", []) : [];
+
+                $pais = mb_strtolower((string) ($telefono['telefono_pais'] ?? ''));
+                $codigo = preg_replace('/\s+/', '', (string) ($telefono['telefono_codigo_pais'] ?? ''));
+
+                if ($pais === 'guatemala' || $codigo === '+502' || $codigo === '502') {
+                    if (!preg_match('/^\d{8}$/', (string) $value)) {
+                        $fail('El teléfono de Guatemala debe tener exactamente 8 dígitos.');
+                    }
+                }
+            },
+        ];
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'emails.required' => 'Debes agregar al menos un correo.',
+            'emails.min' => 'Debes agregar al menos un correo.',
+            'emails.*.required' => 'El correo es obligatorio.',
+            'emails.*.email' => 'Ingresa un correo válido.',
+            'emails.*.regex' => 'Ingresa un correo válido con dominio completo, por ejemplo cliente@dominio.com.',
+            'emails.*.distinct' => 'No puedes agregar el mismo correo más de una vez.',
+            'telefonos.*.digits_between' => 'El teléfono debe contener solo números y tener entre 8 y 20 dígitos.',
+        ];
     }
 
 }

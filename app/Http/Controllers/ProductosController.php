@@ -11,6 +11,7 @@ use App\Models\TipoProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -92,6 +93,12 @@ class ProductosController extends Controller
         ]);
         $request->validate([
             'nombre' => 'required|string',
+            'sku' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('productos', 'sku'),
+            ],
             'alto' => 'nullable|numeric',
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
@@ -115,20 +122,12 @@ class ProductosController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $request->only(['nombre', 'alto', 'ancho', 'fuelle', 'tipo_productos_id', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
+            $data = $request->only(['nombre', 'sku', 'alto', 'ancho', 'fuelle', 'tipo_productos_id', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
 
             $tipoProducto = TipoProducto::findOrFail($data['tipo_productos_id']);
-            $pagina = Pagina::findOrFail($data['paginas_id']);
-
-            if (!$pagina->codigo || !$tipoProducto->codigo) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'La página y el tipo deben tener código para generar el SKU.',
-                ], 422);
-            }
 
             $data['tipo'] = $tipoProducto->nombre;
-            $data['sku'] = $this->generateSku($pagina, $tipoProducto);
+            $data['sku'] = trim($data['sku']);
 
             if ($data['tipo_producto'] === 'simple') {
                 $data['alto'] = $data['ancho'] = $data['fuelle'] = null;
@@ -195,6 +194,12 @@ class ProductosController extends Controller
         ]);
         $request->validate([
             'nombre' => 'required|string',
+            'sku' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('productos', 'sku')->ignore($producto->id),
+            ],
             'alto' => 'nullable|numeric',
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
@@ -219,6 +224,7 @@ class ProductosController extends Controller
         try {
             $data = $request->only([
                 'nombre',
+                'sku',
                 'alto',
                 'ancho',
                 'fuelle',
@@ -232,6 +238,7 @@ class ProductosController extends Controller
 
             $tipoProducto = TipoProducto::findOrFail($data['tipo_productos_id']);
             $data['tipo'] = $tipoProducto->nombre;
+            $data['sku'] = trim($data['sku']);
 
             // Lógica de tipo de producto
             if ($data['tipo_producto'] === 'simple') {
@@ -316,7 +323,10 @@ class ProductosController extends Controller
         DB::beginTransaction();
 
         try {
-            $producto->update(['estado' => 0]);
+            $producto->update([
+                'sku' => $this->skuEliminado($producto),
+                'estado' => 0,
+            ]);
 
             DB::commit();
 
@@ -405,24 +415,26 @@ class ProductosController extends Controller
         return EstadoProduccion::where('estado', 1)->get();
     }
 
-    private function generateSku(Pagina $pagina, TipoProducto $tipoProducto): string
+    private function skuEliminado(Producto $producto): ?string
     {
-        $prefix = $pagina->codigo . $tipoProducto->codigo;
-        $lastSku = Producto::where('sku', 'like', $prefix . '%')
-            ->orderByDesc('sku')
-            ->value('sku');
-
-        $next = 1;
-
-        if ($lastSku && preg_match('/(\d{4})$/', $lastSku, $matches)) {
-            $next = ((int) $matches[1]) + 1;
+        if (!$producto->sku) {
+            return null;
         }
 
-        do {
-            $sku = $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-            $next++;
-        } while (Producto::where('sku', $sku)->exists());
+        for ($attempt = 0; $attempt < 100; $attempt++) {
+            $suffix = '-X' . $producto->id . ($attempt ? '-' . $attempt : '');
+            $candidate = substr($producto->sku, 0, 50 - strlen($suffix)) . $suffix;
 
-        return $sku;
+            $exists = Producto::where('sku', $candidate)
+                ->whereKeyNot($producto->id)
+                ->exists();
+
+            if (!$exists) {
+                return $candidate;
+            }
+        }
+
+        return substr($producto->sku, 0, 41) . '-X' . $producto->id;
     }
+
 }

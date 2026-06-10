@@ -36,7 +36,7 @@ th {
 
 @foreach($venta->detalles as $detalle)
 
-    <h3>{{ $detalle->producto->nombre }} (Cantidad: {{ $detalle->cantidad }})</h3>
+    <h3>{{ $detalle->producto_nombre ?? $detalle->producto->nombre }} (Cantidad: {{ $detalle->cantidad }})</h3>
 
     <table>
         <thead>

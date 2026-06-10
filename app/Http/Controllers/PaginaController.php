@@ -67,12 +67,12 @@ class PaginaController extends Controller
     public function store(Request $request)
     {
         $request->merge([
-            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+            'codigo' => $this->normalizeCodigo($request->codigo),
         ]);
 
         $request->validate([
             'nombre' => 'required|string|max:255|unique:paginas,nombre',
-            'codigo' => 'required|string|min:2|max:10|regex:/^[A-Z0-9]+$/|unique:paginas,codigo',
+            'codigo' => 'nullable|string|min:2|max:10|regex:/^[A-Z0-9]+$/|unique:paginas,codigo',
         ], $this->messages());
 
         return Pagina::create([
@@ -84,7 +84,7 @@ class PaginaController extends Controller
     public function update(Request $request, Pagina $pagina)
     {
         $request->merge([
-            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+            'codigo' => $this->normalizeCodigo($request->codigo),
         ]);
 
         $request->validate([
@@ -95,7 +95,7 @@ class PaginaController extends Controller
                 Rule::unique('paginas', 'nombre')->ignore($pagina->id),
             ],
             'codigo' => [
-                'required',
+                'nullable',
                 'string',
                 'min:2',
                 'max:10',
@@ -145,15 +145,16 @@ class PaginaController extends Controller
         );
     }
 
-    private function normalizeCodigo(string $codigo): string
+    private function normalizeCodigo($codigo): ?string
     {
-        return strtoupper(preg_replace('/[^A-Z0-9]/', '', $codigo));
+        $codigo = strtoupper(preg_replace('/[^A-Z0-9]/', '', (string) $codigo));
+
+        return $codigo !== '' ? $codigo : null;
     }
 
     private function messages(): array
     {
         return [
-            'codigo.required' => 'El código es obligatorio.',
             'codigo.regex' => 'El código solo puede contener letras mayúsculas y números, sin espacios.',
             'codigo.unique' => 'Ya existe una página con ese código.',
             'nombre.unique' => 'Ya existe una página con ese nombre.',

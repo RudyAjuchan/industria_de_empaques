@@ -17,16 +17,16 @@
                 </tr>
                 <tr>
                     <th colspan="3">NOMBRE DEL PRODUCTO</th>
-                    <th colspan="3">{{ item.producto.nombre || '-' }}</th>
+                    <th colspan="3">{{ item.producto_nombre || item.producto.nombre || '-' }}</th>
                 </tr>
                 <tr>
                     <th colspan="3">DESCRIPCIÓN</th>
-                    <td colspan="3">{{ item.producto.descripcion || '-' }}</td>
+                    <td colspan="3">{{ item.producto_descripcion || item.producto.descripcion || '-' }}</td>
                 </tr>
     
                 <tr>
                     <th>ALTO</th>
-                    <td>{{ item.producto.alto ?? '-' }}</td>
+                    <td>{{ item.producto_alto ?? item.producto.alto ?? '-' }}</td>
                     <th>COLOR AGARRADOR</th>
                     <td>{{ item.color_agarrador ?? '-' }}</td>
                     <th>PRECIO U</th>
@@ -34,7 +34,7 @@
                 </tr>
                 <tr>
                     <th>ANCHO</th>
-                    <td>{{ item.producto.ancho }}</td>
+                    <td>{{ item.producto_ancho ?? item.producto.ancho }}</td>
                     <th>TIPO AGARRADOR</th>
                     <td>{{ item.tipo_agarrador?.nombre ?? '-' }}</td>
                     <th>CANTIDAD</th>
@@ -42,7 +42,7 @@
                 </tr>
                 <tr>
                     <th>FUELLE</th>
-                    <td>{{ item.producto.fuelle }}</td>
+                    <td>{{ item.producto_fuelle ?? item.producto.fuelle }}</td>
                     <th>TIPO PAPEL</th>
                     <td>{{ item.tipo_papel?.nombre ?? '-' }}</td>
                     <th>TOTAL</th>
@@ -81,7 +81,7 @@
                 </tr>
                 <tr>
                     <th>TIPO</th>
-                    <td>{{ item.producto.tipo }}</td>
+                    <td>{{ item.producto_tipo ?? item.producto.tipo }}</td>
                     <th>DETALLE IMPRESIÓN</th>
                     <td colspan="3">{{ item.detalle_impresion }}</td>
                 </tr>

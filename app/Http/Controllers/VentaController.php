@@ -195,7 +195,7 @@ class VentaController extends Controller
             // =========================
             foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::with('estadosProduccion')
+                $producto = Producto::with(['estadosProduccion', 'paginas'])
                     ->find($item['productos_id']);
 
                 $precio = $producto->tipo_producto === 'simple'
@@ -209,6 +209,7 @@ class VentaController extends Controller
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
+                    ...$this->snapshotProducto($producto),
 
                     'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
                     'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
@@ -323,7 +324,9 @@ class VentaController extends Controller
         ]);
         $nombresPaginas = $venta->detalles
             ->map(function ($detalle) {
-                return $detalle->producto->paginas->nombre ?? null;
+                return $detalle->producto_pagina
+                    ?? $detalle->producto->paginas->nombre
+                    ?? null;
             })
             ->filter()
             ->unique();
@@ -440,7 +443,9 @@ class VentaController extends Controller
         ]);
         $nombresPaginas = $venta->detalles
             ->map(function ($detalle) {
-                return $detalle->producto->paginas->nombre ?? null;
+                return $detalle->producto_pagina
+                    ?? $detalle->producto->paginas->nombre
+                    ?? null;
             })
             ->filter()
             ->unique();
@@ -652,7 +657,7 @@ class VentaController extends Controller
             */
             foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::with('estadosProduccion')->find($item['productos_id']);
+                $producto = Producto::with(['estadosProduccion', 'paginas'])->find($item['productos_id']);
                 $precio = $producto->tipo_producto === 'simple' ? $producto->precio_base : $item['precio'];
                 $totalItem =
                     $precio * $item['cantidad'];
@@ -668,6 +673,7 @@ class VentaController extends Controller
                     $venta->detalles()->create([
 
                         'productos_id' => $item['productos_id'],
+                        ...$this->snapshotProducto($producto),
                         'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
                         'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
                         'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ( $item['color_agarrador'] ?? '' ),
@@ -816,6 +822,21 @@ class VentaController extends Controller
         return max(0, $total);
     }
 
+    private function snapshotProducto(Producto $producto): array
+    {
+        return [
+            'producto_sku' => $producto->sku,
+            'producto_nombre' => $producto->nombre,
+            'producto_tipo' => $producto->tipo,
+            'producto_pagina' => $producto->paginas?->nombre,
+            'producto_tipo_producto' => $producto->tipo_producto,
+            'producto_alto' => $producto->alto,
+            'producto_ancho' => $producto->ancho,
+            'producto_fuelle' => $producto->fuelle,
+            'producto_descripcion' => $producto->descripcion,
+        ];
+    }
+
     public function exportContabilidad(Request $request)
     {
         return Excel::download(
@@ -850,7 +871,7 @@ class VentaController extends Controller
             return [
                 'fecha' => $d->venta->created_at->format('Y-m-d'),
                 'cliente' => $d->venta->cliente->nombre,
-                'producto' => $d->producto->nombre,
+                'producto' => $d->producto_nombre ?? $d->producto->nombre,
                 'cantidad' => $d->cantidad,
                 'total' => $d->total,
                 'estado' => $d->venta->estado,

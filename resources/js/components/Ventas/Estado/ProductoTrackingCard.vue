@@ -4,7 +4,7 @@
             <v-expansion-panel-title>
                 <v-row class="d-flex justify-space-between">
                     <v-col cols="3">
-                        <strong>{{ detalle.producto.nombre }}</strong>
+                        <strong>{{ detalle.producto_nombre || detalle.producto.nombre }}</strong>
                         <div class="text-caption">
                             Cantidad: {{ detalle.cantidad }}
                         </div>

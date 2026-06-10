@@ -25,7 +25,7 @@ class TrackingVentaExport implements FromCollection, WithHeadings, ShouldAutoSiz
 
                     return [
                         'Venta' => $this->venta->numero_completo,
-                        'Producto' => $detalle->producto->nombre,
+                        'Producto' => $detalle->producto_nombre ?? $detalle->producto->nombre,
                         'Cantidad' => $detalle->cantidad,
                         'Evento' => $h->tipo_evento,
                         'Estado' => $h->estadoProduccion->nombre ?? '-',

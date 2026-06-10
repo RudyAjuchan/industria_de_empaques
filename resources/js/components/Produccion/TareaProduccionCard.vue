@@ -1,7 +1,7 @@
 <template>
     <v-card outlined>
         <v-card-title class="text-subtitle-1">
-            {{ tarea.detalle_venta.producto.nombre }}
+            {{ tarea.detalle_venta.producto_nombre || tarea.detalle_venta.producto.nombre }}
         </v-card-title>
 
         <v-card-subtitle>

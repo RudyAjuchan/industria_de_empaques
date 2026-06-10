@@ -18,12 +18,12 @@ class TipoProductoController extends Controller
     public function store(Request $request)
     {
         $request->merge([
-            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+            'codigo' => $this->normalizeCodigo($request->codigo),
         ]);
 
         $data = $request->validate([
             'nombre' => 'required|string|max:255|unique:tipo_productos,nombre',
-            'codigo' => 'required|string|min:2|max:10|regex:/^[A-Z0-9]+$/|unique:tipo_productos,codigo',
+            'codigo' => 'nullable|string|min:2|max:10|regex:/^[A-Z0-9]+$/|unique:tipo_productos,codigo',
         ], $this->messages());
 
         return TipoProducto::create($data);
@@ -32,7 +32,7 @@ class TipoProductoController extends Controller
     public function update(Request $request, TipoProducto $tipoProducto)
     {
         $request->merge([
-            'codigo' => $this->normalizeCodigo((string) $request->codigo),
+            'codigo' => $this->normalizeCodigo($request->codigo),
         ]);
 
         $data = $request->validate([
@@ -43,7 +43,7 @@ class TipoProductoController extends Controller
                 Rule::unique('tipo_productos', 'nombre')->ignore($tipoProducto->id),
             ],
             'codigo' => [
-                'required',
+                'nullable',
                 'string',
                 'min:2',
                 'max:10',
@@ -61,16 +61,20 @@ class TipoProductoController extends Controller
     {
         $tipoProducto->update([
             'nombre' => substr($tipoProducto->nombre, 0, 230) . ' - eliminado ' . $tipoProducto->id,
-            'codigo' => substr($tipoProducto->codigo . 'X' . $tipoProducto->id, 0, 10),
+            'codigo' => $tipoProducto->codigo
+                ? substr($tipoProducto->codigo . 'X' . $tipoProducto->id, 0, 10)
+                : null,
             'estado' => 0,
         ]);
 
         return response()->json(['message' => 'Eliminado']);
     }
 
-    private function normalizeCodigo(string $codigo): string
+    private function normalizeCodigo($codigo): ?string
     {
-        return strtoupper(preg_replace('/[^A-Z0-9]/', '', $codigo));
+        $codigo = strtoupper(preg_replace('/[^A-Z0-9]/', '', (string) $codigo));
+
+        return $codigo !== '' ? $codigo : null;
     }
 
     private function messages(): array

@@ -11,12 +11,12 @@
 
         <tr>
             <th>CÓDIGO:</th>
-            <td colspan="2">{{ $item->producto->sku ?? $item->producto->id ?? '-' }}</td>
+            <td colspan="2">{{ $item->producto_sku ?? $item->producto->sku ?? $item->producto->id ?? '-' }}</td>
             <td colspan="3"></td>
         </tr>
         <tr>
             <th>PRODUCTO:</th>
-            <td colspan="2">{{ $item->producto->nombre ?? '-' }}</td>
+            <td colspan="2">{{ $item->producto_nombre ?? $item->producto->nombre ?? '-' }}</td>
             <td colspan="3"></td>
         </tr>
         <tr>
@@ -27,7 +27,7 @@
 
         <tr>
             <th style="border-top: #999 solid 1px; border-left: #999 solid 1px">ALTO:</th>
-            <td style="border-top: #999 solid 1px; border-right: #999 solid 1px">{{ $item->producto->alto }}</td>
+            <td style="border-top: #999 solid 1px; border-right: #999 solid 1px">{{ $item->producto_alto ?? $item->producto->alto }}</td>
             <th style="border-top: #999 solid 1px">COLOR AGARRADOR:</th>
             <td style="border-top: #999 solid 1px; border-right: #999 solid 1px; border-left: #999 solid 1px">{{ $item->color_agarrador }}</td>
             <th style="border-top: #999 solid 1px">CANTIDAD:</th>
@@ -36,7 +36,7 @@
 
         <tr>
             <th style="border-left: #999 solid 1px">ANCHO:</th>
-            <td style="border-right: #999 solid 1px">{{ $item->producto->ancho }}</td>
+            <td style="border-right: #999 solid 1px">{{ $item->producto_ancho ?? $item->producto->ancho }}</td>
             <th>TIPO AGARRADOR:</th>
             <td style="border-right: #999 solid 1px; border-left: #999 solid 1px">{{ $item->tipoAgarrador->nombre ?? '-' }}</td>
             <th>PRECIO UNIT:</th>
@@ -45,7 +45,7 @@
 
         <tr>
             <th style="border-left: #999 solid 1px">FUELLE:</th>
-            <td style="border-right: #999 solid 1px">{{ $item->producto->fuelle }}</td>
+            <td style="border-right: #999 solid 1px">{{ $item->producto_fuelle ?? $item->producto->fuelle }}</td>
             <th>TIPO PAPEL:</th>
             <td style="border-right: #999 solid 1px; border-left: #999 solid 1px">{{ $item->tipoPapel->nombre ?? '-' }}</td>
             <th>TOTAL:</th>
@@ -71,7 +71,7 @@
         </tr>
         <tr>
             <th style="border-bottom: #999 solid 1px; border-left: #999 solid 1px">TIPO:</th>
-            <td style="border-bottom: #999 solid 1px; border-right: #999 solid 1px">{{ $item->producto->tipo }}</td>
+            <td style="border-bottom: #999 solid 1px; border-right: #999 solid 1px">{{ $item->producto_tipo ?? $item->producto->tipo }}</td>
             <th style="border-bottom: #999 solid 1px">DETALLE IMPRESIÓN:</th>
             <td colspan="3" style="border: #999 solid 1px">{{ $item->detalle_impresion }}</td>
         </tr>

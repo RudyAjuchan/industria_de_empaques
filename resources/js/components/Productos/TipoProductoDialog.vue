@@ -8,7 +8,7 @@
             <v-card-text>
                 <v-text-field v-model="form.nombre" variant="outlined" density="compact" label="Nombre" autofocus
                     :error-messages="errors.nombre" />
-                <v-text-field v-model="form.codigo" variant="outlined" density="compact" label="Código"
+                <v-text-field v-model="form.codigo" variant="outlined" density="compact" label="Código (opcional)"
                     hint="Ejemplo: T3XD, CBM, BOL" persistent-hint :error-messages="errors.codigo" />
             </v-card-text>
 

@@ -8,6 +8,11 @@
                 </v-col>
 
                 <v-col cols="12">
+                    <v-text-field v-model="form.sku" variant="outlined" density="compact" label="SKU" required
+                        :error-messages="errors.sku" />
+                </v-col>
+
+                <v-col cols="12">
                     <v-select v-model="form.tipo_producto" :items="[
                         { title: 'Personalizado', value: 'personalizado' },
                         { title: 'Simple', value: 'simple' }
@@ -57,7 +62,7 @@
 
                         <template #item="{ props, item }">
                             <v-list-item v-bind="props">
-                                <template #subtitle>
+                                <template #subtitle v-if="item.raw.codigo">
                                     Código: {{ item.raw.codigo }}
                                 </template>
                             </v-list-item>
@@ -193,6 +198,7 @@ export default {
             files: [],
             form: {
                 nombre: '',
+                sku: '',
                 alto: '',
                 ancho: '',
                 fuelle: '',
@@ -398,6 +404,7 @@ export default {
                     // modo crear
                     this.form = {
                         nombre: '',
+                        sku: '',
                         alto: '',
                         ancho: '',
                         fuelle: '',
@@ -417,6 +424,7 @@ export default {
                 // modo editar
                 this.form = {
                     nombre: producto.nombre,
+                    sku: producto.sku,
                     alto: producto.alto,
                     ancho: producto.ancho,
                     fuelle: producto.fuelle,

@@ -18,11 +18,11 @@
             </tr>
             <tr>
                 <th>PRODUCTO</th>
-                <td colspan="4">{{ $item->producto->nombre }}</td>
+                <td colspan="4">{{ $item->producto_nombre ?? $item->producto->nombre }}</td>
             </tr>
             <tr>
                 <th>DESCRIPCIÓN</th>
-                <td colspan="4">{{ $item->producto->descripcion }}</td>
+                <td colspan="4">{{ $item->producto_descripcion ?? $item->producto->descripcion }}</td>
             </tr>
             <tr>
                 <th>CANTIDAD DE BOLSAS</th>
@@ -30,15 +30,15 @@
             </tr>
             <tr>
                 <th>ALTO</th>
-                <td colspan="4">{{ $item->producto->alto }}</td>
+                <td colspan="4">{{ $item->producto_alto ?? $item->producto->alto }}</td>
             </tr>
             <tr>
                 <th>ANCHO</th>
-                <td colspan="4">{{ $item->producto->ancho }}</td>
+                <td colspan="4">{{ $item->producto_ancho ?? $item->producto->ancho }}</td>
             </tr>
             <tr>
                 <th>FUELLE</th>
-                <td colspan="4">{{ $item->producto->fuelle }}</td>
+                <td colspan="4">{{ $item->producto_fuelle ?? $item->producto->fuelle }}</td>
             </tr>
 
             <tr>

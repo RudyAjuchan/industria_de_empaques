@@ -70,6 +70,13 @@
         .green { color: green; }
         .red { color: red; }
         .purple { color: purple; }
+
+        .chart {
+            width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            margin: 8px 0 12px;
+        }
     </style>
 </head>
 
@@ -140,6 +147,10 @@
 <div class="section">
     <h3>Ventas por Página</h3>
 
+    @if (!empty($charts['ventasPorPagina']))
+        <img class="chart" src="{{ $charts['ventasPorPagina'] }}" alt="Ventas por página">
+    @endif
+
     <table>
         <thead>
             <tr>
@@ -174,6 +185,10 @@
 <div class="section">
     <h3>Tipos de Producto</h3>
 
+    @if (!empty($charts['tiposProducto']))
+        <img class="chart" src="{{ $charts['tiposProducto'] }}" alt="Tipos de producto">
+    @endif
+
     <table>
         <thead>
             <tr>
@@ -198,6 +213,93 @@
                 <td>{{ $totalesPorTipo['ventas'] }}</td>
             </tr>
         </tfoot>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Tamaños más comercializados</h3>
+
+    @if (!empty($charts['tamanos']))
+        <img class="chart" src="{{ $charts['tamanos'] }}" alt="Tamaños más comercializados">
+    @endif
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Tamaño</th>
+                <th>Unidades</th>
+                <th>Ventas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (($comercial['tamanos'] ?? []) as $item)
+                <tr>
+                    <td>{{ $item['no'] }}</td>
+                    <td>{{ $item['tamano'] }}</td>
+                    <td>{{ number_format($item['unidades']) }}</td>
+                    <td>{{ number_format($item['ventas']) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Compras por género</h3>
+
+    @if (!empty($charts['generos']))
+        <img class="chart" src="{{ $charts['generos'] }}" alt="Compras por género">
+    @endif
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Género</th>
+                <th>Ventas</th>
+                <th>Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (($comercial['generos'] ?? []) as $item)
+                <tr>
+                    <td>{{ $item['no'] }}</td>
+                    <td>{{ $item['genero'] }}</td>
+                    <td>{{ number_format($item['ventas']) }}</td>
+                    <td class="right">Q{{ number_format($item['total'], 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Ventas por departamento</h3>
+
+    @if (!empty($charts['departamentos']))
+        <img class="chart" src="{{ $charts['departamentos'] }}" alt="Ventas por departamento">
+    @endif
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Departamento</th>
+                <th>Ventas</th>
+                <th>Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (($comercial['departamentos'] ?? []) as $item)
+                <tr>
+                    <td>{{ $item['no'] }}</td>
+                    <td>{{ $item['departamento'] }}</td>
+                    <td>{{ number_format($item['ventas']) }}</td>
+                    <td class="right">Q{{ number_format($item['total'], 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
     </table>
 </div>
 

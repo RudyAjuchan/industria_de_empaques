@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 
 const InicioComponent = () => import('../components/Inicio.vue');
 const DashboardCorporativoComponent = () => import('../components/DashboardCorporativo.vue');
+const DashboardSinAsignarComponent = () => import('../components/DashboardSinAsignar.vue');
 const UsuarioComponent = () => import('../components/Usuarios/Usuario.vue');
 //COMPONENTES DE ROLES
 const RolesComponent = () => import('../components/Roles/RolesIndex.vue');
@@ -62,7 +63,17 @@ const routes = [
         component: InicioComponent,
         meta: {
             permission: 'dashboard.general.ver',
+            fallback: 'dashboard.sin-asignar',
             title: 'Dashboard',
+            navRoute: '/'
+        }
+    },
+    {
+        path: '/dashboard-sin-asignar',
+        name: 'dashboard.sin-asignar',
+        component: DashboardSinAsignarComponent,
+        meta: {
+            title: 'Dashboard sin asignar',
             navRoute: '/'
         }
     },
@@ -385,7 +396,15 @@ router.beforeEach((to, from, next) => {
         return next()
     }
 
+    if (to.meta.fallback) {
+        return next({ name: to.meta.fallback })
+    }
+
     // Si no tiene permiso, lo mandamos al inicio
-    return next('/')
+    if (to.path !== '/') {
+        return next('/')
+    }
+
+    return next({ name: 'dashboard.sin-asignar' })
 })
 export default router;

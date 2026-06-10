@@ -49,6 +49,7 @@ class EstadisticasProduccionController extends Controller
         $data = $this->obtenerDatos($request);
         $data2 = $this->obtenerVentasPorPaginaData($request);
         $data3 = $this->obtenerTiposProductoData($request);
+        $data4 = $this->obtenerEstadisticasComercialesData($request);
 
         $pdf = Pdf::loadView('pdf.estadisticas', [
             'totales' => $data['totales'],
@@ -58,7 +59,10 @@ class EstadisticasProduccionController extends Controller
             'totalesPorPagina' => $data2['totales'],
 
             'porTipo' => $data3['tipos_producto'],
-            'totalesPorTipo' => $data3['totales'], // 🔥 corregido nombre
+            'totalesPorTipo' => $data3['totales'],
+
+            'comercial' => $data4,
+            'charts' => $request->input('charts', []),
 
             'filtros' => $request->all()
         ]);
@@ -286,9 +290,10 @@ class EstadisticasProduccionController extends Controller
         $data = $this->obtenerDatos($request);
         $data2 = $this->obtenerVentasPorPaginaData($request);
         $data3 = $this->obtenerTiposProductoData($request);
+        $data4 = $this->obtenerEstadisticasComercialesData($request);
 
         return Excel::download(
-            new EstadisticasProduccionExport($data, $data2, $data3),
+            new EstadisticasProduccionExport($data, $data2, $data3, $data4),
             'reporte-produccion.xlsx'
         );
     }
@@ -308,6 +313,13 @@ class EstadisticasProduccionController extends Controller
         );
     }
 
+    public function estadisticasComerciales(Request $request)
+    {
+        return response()->json(
+            $this->obtenerEstadisticasComercialesData($request)
+        );
+    }
+
     private function obtenerVentasPorPaginaData($request)
     {
         $filtros = $this->validarFiltros($request);
@@ -322,6 +334,7 @@ class EstadisticasProduccionController extends Controller
         |--------------------------------------------------------------------------
         */
         $this->aplicarFiltroFecha($query, $filtros);
+        $this->aplicarFiltroTipoCliente($query, $filtros);
 
         $ventas = $query->get();
 
@@ -415,14 +428,14 @@ class EstadisticasProduccionController extends Controller
     private function obtenerTiposProductoData($request)
     {
         $filtros = $this->validarFiltros($request);
-        $query = DetalleVenta::with('producto');
+        $query = DetalleVenta::with('producto.tipoCatalogo');
 
         /*
         |--------------------------------------------------------------------------
         | FILTROS (igual que todo tu sistema)
         |--------------------------------------------------------------------------
         */
-        $this->aplicarFiltroVentaConfirmadaEnDetalle($query, $filtros);
+        $this->aplicarFiltroVentaConfirmadaEnDetalle($query, $filtros, true);
 
         $detalles = $query->get();
 
@@ -432,7 +445,10 @@ class EstadisticasProduccionController extends Controller
         |--------------------------------------------------------------------------
         */
         $agrupado = $detalles->groupBy(function ($item) {
-            return $item->producto->tipo ?? 'Sin tipo';
+            return $item->producto_tipo
+                ?? $item->producto?->tipoCatalogo?->nombre
+                ?? $item->producto?->tipo
+                ?? 'Sin tipo';
         });
 
         $resultado = [];
@@ -475,13 +491,15 @@ class EstadisticasProduccionController extends Controller
             'year' => now()->year,
             'month' => now()->month,
             'fecha' => now()->toDateString(),
-        ], $request->only('periodo', 'year', 'month', 'fecha'));
+            'tipo_cliente' => 'todos',
+        ], $request->only('periodo', 'year', 'month', 'fecha', 'tipo_cliente'));
 
         return Validator::make($data, [
             'periodo' => ['required', 'in:hoy,dia,mes,anio'],
             'fecha' => ['required_if:periodo,dia', 'date'],
             'year' => ['required_if:periodo,mes,anio', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required_if:periodo,mes', 'integer', 'between:1,12'],
+            'tipo_cliente' => ['nullable', 'in:todos,nuevo,existente'],
         ])->validate();
     }
 
@@ -505,11 +523,143 @@ class EstadisticasProduccionController extends Controller
         }
     }
 
-    private function aplicarFiltroVentaConfirmadaEnDetalle($query, array $filtros): void
+    private function aplicarFiltroTipoCliente($query, array $filtros): void
     {
-        $query->whereHas('venta', function ($ventaQuery) use ($filtros) {
+        if (($filtros['tipo_cliente'] ?? 'todos') === 'nuevo') {
+            $query->where('es_cliente_nuevo', true);
+        }
+
+        if (($filtros['tipo_cliente'] ?? 'todos') === 'existente') {
+            $query->where('es_cliente_nuevo', false);
+        }
+    }
+
+    private function aplicarFiltroVentaConfirmadaEnDetalle($query, array $filtros, bool $filtrarTipoCliente = false): void
+    {
+        $query->whereHas('venta', function ($ventaQuery) use ($filtros, $filtrarTipoCliente) {
             $ventaQuery->where('estado', '<>', 'pendiente');
             $this->aplicarFiltroFecha($ventaQuery, $filtros);
+
+            if ($filtrarTipoCliente) {
+                $this->aplicarFiltroTipoCliente($ventaQuery, $filtros);
+            }
         });
+    }
+
+    private function obtenerEstadisticasComercialesData(Request $request): array
+    {
+        $filtros = $this->validarFiltros($request);
+
+        $ventasQuery = Venta::with([
+            'cliente.municipio.departamento',
+            'detalles.producto',
+        ])->where('estado', '<>', 'pendiente');
+
+        $this->aplicarFiltroFecha($ventasQuery, $filtros);
+        $this->aplicarFiltroTipoCliente($ventasQuery, $filtros);
+
+        $ventas = $ventasQuery->get();
+
+        $tamanos = [];
+        $generos = [];
+        $tiposCliente = [];
+        $departamentos = [];
+
+        foreach ($ventas as $venta) {
+            $totalVenta = (float) ($venta->total ?? 0);
+
+            $genero = $this->normalizarEtiqueta($venta->cliente->genero ?? null, 'No especificado');
+            $this->sumarAgrupado($generos, $genero, 'ventas', 1);
+            $this->sumarAgrupado($generos, $genero, 'total', $totalVenta);
+
+            $tipoCliente = $venta->es_cliente_nuevo ? 'Nuevo' : 'Existente';
+            $this->sumarAgrupado($tiposCliente, $tipoCliente, 'ventas', 1);
+            $this->sumarAgrupado($tiposCliente, $tipoCliente, 'total', $totalVenta);
+
+            $departamento = $venta->cliente?->municipio?->departamento?->nombre ?: 'Internacional';
+            $departamento = $this->normalizarEtiqueta($departamento, 'Internacional');
+            $this->sumarAgrupado($departamentos, $departamento, 'ventas', 1);
+            $this->sumarAgrupado($departamentos, $departamento, 'total', $totalVenta);
+
+            foreach ($venta->detalles as $detalle) {
+                $labelTamano = $this->labelTamano($detalle);
+
+                if (!$labelTamano) {
+                    continue;
+                }
+
+                $this->sumarAgrupado($tamanos, $labelTamano, 'unidades', (int) ($detalle->cantidad ?? 0));
+                $this->sumarAgrupado($tamanos, $labelTamano, 'ventas', 1);
+            }
+        }
+
+        return [
+            'tamanos' => $this->ordenarAgrupado($tamanos, 'unidades', 'tamano'),
+            'generos' => $this->ordenarAgrupado($generos, 'total', 'genero'),
+            'tipos_cliente' => $this->ordenarAgrupado($tiposCliente, 'total', 'tipo'),
+            'departamentos' => $this->ordenarAgrupado($departamentos, 'total', 'departamento'),
+            'totales' => [
+                'ventas' => $ventas->count(),
+                'total' => round($ventas->sum('total'), 2),
+                'unidades' => $ventas->sum(fn($venta) => $venta->detalles->sum('cantidad')),
+            ],
+        ];
+    }
+
+    private function labelTamano(DetalleVenta $detalle): ?string
+    {
+        $alto = $detalle->producto_alto ?? $detalle->producto?->alto;
+        $ancho = $detalle->producto_ancho ?? $detalle->producto?->ancho;
+        $fuelle = $detalle->producto_fuelle ?? $detalle->producto?->fuelle;
+
+        $partes = collect([$alto, $ancho, $fuelle])
+            ->filter(fn($valor) => $valor !== null && $valor !== '' && (float) $valor > 0)
+            ->map(fn($valor) => rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.'))
+            ->values();
+
+        return $partes->isNotEmpty()
+            ? $partes->join(' x ')
+            : null;
+    }
+
+    private function normalizarEtiqueta(?string $valor, string $fallback): string
+    {
+        $valor = trim((string) $valor);
+
+        if ($valor === '') {
+            return $fallback;
+        }
+
+        return mb_convert_case($valor, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    private function sumarAgrupado(array &$agrupado, string $label, string $campo, float|int $valor): void
+    {
+        if (!isset($agrupado[$label])) {
+            $agrupado[$label] = [];
+        }
+
+        $agrupado[$label][$campo] = ($agrupado[$label][$campo] ?? 0) + $valor;
+    }
+
+    private function ordenarAgrupado(array $agrupado, string $orden, string $labelKey): array
+    {
+        return collect($agrupado)
+            ->map(function ($valores, $label) use ($labelKey) {
+                return array_merge([
+                    $labelKey => $label,
+                    'ventas' => 0,
+                    'unidades' => 0,
+                    'total' => 0,
+                ], $valores);
+            })
+            ->sortByDesc($orden)
+            ->values()
+            ->map(function ($item, $index) {
+                $item['no'] = $index + 1;
+                $item['total'] = round((float) ($item['total'] ?? 0), 2);
+                return $item;
+            })
+            ->all();
     }
 }

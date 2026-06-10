@@ -35,14 +35,14 @@
             <div class="divider"></div>
 
             <nav class="nav" id="nav">
-                @can('menu.inicio')
+                @if(auth()->user()->can('menu.inicio') || auth()->user()->can('dashboard.general.ver'))
                     <a href="#" data-route="/" data-title="Dashboard">
                         <div class="ico" aria-hidden="true">
                             <i class="mdi mdi-view-dashboard"></i>
                         </div>
                         <div class="label">Dashboard</div>
                     </a>
-                @endcan
+                @endif
 
                 @can('dashboard.corporativo.ver')
                     <a href="#" data-route="/dashboard-corporativo" data-title="Dashboard Corporativo">

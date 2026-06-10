@@ -2,53 +2,99 @@
     <div class="pa-10">
         <LoginWelcome />
 
-        <!-- FILTROS PARA EL DASHBOARD -->
-        <v-row>
+        <v-card v-if="puedeVerGeneral || puedeVerCorporativo" class="dashboard-filter-card mb-8 elevation-1">
+            <div class="filter-card-header">
+                <div>
+                    <div class="text-h6 font-weight-bold">Filtros del dashboard</div>
+                    <div class="text-caption text-grey-darken-1">
+                        Periodo afecta todo. Tipo de cliente solo afecta indicadores corporativos.
+                    </div>
+                </div>
 
-            <!-- TIPO DE PERIODO -->
-            <v-col cols="12" md="3">
-                <v-select v-model="filtros.periodo" :items="periodos" label="Periodo" density="compact"
-                    variant="outlined" />
-            </v-col>
+                <div class="filter-actions">
+                    <v-btn color="primary" @click="cargarEstadisticas">
+                        Aplicar
+                    </v-btn>
 
-            <!-- AÑO -->
-            <v-col cols="12" md="2">
-                <v-select v-model="filtros.year" :items="years" label="Año" density="compact" variant="outlined" />
-            </v-col>
+                    <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="error" variant="tonal"
+                        @click="exportPDF">
+                        PDF
+                    </v-btn>
 
-            <!-- MES -->
-            <v-col cols="12" md="2" v-if="filtros.periodo === 'mes'">
-                <v-select v-model="filtros.month" :items="meses" label="Mes" density="compact" variant="outlined" />
-            </v-col>
+                    <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="success" variant="tonal"
+                        @click="exportExcel">
+                        Excel
+                    </v-btn>
+                </div>
+            </div>
 
-            <v-col cols="12" md="2" v-if="filtros.periodo === 'dia'">
-                <v-text-field v-model="filtros.fecha" type="date" label="Fecha" density="compact" variant="outlined" />
-            </v-col>
+            <v-row class="mt-1">
+                <v-col cols="12" md="7">
+                    <div class="filter-group">
+                        <div class="filter-group-title">
+                            <span>Periodo operativo y corporativo</span>
+                            <v-chip size="x-small" color="primary" variant="tonal">Producción</v-chip>
+                            <v-chip size="x-small" color="primary" variant="tonal">Ventas</v-chip>
+                        </div>
 
-            <!-- BOTÓN -->
-            <v-col cols="12" md="5" class="d-flex ga-3">
-                <v-btn color="primary" @click="cargarEstadisticas">
-                    Aplicar
-                </v-btn>
+                        <v-row>
+                            <v-col cols="12" sm="4">
+                                <v-select v-model="filtros.periodo" :items="periodos" label="Periodo" density="compact"
+                                    variant="outlined" hide-details />
+                            </v-col>
 
-                <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="error" variant="tonal" @click="exportPDF">
-                    Exportar PDF
-                </v-btn>
+                            <v-col cols="12" sm="4">
+                                <v-select v-model="filtros.year" :items="years" label="Año" density="compact"
+                                    variant="outlined" hide-details />
+                            </v-col>
 
-                <v-btn v-if="corporativo && can('dashboard.corporativo.reporte')" color="success" variant="tonal" @click="exportExcel">
-                    Exportar Excel
-                </v-btn>
-            </v-col>
+                            <v-col cols="12" sm="4" v-if="filtros.periodo === 'mes'">
+                                <v-select v-model="filtros.month" :items="meses" label="Mes" density="compact"
+                                    variant="outlined" hide-details />
+                            </v-col>
 
-        </v-row>
+                            <v-col cols="12" sm="4" v-if="filtros.periodo === 'dia'">
+                                <v-text-field v-model="filtros.fecha" type="date" label="Fecha" density="compact"
+                                    variant="outlined" hide-details />
+                            </v-col>
+                        </v-row>
+                    </div>
+                </v-col>
+
+                <v-col v-if="puedeVerCorporativo" cols="12" md="5">
+                    <div class="filter-group filter-group-corporate">
+                        <div class="filter-group-title">
+                            <span>Segmentación corporativa</span>
+                            <v-chip size="x-small" color="teal" variant="tonal">Solo ventas</v-chip>
+                        </div>
+
+                        <v-select v-model="filtros.tipo_cliente" :items="tiposClienteFiltro" label="Tipo de cliente"
+                            density="compact" variant="outlined" hide-details />
+                    </div>
+                </v-col>
+            </v-row>
+        </v-card>
 
         <!-- ESTADISTICAS GENERALES (unidades) -->
+        <div v-if="puedeVerGeneral" class="dashboard-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Dashboard general</h2>
+                    <div class="text-caption text-grey-darken-1">
+                        Indicadores operativos filtrados únicamente por periodo
+                    </div>
+                </div>
+                <div class="section-filter-chips">
+                    <v-chip size="small" color="primary" variant="tonal">Periodo</v-chip>
+                </div>
+            </div>
+
         <v-row class="mb-5">
             <v-col cols="12">
-                <h2>Estado de pedidos del periodo</h2>
+                <div class="subsection-title">Estado de pedidos del periodo</div>
             </v-col>
             <v-col cols="12" sm="6" md="2">
-                <v-card class="pa-3 elevation-2">
+                <v-card class="metric-card metric-primary">
                     <div class="text-caption text-grey">Pedido</div>
                     <div class="text-h5 font-weight-bold text-primary">
                         {{ formatNumber(estadisticas.pedido) }}
@@ -57,7 +103,7 @@
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
-                <v-card class="pa-3 elevation-2">
+                <v-card class="metric-card metric-success">
                     <div class="text-caption text-grey">Producción</div>
                     <div class="text-h5 font-weight-bold text-green">
                         {{ formatNumber(estadisticas.finalizadas) }}
@@ -66,7 +112,7 @@
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
-                <v-card class="pa-3 elevation-2">
+                <v-card class="metric-card metric-purple">
                     <div class="text-caption text-grey">Extras</div>
                     <div class="text-h5 font-weight-bold text-purple">
                         +{{ formatNumber(estadisticas.extras) }}
@@ -75,7 +121,7 @@
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
-                <v-card class="pa-3 elevation-2">
+                <v-card class="metric-card metric-danger">
                     <div class="text-caption text-grey">Desechadas</div>
                     <div class="text-h5 font-weight-bold text-red">
                         {{ formatNumber(estadisticas.desechadas) }}
@@ -84,7 +130,7 @@
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
-                <v-card class="pa-3 elevation-2">
+                <v-card class="metric-card metric-muted">
                     <div class="text-caption text-grey">Pendiente de pedidos</div>
                     <div class="text-h5 font-weight-bold text-grey-darken-1">
                         {{ formatNumber(estadisticas.pendiente) }}
@@ -96,13 +142,13 @@
         <!-- ESTADÍSTICAS POR ESTADOS -->
         <v-row class="mb-5">
             <v-col cols="12">
-                <h2>Estadísticas Por área (unidades)</h2>
+                <div class="subsection-title">Estadísticas por área</div>
                 <div class="text-caption text-grey mb-4">
                     Mostrando el avance de los pedidos creados en el periodo seleccionado
                 </div>
             </v-col>
             <v-col v-for="(estado, index) in porEstado" :key="index" cols="12" sm="6" md="4" lg="3">
-                <v-card class="pa-4 elevation-2 rounded-lg">
+                <v-card class="area-card">
 
                     <!-- TÍTULO -->
                     <div class="text-subtitle-1 font-weight-bold mb-3">
@@ -160,10 +206,6 @@
                 <v-card class="pa-4 elevation-2">
                     <div class="text-h6 mb-3">Producción por estado</div>
                     <v-row>
-                        <v-col cols="12">
-                            <h2>Comparativa por área</h2>
-                        </v-col>
-
                         <v-col v-for="(estado, index) in porEstado" :key="'chart-' + index" cols="12" sm="6" md="4"
                             lg="3">
                             <v-card class="pa-3" style="position: relative; height: 250px;">
@@ -224,8 +266,23 @@
                 </v-card>
             </v-col>
         </v-row>
+        </div>
 
-        <v-row v-if="corporativo" class="mt-5">
+        <div v-if="puedeVerCorporativo" class="dashboard-section dashboard-section-corporate mt-8">
+            <div class="section-heading">
+                <div>
+                    <h2>Dashboard corporativo</h2>
+                    <div class="text-caption text-grey-darken-1">
+                        Indicadores comerciales filtrados por periodo y tipo de cliente
+                    </div>
+                </div>
+                <div class="section-filter-chips">
+                    <v-chip size="small" color="primary" variant="tonal">Periodo</v-chip>
+                    <v-chip size="small" color="teal" variant="tonal">Tipo de cliente</v-chip>
+                </div>
+            </div>
+
+        <v-row class="mt-5">
 
             <!-- TABLA -->
             <v-col cols="12" md="6">
@@ -291,7 +348,7 @@
 
         </v-row>
 
-        <v-row v-if="corporativo" class="mt-6">
+        <v-row class="mt-6">
 
             <!-- TABLA -->
             <v-col cols="12" md="5">
@@ -340,6 +397,105 @@
 
         </v-row>
 
+        <v-row class="mt-6">
+            <v-col cols="12">
+                <div class="subsection-title">Análisis comercial</div>
+                <div class="text-caption text-grey mb-4">
+                    Indicadores de venta según los pedidos confirmados del periodo seleccionado
+                </div>
+            </v-col>
+
+            <v-col cols="12" md="6">
+                <v-card class="pa-4 elevation-2 commercial-card">
+                    <v-card-title>Tamaños más comercializados</v-card-title>
+
+                    <v-table density="compact">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Tamaño</th>
+                                <th class="text-right">Unidades</th>
+                                <th class="text-right">Ventas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in comerciales.tamanos" :key="`tamano-${item.no}`">
+                                <td>{{ item.no }}</td>
+                                <td>{{ item.tamano }}</td>
+                                <td class="text-right">{{ formatNumber(item.unidades) }}</td>
+                                <td class="text-right">{{ formatNumber(item.ventas) }}</td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+
+                    <div class="commercial-chart-wrap">
+                        <canvas id="graficaTamanos"></canvas>
+                    </div>
+                </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+                <v-card class="pa-4 elevation-2 commercial-card">
+                    <v-card-title>Compras por género</v-card-title>
+
+                    <v-table density="compact">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Género</th>
+                                <th class="text-right">Ventas</th>
+                                <th class="text-right">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in comerciales.generos" :key="`genero-${item.no}`">
+                                <td>{{ item.no }}</td>
+                                <td>{{ item.genero }}</td>
+                                <td class="text-right">{{ formatNumber(item.ventas) }}</td>
+                                <td class="text-right">{{ formatQuetzales(item.total) }}</td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+
+                    <div class="commercial-chart-wrap">
+                        <canvas id="graficaGeneros"></canvas>
+                    </div>
+                </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+                <v-card class="pa-4 elevation-2 commercial-card">
+                    <v-card-title>Ventas por departamento</v-card-title>
+
+                    <v-table density="compact">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Departamento</th>
+                                <th class="text-right">Ventas</th>
+                                <th class="text-right">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in comerciales.departamentos" :key="`departamento-${item.no}`">
+                                <td>{{ item.no }}</td>
+                                <td>{{ item.departamento }}</td>
+                                <td class="text-right">{{ formatNumber(item.ventas) }}</td>
+                                <td class="text-right">{{ formatQuetzales(item.total) }}</td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+
+                    <div class="commercial-chart-wrap">
+                        <canvas id="graficaDepartamentos"></canvas>
+                    </div>
+                </v-card>
+            </v-col>
+        </v-row>
+        </div>
+
+        <DashboardSinAsignar v-if="!puedeVerGeneral && !puedeVerCorporativo" />
+
         <v-overlay :model-value="loading" class="align-center justify-center">
             <v-progress-circular indeterminate size="64" />
         </v-overlay>
@@ -347,6 +503,7 @@
 </template>
 <script>
 import LoginWelcome from './LoginWelcome.vue';
+import DashboardSinAsignar from './DashboardSinAsignar.vue';
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { toast } from 'vue3-toastify'
 import { formatQuetzales } from '../utils/money'
@@ -404,7 +561,8 @@ Chart.register(
 export default {
     name: 'InicioVue',
     components: {
-        LoginWelcome
+        LoginWelcome,
+        DashboardSinAsignar,
     },
     props: {
         corporativo: {
@@ -440,6 +598,7 @@ export default {
                 year: new Date().getFullYear(),
                 month: new Date().getMonth() + 1,
                 fecha: new Date().toISOString().substr(0, 10),
+                tipo_cliente: 'todos',
             },
 
             periodos: [
@@ -452,6 +611,11 @@ export default {
             mesesDisponibles: {},
 
             meses: [],
+            tiposClienteFiltro: [
+                { title: 'Todos', value: 'todos' },
+                { title: 'Nuevo', value: 'nuevo' },
+                { title: 'Existente', value: 'existente' },
+            ],
 
             chart: [],
 
@@ -495,7 +659,21 @@ export default {
                 unidades: 0,
                 ventas: 0
             },
-            chartTipos: null
+            chartTipos: null,
+            comerciales: {
+                tamanos: [],
+                generos: [],
+                tipos_cliente: [],
+                departamentos: [],
+                totales: {
+                    ventas: 0,
+                    total: 0,
+                    unidades: 0,
+                }
+            },
+            chartTamanos: null,
+            chartGeneros: null,
+            chartDepartamentos: null,
         }
     },
     methods: {
@@ -512,12 +690,16 @@ export default {
 
                 this.$nextTick(() => this.renderChart())
 
-                if (this.corporativo) {
+                if (this.puedeVerCorporativo) {
                     const response2 = await axios.get('/estadisticas-por-pagina', {
                         params: this.filtros
                     })
 
                     const response3 = await axios.get('/estadisticas-por-tipo', {
+                        params: this.filtros
+                    })
+
+                    const response4 = await axios.get('/estadisticas-comerciales', {
                         params: this.filtros
                     })
 
@@ -534,8 +716,21 @@ export default {
                         ventas: 0
                     }
 
+                    this.comerciales = {
+                        tamanos: response4.data.tamanos || [],
+                        generos: response4.data.generos || [],
+                        tipos_cliente: response4.data.tipos_cliente || [],
+                        departamentos: response4.data.departamentos || [],
+                        totales: response4.data.totales || {
+                            ventas: 0,
+                            total: 0,
+                            unidades: 0,
+                        }
+                    }
+
                     this.$nextTick(() => this.renderChartVentas())
                     this.$nextTick(() => this.renderChartTipos())
+                    this.$nextTick(() => this.renderChartsComerciales())
                 }
 
             } catch (error) {
@@ -659,9 +854,22 @@ export default {
             return nombres[mes - 1]
         },
 
-        exportPDF() {
-            const params = new URLSearchParams(this.filtros).toString()
-            window.open(`/export/pdf?${params}`, '_blank')
+        async exportPDF() {
+            try {
+                const response = await axios.post('/export/pdf', {
+                    ...this.filtros,
+                    charts: this.getChartImages(),
+                }, {
+                    responseType: 'blob',
+                })
+
+                const blob = new Blob([response.data], { type: 'application/pdf' })
+                const url = window.URL.createObjectURL(blob)
+                window.open(url, '_blank')
+            } catch (error) {
+                console.error(error)
+                toast.error('No se pudo exportar el PDF')
+            }
         },
 
         exportExcel() {
@@ -859,7 +1067,155 @@ export default {
                     }
                 }
             })
+        },
+
+        renderChartsComerciales() {
+            this.chartTamanos = this.renderBarChart({
+                chart: this.chartTamanos,
+                canvasId: 'graficaTamanos',
+                labels: this.comerciales.tamanos.map(item => item.tamano),
+                data: this.comerciales.tamanos.map(item => item.unidades),
+                label: 'Unidades vendidas',
+                money: false,
+            })
+
+            this.chartGeneros = this.renderBarChart({
+                chart: this.chartGeneros,
+                canvasId: 'graficaGeneros',
+                labels: this.comerciales.generos.map(item => item.genero),
+                data: this.comerciales.generos.map(item => item.total),
+                label: 'Monto vendido',
+                money: true,
+            })
+
+            this.chartDepartamentos = this.renderBarChart({
+                chart: this.chartDepartamentos,
+                canvasId: 'graficaDepartamentos',
+                labels: this.comerciales.departamentos.slice(0, 10).map(item => item.departamento),
+                data: this.comerciales.departamentos.slice(0, 10).map(item => item.total),
+                label: 'Monto vendido',
+                money: true,
+            })
+        },
+
+        renderBarChart({ chart, canvasId, labels, data, label, money }) {
+            if (chart) {
+                chart.destroy()
+            }
+
+            const ctx = document.getElementById(canvasId)
+
+            if (!ctx) return null
+
+            const colores = data.map((_, index) => {
+                return this.coloresBase[index % this.coloresBase.length]
+            })
+
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.map(item => this.chartLabel(item)),
+                    datasets: [
+                        {
+                            label,
+                            data,
+                            backgroundColor: colores,
+                            borderColor: colores.map(c => c.replace('0.8', '1')),
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 42,
+                            left: 10,
+                            right: 10,
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => {
+                                if (Number(value) <= 0) return ''
+                                return money
+                                    ? this.formatQuetzales(value)
+                                    : this.formatNumber(value)
+                            },
+                            font: {
+                                weight: 'bold',
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const chartLabel = items[0]?.label
+                                    return Array.isArray(chartLabel) ? chartLabel.join(' ') : chartLabel
+                                },
+                                label: (context) => {
+                                    return money
+                                        ? this.formatQuetzales(context.raw)
+                                        : this.formatNumber(context.raw)
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 35,
+                                minRotation: 35,
+                                padding: 10,
+                                font: {
+                                    size: 11,
+                                }
+                            },
+                            grid: {
+                                display: false,
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => {
+                                    return money
+                                        ? this.formatQuetzales(value)
+                                        : this.formatNumber(value)
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        },
+
+        getChartImages() {
+            return {
+                ventasPorPagina: this.chartVentas?.toBase64Image() || null,
+                tiposProducto: this.chartTipos?.toBase64Image() || null,
+                tamanos: this.chartTamanos?.toBase64Image() || null,
+                generos: this.chartGeneros?.toBase64Image() || null,
+                departamentos: this.chartDepartamentos?.toBase64Image() || null,
+            }
         }
+    },
+    computed: {
+        puedeVerGeneral() {
+            return this.can('dashboard.general.ver')
+        },
+
+        puedeVerCorporativo() {
+            return this.corporativo && this.can('dashboard.corporativo.ver')
+        },
     },
     async mounted() {
         await this.cargarFiltros()
@@ -875,9 +1231,144 @@ export default {
 </script>
 
 <style scoped>
+.dashboard-filter-card {
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e6e8eb;
+}
+
+.filter-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.filter-group {
+    height: 100%;
+    padding: 14px;
+    border: 1px solid #e6e8eb;
+    border-radius: 8px;
+    background: #fbfcfd;
+}
+
+.filter-group-corporate {
+    background: #f5fbfa;
+    border-color: #cde8e4;
+}
+
+.filter-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2f3a45;
+}
+
+.dashboard-section {
+    padding-top: 4px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e6e8eb;
+}
+
+.section-filter-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.dashboard-section-corporate {
+    padding-top: 24px;
+    border-top: 2px solid #d9efec;
+}
+
+.subsection-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #272727;
+}
+
+.metric-card {
+    min-height: 92px;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #e6e8eb;
+    border-left-width: 4px;
+}
+
+.metric-primary {
+    border-left-color: #005b83;
+}
+
+.metric-success {
+    border-left-color: #2e7d32;
+}
+
+.metric-purple {
+    border-left-color: #8e24aa;
+}
+
+.metric-danger {
+    border-left-color: #d32f2f;
+}
+
+.metric-muted {
+    border-left-color: #757575;
+}
+
+.area-card {
+    height: 100%;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e6e8eb;
+}
+
 .ventas-chart-wrap {
     position: relative;
     height: 300px;
     min-height: 300px;
+}
+
+.commercial-card {
+    min-height: 620px;
+}
+
+.commercial-chart-wrap {
+    position: relative;
+    height: 280px;
+    min-height: 280px;
+    margin-top: 20px;
+}
+
+@media (max-width: 960px) {
+    .filter-card-header,
+    .section-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter-actions,
+    .section-filter-chips {
+        justify-content: flex-start;
+    }
 }
 </style>

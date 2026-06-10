@@ -273,9 +273,13 @@ Route::middleware(['auth', 'force.password'])->group(function () {
         ->middleware('permission:dashboard.corporativo.ver');
     Route::get('/estadisticas-por-tipo', [EstadisticasProduccionController::class, 'estadisticasPorTipo'])
         ->middleware('permission:dashboard.corporativo.ver');
+    Route::get('/estadisticas-comerciales', [EstadisticasProduccionController::class, 'estadisticasComerciales'])
+        ->middleware('permission:dashboard.corporativo.ver');
     Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion'])
         ->middleware('permission:dashboard.general.ver|dashboard.corporativo.ver');
     Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF'])
+        ->middleware('permission:dashboard.corporativo.reporte');
+    Route::post('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF'])
         ->middleware('permission:dashboard.corporativo.reporte');
     Route::get('/export/excel', [EstadisticasProduccionController::class, 'exportExcel'])
         ->middleware('permission:dashboard.corporativo.reporte');

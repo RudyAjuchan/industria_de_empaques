@@ -27,8 +27,8 @@ class RoleController extends Controller
             'guard_name' => 'web'
         ]);
 
-        // Asignar permiso automáticamente
-        $role->givePermissionTo(['menu.inicio', 'dashboard.general.ver']);
+        // Permite que el usuario llegue a una vista inicial, pero el dashboard se asigna explícitamente.
+        $role->givePermissionTo(['menu.inicio']);
 
         return $role;
     }

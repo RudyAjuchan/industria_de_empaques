@@ -103,10 +103,12 @@ class CheckoutController extends Controller
 
                 // PROMO PRODUCTO
                 $promo = Promocion::vigente()
-                    ->where('aplica_a', 'producto')
+                    ->producto()
                     ->whereHas('productos', function ($q) use ($item) {
                         $q->where('productos.id', $item['productos_id']);
                     })
+                    ->orderBy('fecha_fin')
+                    ->orderBy('id')
                     ->first();
 
                 $promocionAplicada = null;
@@ -168,16 +170,19 @@ class CheckoutController extends Controller
             }
 
             // PROMO CARRITO
+            $promocionCarritoMonto = 0;
             $promoCarrito = Promocion::vigente()
-                ->where('aplica_a', 'carrito')
+                ->carrito()
+                ->orderBy('fecha_fin')
+                ->orderBy('id')
                 ->first();
 
             if ($promoCarrito) {
 
                 if ($promoCarrito->tipo === 'porcentaje') {
-                    $subtotal -= $subtotal * ($promoCarrito->valor / 100);
+                    $promocionCarritoMonto = $subtotal * ($promoCarrito->valor / 100);
                 } else {
-                    $subtotal -= $promoCarrito->valor;
+                    $promocionCarritoMonto = $promoCarrito->valor;
                 }
 
                 $venta->promociones = [
@@ -190,7 +195,7 @@ class CheckoutController extends Controller
 
             // ACTUALIZAR TOTALES
             $venta->subtotal = $subtotal;
-            $venta->total = $subtotal;
+            $venta->total = max(0, $subtotal - $promocionCarritoMonto);
             $venta->save();
 
             $venta->load('detalles.producto', 'pagos');

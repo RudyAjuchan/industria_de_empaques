@@ -95,8 +95,15 @@
                     <td><v-text-field v-model="item.nombre_logo" dense hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'nombre_logo')"/></td>
                     <td>
                         <div v-if="item.promocion_aplicada">
-                            <span style="color:red; font-size:11px">{{ item.promocion_aplicada.nombre }}</span><br>
-                            -<span>{{ item.promocion_aplicada.tipo == 'porcentaje' ?  `${item.promocion_aplicada.valor}%` : formatQuetzales(item.promocion_aplicada.valor) }}</span>
+                            <v-chip size="x-small" color="red" variant="tonal">
+                                Promo producto
+                            </v-chip>
+                            <div class="promo-product-name">
+                                {{ item.promocion_aplicada.nombre }}
+                            </div>
+                            <div class="promo-product-value">
+                                -{{ promocionLabel(item.promocion_aplicada) }}
+                            </div>
                         </div>
                     </td>
                     <td>
@@ -408,6 +415,14 @@ export default {
             item.total = total.toFixed(2)
         },
 
+        promocionLabel(promocion) {
+            if (!promocion) return ''
+
+            return promocion.tipo === 'porcentaje'
+                ? `${promocion.valor}%`
+                : this.formatQuetzales(promocion.valor)
+        },
+
         openAgarradorDialog(index) {
             this.filaAgarradorIndex = index
             this.dialogAgarrador = true
@@ -682,5 +697,18 @@ export default {
 /* Select / autocomplete */
 .ventas_table .v-select__selection-text {
     font-size: 13px;
+}
+
+.promo-product-name {
+    margin-top: 3px;
+    color: #b71c1c;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.promo-product-value {
+    color: #b71c1c;
+    font-size: 11px;
 }
 </style>

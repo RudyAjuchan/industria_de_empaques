@@ -35,4 +35,14 @@ class Promocion extends Model
                     ->orWhere('fecha_fin', '>=', today());
             });
     }
+
+    public function scopeProducto($query)
+    {
+        return $query->where('aplica_a', 'producto');
+    }
+
+    public function scopeCarrito($query)
+    {
+        return $query->where('aplica_a', 'carrito');
+    }
 }

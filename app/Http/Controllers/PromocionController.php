@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\Promocion;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PromocionController extends Controller
 {
@@ -18,6 +19,8 @@ class PromocionController extends Controller
         $data = $this->validatedData($request);
         $productos = $data['productos'] ?? [];
         unset($data['productos']);
+
+        $this->validarConflictosPromocion($data, $productos);
 
         $promo = Promocion::create($data);
 
@@ -40,6 +43,8 @@ class PromocionController extends Controller
         $data = $this->validatedData($request);
         $productos = $data['productos'] ?? [];
         unset($data['productos']);
+
+        $this->validarConflictosPromocion($data, $productos, $promo->id);
 
         $promo->update($data);
 
@@ -77,6 +82,59 @@ class PromocionController extends Controller
             'aplica_a' => 'required|in:producto,carrito',
             'productos' => 'exclude_unless:aplica_a,producto|required|array|min:1',
             'productos.*' => 'exists:productos,id',
+        ]);
+    }
+
+    private function validarConflictosPromocion(array $data, array $productos, ?int $promocionId = null): void
+    {
+        $query = Promocion::query()
+            ->where('activo', true)
+            ->where('aplica_a', $data['aplica_a'])
+            ->whereDate('fecha_inicio', '<=', $data['fecha_fin'])
+            ->whereDate('fecha_fin', '>=', $data['fecha_inicio']);
+
+        if ($promocionId) {
+            $query->whereKeyNot($promocionId);
+        }
+
+        if ($data['aplica_a'] === 'carrito') {
+            if ($query->exists()) {
+                throw ValidationException::withMessages([
+                    'fecha_inicio' => 'Ya existe una promoción de carrito activa en un rango de fechas que se cruza.',
+                ]);
+            }
+
+            return;
+        }
+
+        $productos = collect($productos)->map(fn($id) => (int) $id)->unique()->values();
+
+        if ($productos->isEmpty()) {
+            return;
+        }
+
+        $promocionesConflicto = $query
+            ->with(['productos:id,nombre'])
+            ->whereHas('productos', function ($productoQuery) use ($productos) {
+                $productoQuery->whereIn('productos.id', $productos);
+            })
+            ->get();
+
+        if ($promocionesConflicto->isEmpty()) {
+            return;
+        }
+
+        $productosConflicto = $promocionesConflicto
+            ->flatMap->productos
+            ->whereIn('id', $productos)
+            ->pluck('nombre')
+            ->unique()
+            ->values()
+            ->take(6)
+            ->join(', ');
+
+        throw ValidationException::withMessages([
+            'productos' => "Estos productos ya tienen una promoción activa en un rango de fechas que se cruza: {$productosConflicto}.",
         ]);
     }
 

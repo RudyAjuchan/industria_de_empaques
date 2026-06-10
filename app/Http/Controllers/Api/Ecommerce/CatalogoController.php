@@ -130,10 +130,12 @@ class CatalogoController extends Controller
     private function aplicarPromocion($producto)
     {
         $promo = Promocion::vigente()
-            ->where('aplica_a', 'producto')
+            ->producto()
             ->whereHas('productos', function ($q) use ($producto) {
                 $q->where('productos.id', $producto->id);
             })
+            ->orderBy('fecha_fin')
+            ->orderBy('id')
             ->first();
 
         if ($promo) {

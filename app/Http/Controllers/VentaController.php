@@ -814,11 +814,12 @@ class VentaController extends Controller
     private function promocionProducto(int $productoId): ?array
     {
         $promocion = Promocion::vigente()
-            ->where('aplica_a', 'producto')
+            ->producto()
             ->whereHas('productos', function ($query) use ($productoId) {
                 $query->where('productos.id', $productoId);
             })
-            ->orderByDesc('id')
+            ->orderBy('fecha_fin')
+            ->orderBy('id')
             ->first();
 
         if (!$promocion) {

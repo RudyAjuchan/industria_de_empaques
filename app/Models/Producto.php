@@ -89,6 +89,10 @@ class Producto extends Model
             'promocion_productos',
             'productos_id',
             'promocions_id'
-        )->vigente();
+        )
+            ->producto()
+            ->vigente()
+            ->orderBy('fecha_fin')
+            ->orderBy('promocions.id');
     }
 }

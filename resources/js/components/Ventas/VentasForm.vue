@@ -100,19 +100,56 @@
                     density="compact" />
                 <MoneyInput label="Descuento" v-model="form.descuento" variant="outlined" density="compact"
                     :error-messages="errors.descuento" />
-                <MoneyInput label="Promociones" v-model="form.promociones_monto" :readonly="!!form.promociones"
-                    :disabled="!!form.promociones" variant="outlined" density="compact" />
 
-                <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
-                    Promoción aplicada: {{ form.promociones.nombre }}
+                <v-card class="discount-summary-card mb-4" variant="tonal">
+                    <div class="discount-summary-title">
+                        <v-icon size="18">mdi-ticket-percent-outline</v-icon>
+                        Descuentos aplicados
+                    </div>
 
-                    <span v-if="form.promociones.tipo === 'porcentaje'">
-                        ({{ form.promociones.valor }}% de descuento)
-                    </span>
-                    <span v-else>
-                        ({{ formatQuetzales(form.promociones.valor) }} de descuento)
-                    </span>
-                </div>
+                    <div class="discount-row">
+                        <span>Productos</span>
+                        <strong>{{ formatQuetzales(descuentoProductosMonto) }}</strong>
+                    </div>
+
+                    <div v-if="promocionesProductoAplicadas.length" class="discount-product-list">
+                        <v-chip v-for="promo in promocionesProductoAplicadas" :key="promo.key" size="x-small"
+                            color="red" variant="tonal">
+                            {{ promo.nombre }} -{{ promo.valor }}
+                        </v-chip>
+                    </div>
+
+                    <div class="discount-row">
+                        <span>Carrito</span>
+                        <strong>{{ formatQuetzales(promocionCarritoMonto) }}</strong>
+                    </div>
+
+                    <div v-if="form.promociones" class="discount-caption">
+                        {{ form.promociones.nombre }}
+                        <span v-if="form.promociones.tipo === 'porcentaje'">
+                            ({{ form.promociones.valor }}%)
+                        </span>
+                        <span v-else>
+                            ({{ formatQuetzales(form.promociones.valor) }})
+                        </span>
+                    </div>
+
+                    <MoneyInput v-else label="Promoción carrito" v-model="form.promociones_monto" variant="outlined"
+                        density="compact" hide-details />
+
+                    <div class="discount-row">
+                        <span>Manual</span>
+                        <strong>{{ formatQuetzales(descuentoManualMonto) }}</strong>
+                    </div>
+
+                    <v-divider class="my-2" />
+
+                    <div class="discount-row discount-total">
+                        <span>Total descuentos</span>
+                        <strong>{{ formatQuetzales(totalDescuentosMonto) }}</strong>
+                    </div>
+                </v-card>
+
                 <MoneyInput label="Costo Envío" v-model="form.costo_envio" variant="outlined" density="compact"
                     :error-messages="errors.costo_envio" />
                 <MoneyInput label="Total" :model-value="totalCalculado" readonly variant="outlined" density="compact"
@@ -700,6 +737,52 @@ export default {
 
             return this.form.detalle.reduce((s, i) => s + parseFloat(i.total || 0), 0)
         },
+        subtotalBrutoProductos() {
+            if (!Array.isArray(this.form.detalle)) return 0
+
+            return this.form.detalle.reduce((total, item) => {
+                const precio = parseMoney(item.precio) ?? 0
+                const cantidad = parseFloat(item.cantidad || 0)
+
+                return total + (precio * cantidad)
+            }, 0)
+        },
+        descuentoProductosMonto() {
+            return Math.max(0, this.subtotalBrutoProductos - this.subtotalCalculado)
+        },
+        promocionCarritoMonto() {
+            return parseMoney(this.form.promociones_monto) ?? 0
+        },
+        descuentoManualMonto() {
+            return parseMoney(this.form.descuento) ?? 0
+        },
+        totalDescuentosMonto() {
+            return this.descuentoProductosMonto + this.promocionCarritoMonto + this.descuentoManualMonto
+        },
+        promocionesProductoAplicadas() {
+            if (!Array.isArray(this.form.detalle)) return []
+
+            const promociones = new Map()
+
+            this.form.detalle.forEach((item, index) => {
+                const promo = item.promocion_aplicada
+
+                if (!promo) return
+
+                const key = promo.id || `${promo.nombre}-${promo.tipo}-${promo.valor}-${index}`
+                const valor = promo.tipo === 'porcentaje'
+                    ? `${promo.valor}%`
+                    : this.formatQuetzales(promo.valor)
+
+                promociones.set(key, {
+                    key,
+                    nombre: promo.nombre,
+                    valor,
+                })
+            })
+
+            return [...promociones.values()]
+        },
         totalCalculado() {
             const sub = this.subtotalCalculado;
             const logo = parseMoney(this.form.costo_logo) ?? 0;
@@ -753,3 +836,48 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.discount-summary-card {
+    padding: 12px;
+    border: 1px solid #dbe8e5;
+    background: #f5fbfa;
+}
+
+.discount-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    color: #0f5f56;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.discount-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    font-size: 0.85rem;
+}
+
+.discount-total {
+    color: #0f5f56;
+    font-size: 0.9rem;
+}
+
+.discount-caption {
+    margin: -1px 0 5px;
+    color: #5c6f6b;
+    font-size: 0.75rem;
+}
+
+.discount-product-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 0 6px;
+}
+</style>

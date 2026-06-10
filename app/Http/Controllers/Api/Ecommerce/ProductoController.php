@@ -38,10 +38,12 @@ class ProductoController extends Controller
         $productos->getCollection()->transform(function ($producto) {
 
             $promo = Promocion::vigente()
-                ->where('aplica_a', 'producto')
+                ->producto()
                 ->whereHas('productos', function ($q) use ($producto) {
                     $q->where('productos.id', $producto->id);
                 })
+                ->orderBy('fecha_fin')
+                ->orderBy('id')
                 ->first();
 
             if ($promo) {
@@ -77,10 +79,12 @@ class ProductoController extends Controller
 
         // APLICAR PROMOCIÓN
         $promo = Promocion::vigente()
-            ->where('aplica_a', 'producto')
+            ->producto()
             ->whereHas('productos', function ($q) use ($producto) {
                 $q->where('productos.id', $producto->id);
             })
+            ->orderBy('fecha_fin')
+            ->orderBy('id')
             ->first();
 
         if ($promo) {
@@ -110,7 +114,9 @@ class ProductoController extends Controller
     public function getPromos()
     {
         return Promocion::vigente()
-            ->where('aplica_a', 'carrito')
+            ->carrito()
+            ->orderBy('fecha_fin')
+            ->orderBy('id')
             ->get()
             ->map(fn($p) => [
                 'id' => $p->id,
@@ -127,10 +133,12 @@ class ProductoController extends Controller
         return collect($items)->map(function ($item) {
 
             $promo = Promocion::vigente()
-                ->where('aplica_a', 'producto')
+                ->producto()
                 ->whereHas('productos', function ($q) use ($item) {
                     $q->where('productos.id', $item['productos_id']);
                 })
+                ->orderBy('fecha_fin')
+                ->orderBy('id')
                 ->first();
 
             return [
@@ -151,11 +159,13 @@ class ProductoController extends Controller
     public function promociones()
     {
         return Promocion::vigente()
-            ->where('aplica_a', 'producto')
+            ->producto()
             ->with(['productos' => function ($q) {
                 $q->where('estado', 1)
                     ->where('ecommerce', 1);
             }])
+            ->orderBy('fecha_fin')
+            ->orderBy('id')
             ->get()
             ->map(function ($promo) {
                 return [

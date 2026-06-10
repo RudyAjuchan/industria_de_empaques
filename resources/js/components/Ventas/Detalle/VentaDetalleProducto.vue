@@ -30,7 +30,7 @@
                     <th>COLOR AGARRADOR</th>
                     <td>{{ item.color_agarrador ?? '-' }}</td>
                     <th>PRECIO U</th>
-                    <td>{{ item.precio }}</td>
+                    <td>{{ formatQuetzales(item.precio) }}</td>
                 </tr>
                 <tr>
                     <th>ANCHO</th>
@@ -49,14 +49,14 @@
                     <td>
                         <div v-if="item.promocion_aplicada">
                             <span style="text-decoration:line-through; color:#999;">
-                                Q {{ Number(item.precio * item.cantidad).toFixed(2) }}
+                                {{ formatQuetzales(item.precio * item.cantidad) }}
                             </span>
                             <br>
-                            <strong>Q {{ Number(item.total).toFixed(2) }}</strong>
+                            <strong>{{ formatQuetzales(item.total) }}</strong>
                         </div>
     
                         <div v-else>
-                            Q {{ Number(item.total).toFixed(2) }}
+                            {{ formatQuetzales(item.total) }}
                         </div>
                     </td>
                 </tr>
@@ -75,7 +75,7 @@
                             ({{ item.promocion_aplicada.valor }}%)
                         </span>
                         <span v-else>
-                            (Q {{ Number(item.promocion_aplicada.valor).toFixed(2) }})
+                            ({{ formatQuetzales(item.promocion_aplicada.valor) }})
                         </span>
                     </td>
                 </tr>
@@ -209,6 +209,7 @@
 
 <script>
 import { toast } from 'vue3-toastify'
+import { formatQuetzales } from '../../../utils/money'
 export default {
     name: 'VentaDetalleProductos',
     props: {
@@ -225,6 +226,7 @@ export default {
         }
     },
     methods: {
+        formatQuetzales,
         getLogoUrl(path) {
             return this.getFileUrl(path)
         },

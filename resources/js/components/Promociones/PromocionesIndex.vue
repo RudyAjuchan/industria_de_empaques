@@ -62,7 +62,7 @@
                     {{ item.valor }}%
                 </span>
                 <span v-else>
-                    Q {{ item.valor }}
+                    {{ formatQuetzales(item.valor) }}
                 </span>
             </template>
 
@@ -104,6 +104,7 @@
 import axios from 'axios'
 import PromocionDialog from './PromocionDialog.vue'
 import { toast } from 'vue3-toastify'
+import { formatQuetzales } from '../../utils/money'
 
 export default {
     name: 'promociones.index',
@@ -213,7 +214,9 @@ export default {
                 hour: '2-digit',
                 minute: '2-digit',
             })
-        }
+        },
+
+        formatQuetzales,
     }
 }
 </script>

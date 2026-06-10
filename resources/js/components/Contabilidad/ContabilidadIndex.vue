@@ -28,13 +28,18 @@
 
         <!-- TABLA -->
         <v-data-table :headers="headers" :items="items" :loading="loading" fixed-header height="400px"
-            :header-props="{ class: 'bg-teal-lighten-2' }" />
+            :header-props="{ class: 'bg-teal-lighten-2' }">
+            <template v-slot:[`item.total`]="{ item }">
+                {{ formatQuetzales(item.total) }}
+            </template>
+        </v-data-table>
 
     </div>
 </template>
 
 <script>
 import axios from 'axios'
+import { formatQuetzales } from '../../utils/money'
 
 export default {
     name: 'ContabilidadVue',
@@ -62,6 +67,7 @@ export default {
     },
 
     methods: {
+        formatQuetzales,
 
         async getData() {
             this.loading = true

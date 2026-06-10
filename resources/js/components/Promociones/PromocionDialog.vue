@@ -24,10 +24,12 @@
                 <v-select v-model="form.tipo" :items="tipos" label="Tipo" density="compact" variant="outlined" />
 
                 <!-- VALOR -->
-                <v-text-field v-model="form.valor" :label="form.tipo === 'porcentaje' ? 'Porcentaje (%)' : 'Monto (Q)'"
+                <v-text-field v-if="form.tipo === 'porcentaje'" v-model="form.valor" label="Porcentaje (%)"
                     type="number" density="compact" variant="outlined" :min="form.tipo === 'porcentaje' ? 1 : 0"
                     :max="form.tipo === 'porcentaje' ? 100 : null" :error="errorValor"
                     :error-messages="errorValor ? 'Debe estar entre 1 y 100' : ''" />
+                <MoneyInput v-else v-model="form.valor" label="Monto" density="compact" variant="outlined"
+                    :error-messages="errors.valor" />
 
                 <!-- FECHAS -->
                 <v-row>
@@ -144,9 +146,13 @@
 <script>
 import axios from 'axios'
 import { toast } from 'vue3-toastify'
+import MoneyInput from '../common/MoneyInput.vue'
 
 export default {
     name: 'PromocionDialog',
+    components: {
+        MoneyInput,
+    },
 
     props: {
         modelValue: Boolean,

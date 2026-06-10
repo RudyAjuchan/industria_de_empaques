@@ -100,7 +100,7 @@
                         </div>
                     </td>
                     <td>
-                        <v-text-field v-model="item.precio" @input="onChangeItem(item)" dense
+                        <MoneyInput v-model="item.precio" @update:model-value="onChangeItem(item)" dense
                             hide-details="auto" density="compact" variant="outlined" :error-messages="fieldError(index, 'precio')" :disabled="item.producto?.tipo_producto === 'simple'"/>
                     </td>
 
@@ -110,7 +110,7 @@
                     </td>
 
                     <td>
-                        <v-text-field :model-value="item.total" readonly dense hide-details density="compact" variant="outlined" disabled/>
+                        <MoneyInput :model-value="item.total" readonly dense hide-details density="compact" variant="outlined" disabled/>
                     </td>
 
                     <td>
@@ -232,6 +232,8 @@
 import AgarradorDialog from '../Agarradores/AgarradorDialog.vue'
 import PapelDialog from '../TipoPapel/TipoPapelDialog.vue'
 import ProductoDialog from '../Productos/ProductosDialog.vue'
+import MoneyInput from '../common/MoneyInput.vue'
+import { formatQuetzales } from '../../utils/money'
 import { toast } from 'vue3-toastify'
 import { FilePond } from '../../plugins/filepond'
 export default {
@@ -249,6 +251,7 @@ export default {
         AgarradorDialog,
         PapelDialog,
         ProductoDialog,
+        MoneyInput,
         FilePond,
     },
 
@@ -530,17 +533,7 @@ export default {
             this.calcularFila(item)
         },
 
-        formatQuetzales(value){
-            if (value === null || value === undefined || isNaN(value)) {
-                return 'Q 0.00';
-            }
-
-            return new Intl.NumberFormat('es-GT', {
-                style: 'currency',
-                currency: 'GTQ',
-                minimumFractionDigits: 2
-            }).format(value);
-        },
+        formatQuetzales,
 
         async obtenerPromocion(item) {
             try {

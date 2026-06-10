@@ -249,10 +249,10 @@
                             <tr v-for="(item, index) in ventasPorPagina" :key="index">
                                 <td>{{ index + 1 }}</td>
                                 <td>{{ item.nombre }}</td>
-                                <td class="text-right">Q{{ formatNumber(item.venta) }}</td>
-                                <td class="text-right">Q{{ formatNumber(item.envio) }}</td>
+                                <td class="text-right">{{ formatQuetzales(item.venta) }}</td>
+                                <td class="text-right">{{ formatQuetzales(item.envio) }}</td>
                                 <td class="text-right font-weight-bold">
-                                    Q{{ formatNumber(item.total) }}
+                                    {{ formatQuetzales(item.total) }}
                                 </td>
                             </tr>
                         </tbody>
@@ -262,13 +262,13 @@
                             <tr class="bg-grey-lighten-3 font-weight-bold">
                                 <td colspan="2">TOTAL</td>
                                 <td class="text-right">
-                                    Q{{ formatNumber(totalesVentaPagina.venta) }}
+                                    {{ formatQuetzales(totalesVentaPagina.venta) }}
                                 </td>
                                 <td class="text-right">
-                                    Q{{ formatNumber(totalesVentaPagina.envio) }}
+                                    {{ formatQuetzales(totalesVentaPagina.envio) }}
                                 </td>
                                 <td class="text-right">
-                                    Q{{ formatNumber(totalesVentaPagina.total) }}
+                                    {{ formatQuetzales(totalesVentaPagina.total) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -349,6 +349,7 @@
 import LoginWelcome from './LoginWelcome.vue';
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { toast } from 'vue3-toastify'
+import { formatQuetzales } from '../utils/money'
 
 const centerTextPlugin = {
     id: 'centerText',
@@ -625,6 +626,8 @@ export default {
             return Number(value).toLocaleString('es-GT')
         },
 
+        formatQuetzales,
+
         async cargarFiltros() {
             const { data } = await axios.get('/filtros-produccion')
 
@@ -707,7 +710,7 @@ export default {
                             anchor: 'end',
                             align: 'top',
                             formatter: (value) => {
-                                return 'Q' + Number(value).toLocaleString('es-GT')
+                                return this.formatQuetzales(value)
                             },
                             font: {
                                 weight: 'bold'
@@ -720,7 +723,7 @@ export default {
                                     return Array.isArray(label) ? label.join(' ') : label
                                 },
                                 label: (context) => {
-                                    return 'Q' + Number(context.raw).toLocaleString('es-GT')
+                                    return this.formatQuetzales(context.raw)
                                 }
                             }
                         }
@@ -745,7 +748,7 @@ export default {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                callback: (value) => 'Q' + Number(value).toLocaleString('es-GT')
+                                callback: (value) => this.formatQuetzales(value)
                             }
                         }
                     }

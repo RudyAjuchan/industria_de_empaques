@@ -12,7 +12,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(pago, index) in venta.pagos" :key="pago.id">
                         <v-list-item-title>
-                            Q{{ pago.monto }} - {{ pago.metodo_pago }} <v-btn v-if="index > 0 && can('pago.borrar')" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
+                            {{ formatQuetzales(pago.monto) }} - {{ pago.metodo_pago }} <v-btn v-if="index > 0 && can('pago.borrar')" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
 
                         <v-list-item-subtitle>
@@ -43,7 +43,7 @@
                 </div>
 
                 <div class="text-subtitle-2 mb-2">Datos para el nuevo pago</div>
-                <v-text-field v-model="form.monto" label="Monto" type="number" variant="outlined" density="compact"
+                <MoneyInput v-model="form.monto" label="Monto" variant="outlined" density="compact"
                     :error-messages="errores.monto" />
 
                 <v-select v-model="form.metodo_pago" :items="tipoPago" item-title="nombre" item-value="nombre"
@@ -91,10 +91,15 @@
 
 <script>
 import { toast } from 'vue3-toastify';
+import MoneyInput from '../common/MoneyInput.vue';
+import { formatQuetzales } from '../../utils/money';
 
 
 export default {
     name: 'PagoDialog',
+    components: {
+        MoneyInput,
+    },
 
     props: {
         modelValue: Boolean,
@@ -193,17 +198,7 @@ export default {
             })
         },
 
-        formatQuetzales(value){
-            if (value === null || value === undefined || isNaN(value)) {
-                return 'Q 0.00';
-            }
-
-            return new Intl.NumberFormat('es-GT', {
-                style: 'currency',
-                currency: 'GTQ',
-                minimumFractionDigits: 2
-            }).format(value);
-        },
+        formatQuetzales,
 
         async deletePago(){
             this.saving = true

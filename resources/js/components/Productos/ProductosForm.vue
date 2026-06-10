@@ -37,8 +37,7 @@
                 </template>
 
                 <v-col cols="12" v-if="form.tipo_producto === 'simple'">
-                    <v-text-field v-model="form.precio_base" label="Precio unidad" type="number" step="0.01" lang="es-GT"
-                        inputmode="decimal" variant="outlined" density="compact" />
+                    <MoneyInput v-model="form.precio_base" label="Precio unidad" variant="outlined" density="compact" />
                 </v-col>
 
                 <v-col cols="12">
@@ -171,6 +170,7 @@ import { FilePond } from '../../plugins/filepond'
 import draggable from 'vuedraggable'
 import DialogPagina from '../Paginas/PaginaDialog.vue'
 import TipoProductoDialog from './TipoProductoDialog.vue'
+import MoneyInput from '../common/MoneyInput.vue'
 import { toast } from 'vue3-toastify'
 
 export default {
@@ -181,6 +181,7 @@ export default {
         draggable,
         DialogPagina,
         TipoProductoDialog,
+        MoneyInput,
     },
 
     emits: ['saved', 'cancel'],

@@ -41,6 +41,10 @@
                 {{ formatDate(item.created_at) }}
             </template>
 
+            <template v-slot:[`item.total`]="{ item }">
+                {{ formatQuetzales(item.total) }}
+            </template>
+
             <template v-slot:[`item.estado`]="{ item }">
                 <v-chip :color="item.estado === 'anulada' ? 'red' : 'green'" dark>
                     {{ item.estado }}
@@ -78,6 +82,7 @@
 <script>
 import axios from 'axios'
 import { toast } from 'vue3-toastify'
+import { formatQuetzales } from '../../utils/money'
 
 export default {
     name: 'ventas.index',
@@ -99,6 +104,8 @@ export default {
     },
 
     methods: {
+        formatQuetzales,
+
         async getVentas() {
             this.loading = true
             try {

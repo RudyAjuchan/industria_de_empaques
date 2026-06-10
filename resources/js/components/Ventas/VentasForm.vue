@@ -64,10 +64,10 @@
                     v-model="form.tipo_pago" variant="outlined" density="compact" :error-messages="errors.tipo_pago" />
                 <v-text-field label="No. Depósito" density="compact" variant="outlined"
                     v-model="form.no_deposito"></v-text-field>
-                <v-text-field label="Cantidad depósito" density="compact" variant="outlined"
-                    v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito"></v-text-field>
-                <v-text-field label="Pendiente a pagar" density="compact" variant="outlined" v-model="pendientePagar"
-                    disabled></v-text-field>
+                <MoneyInput label="Cantidad depósito" density="compact" variant="outlined"
+                    v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito" />
+                <MoneyInput label="Pendiente a pagar" density="compact" variant="outlined" :model-value="pendientePagar"
+                    disabled />
             </v-col>
         </v-row>
 
@@ -85,15 +85,15 @@
                 </v-btn>
             </v-col>
             <v-col cols="4">
-                <v-text-field label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact"
+                <MoneyInput label="Costo Logo" v-model="form.costo_logo" variant="outlined" density="compact"
                     :error-messages="errors.costo_logo" />
             </v-col>
             <v-col cols="4">
-                <v-text-field label="Subtotal" :model-value="subtotalCalculado" disabled variant="outlined"
+                <MoneyInput label="Subtotal" :model-value="subtotalCalculado" disabled variant="outlined"
                     density="compact" />
-                <v-text-field label="Descuento" v-model.number="form.descuento" variant="outlined" density="compact"
+                <MoneyInput label="Descuento" v-model="form.descuento" variant="outlined" density="compact"
                     :error-messages="errors.descuento" />
-                <v-text-field label="Promociones" v-model.number="form.promociones_monto" :readonly="!!form.promociones"
+                <MoneyInput label="Promociones" v-model="form.promociones_monto" :readonly="!!form.promociones"
                     :disabled="!!form.promociones" variant="outlined" density="compact" />
 
                 <div v-if="form.promociones" style="font-size:12px; color:#2e7d32; margin-top:4px;" class="mb-3">
@@ -103,12 +103,12 @@
                         ({{ form.promociones.valor }}% de descuento)
                     </span>
                     <span v-else>
-                        (Q{{ form.promociones.valor }} de descuento)
+                        ({{ formatQuetzales(form.promociones.valor) }} de descuento)
                     </span>
                 </div>
-                <v-text-field label="Costo Envío" v-model.number="form.costo_envio" variant="outlined" density="compact"
+                <MoneyInput label="Costo Envío" v-model="form.costo_envio" variant="outlined" density="compact"
                     :error-messages="errors.costo_envio" />
-                <v-text-field label="Total" :model-value="totalCalculado" readonly variant="outlined" density="compact"
+                <MoneyInput label="Total" :model-value="totalCalculado" readonly variant="outlined" density="compact"
                     disabled />
             </v-col>
         </v-row>
@@ -121,10 +121,12 @@ import axios from 'axios'
 import VentasDetalleTable from './VentasDetalleTable.vue'
 import BancoDialog from '../Bancos/BancoDialog.vue';
 import ClientesDialog from '../Clientes/ClientesDialog.vue';
+import MoneyInput from '../common/MoneyInput.vue'
+import { formatQuetzales } from '../../utils/money'
 import { toast } from 'vue3-toastify'
 
 export default {
-    components: { VentasDetalleTable, BancoDialog, ClientesDialog },
+    components: { VentasDetalleTable, BancoDialog, ClientesDialog, MoneyInput },
     emits: ['saved', 'cancel'],
     data() {
         return {
@@ -188,6 +190,7 @@ export default {
     },
 
     methods: {
+        formatQuetzales,
 
         async loadCatalogos() {
             //this.clientes = (await axios.get('/cliente')).data

@@ -128,6 +128,7 @@
 <script>
 import axios from 'axios'
 import { toast } from 'vue3-toastify'
+import { formatQuetzales } from '../../utils/money'
 
 
 export default {
@@ -270,17 +271,7 @@ export default {
             })
         },
 
-        formatQuetzales(value){
-            if (value === null || value === undefined || isNaN(value)) {
-                return 'Q 0.00';
-            }
-
-            return new Intl.NumberFormat('es-GT', {
-                style: 'currency',
-                currency: 'GTQ',
-                minimumFractionDigits: 2
-            }).format(value);
-        },
+        formatQuetzales,
     },
     watch: {
         search(newValue) {

@@ -28,22 +28,22 @@
 
                         <div class="d-flex justify-space-between mb-2">
                             <span>Subtotal</span>
-                            <v-chip size="small" color="primary">Q {{ venta.subtotal }}</v-chip>
+                            <v-chip size="small" color="primary">{{ formatQuetzales(venta.subtotal) }}</v-chip>
                         </div>
 
                         <div class="d-flex justify-space-between mb-2">
                             <span>Descuento</span>
-                            <v-chip size="small" color="red">Q {{ venta.descuento }}</v-chip>
+                            <v-chip size="small" color="red">{{ formatQuetzales(venta.descuento) }}</v-chip>
                         </div>
 
                         <div class="d-flex justify-space-between mb-2">
                             <span>Logo</span>
-                            <v-chip size="small" color="green">Q {{ venta.costo_logo }}</v-chip>
+                            <v-chip size="small" color="green">{{ formatQuetzales(venta.costo_logo) }}</v-chip>
                         </div>
 
                         <div class="d-flex justify-space-between mb-2">
                             <span>Envío</span>
-                            <v-chip size="small" color="green">Q {{ venta.costo_envio }}</v-chip>
+                            <v-chip size="small" color="green">{{ formatQuetzales(venta.costo_envio) }}</v-chip>
                         </div>
 
                         <!-- PROMO -->
@@ -51,7 +51,7 @@
                             <div class="d-flex justify-space-between">
                                 <span>Promoción</span>
                                 <v-chip size="small" color="purple">
-                                    - Q {{ promocionMonto.toFixed(2) }}
+                                    - {{ formatQuetzales(promocionMonto) }}
                                 </v-chip>
                             </div>
 
@@ -65,7 +65,7 @@
                         <div class="d-flex justify-space-between align-center">
                             <span class="font-weight-bold">TOTAL</span>
                             <v-chip color="red" class="text-h6">
-                                Q {{ venta.total }}
+                                {{ formatQuetzales(venta.total) }}
                             </v-chip>
                         </div>
 
@@ -89,20 +89,20 @@
                 </div>
 
                 <div class="text-body-2 mb-2">
-                    <b>Total:</b> Q {{ venta.total }}
+                    <b>Total:</b> {{ formatQuetzales(venta.total) }}
                 </div>
 
                 <div class="text-body-2 mb-2">
                     <b>Pagado:</b>
                     <v-chip size="small" color="green">
-                        Q {{ totalPagado.toFixed(2) }}
+                        {{ formatQuetzales(totalPagado) }}
                     </v-chip>
                 </div>
 
                 <div class="text-body-2 mb-3">
                     <b>Pendiente:</b>
                     <v-chip size="small" color="red">
-                        Q {{ saldoPendiente.toFixed(2) }}
+                        {{ formatQuetzales(saldoPendiente) }}
                     </v-chip>
                 </div>
 
@@ -112,7 +112,7 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(p,index) in venta.pagos" :key="p.id">
                         <v-list-item-title>
-                            Q{{ p.monto }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index > 0 && can('pago.borrar')" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="error" density="compact" icon="mdi-delete"></v-btn>
+                            {{ formatQuetzales(p.monto) }} - {{ p.metodo_pago || 'N/A' }} <v-btn v-if="index > 0 && can('pago.borrar')" :disabled="venta.estado_produccion == 'finalizada'" @click="deleteDialog = true, idEliminar = p.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
                         <v-list-item-subtitle>
                             {{ p.banco?.nombre }}
@@ -156,6 +156,7 @@
 
 <script>
 import { toast } from 'vue3-toastify';
+import { formatQuetzales } from '../../../utils/money'
 export default {
     props: {
         venta: Object
@@ -211,6 +212,7 @@ export default {
     },
 
     methods: {
+        formatQuetzales,
         formatDate(date) {
             return new Date(date).toLocaleString('es-GT')
         },

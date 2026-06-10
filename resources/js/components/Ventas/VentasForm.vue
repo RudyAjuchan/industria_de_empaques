@@ -50,7 +50,7 @@
                 <h2>Datos de pago</h2>
                 <!-- PARA EL BANCO -->
                 <v-select label="Banco" :items="bancos" item-title="nombre" item-value="id" v-model="form.bancos_id"
-                    variant="outlined" density="compact" :error-messages="errors.bancos_id">
+                    variant="outlined" density="compact" :disabled="!tieneDeposito" :error-messages="errors.bancos_id">
                     <template #append-inner>
                         <v-btn icon size="small" variant="text" @click.stop="openBancoDialog">
                             <v-icon size="18">mdi-plus</v-icon>
@@ -61,11 +61,18 @@
                 <BancoDialog v-model="bancoDialog" :tipo="null" @saved="onBancoSaved" />
                 <!-- FINAL PARA EL BANCO -->
                 <v-select label="Tipo pago" :items="tipoPago" item-title="nombre" item-value="nombre"
-                    v-model="form.tipo_pago" variant="outlined" density="compact" :error-messages="errors.tipo_pago" />
+                    v-model="form.tipo_pago" variant="outlined" density="compact" :disabled="!tieneDeposito"
+                    :error-messages="errors.tipo_pago" />
                 <v-text-field label="No. Depósito" density="compact" variant="outlined"
-                    v-model="form.no_deposito"></v-text-field>
+                    v-model="form.no_deposito" :disabled="!tieneDeposito"></v-text-field>
                 <MoneyInput label="Cantidad depósito" density="compact" variant="outlined"
                     v-model="form.cantidad_deposito" :error-messages="errors.cantidad_deposito" />
+                <v-file-input v-model="comprobantePago" label="Comprobante de pago"
+                    accept="image/*,.pdf" prepend-icon="mdi-paperclip" variant="outlined" density="compact"
+                    :disabled="!tieneDeposito" :error-messages="errors.comprobante_pago" />
+                <v-alert v-if="!tieneDeposito" type="info" variant="tonal" density="compact" class="mb-4">
+                    La venta quedará pendiente de pago y podrá abonarse desde el módulo de pagos.
+                </v-alert>
                 <MoneyInput label="Pendiente a pagar" density="compact" variant="outlined" :model-value="pendientePagar"
                     disabled />
             </v-col>
@@ -122,7 +129,7 @@ import VentasDetalleTable from './VentasDetalleTable.vue'
 import BancoDialog from '../Bancos/BancoDialog.vue';
 import ClientesDialog from '../Clientes/ClientesDialog.vue';
 import MoneyInput from '../common/MoneyInput.vue'
-import { formatQuetzales } from '../../utils/money'
+import { formatQuetzales, parseMoney } from '../../utils/money'
 import { toast } from 'vue3-toastify'
 
 export default {
@@ -185,7 +192,8 @@ export default {
             errors: {},
             modo: '',
             venta: null,
-            ready: false
+            ready: false,
+            comprobantePago: null,
         }
     },
 
@@ -221,6 +229,14 @@ export default {
 
                 if (this.form.promociones?.id) {
                     formData.append('promociones_id', this.form.promociones.id);
+                }
+
+                const comprobante = Array.isArray(this.comprobantePago)
+                    ? this.comprobantePago[0]
+                    : this.comprobantePago
+
+                if (comprobante) {
+                    formData.append('comprobante_pago', comprobante)
                 }
 
                 this.form.detalle.forEach((item, index) => {
@@ -654,6 +670,14 @@ export default {
             },
             deep: true
         },
+        'form.cantidad_deposito'(value) {
+            if ((parseMoney(value) ?? 0) > 0) return
+
+            this.form.bancos_id = null
+            this.form.tipo_pago = null
+            this.form.no_deposito = ''
+            this.comprobantePago = null
+        },
 
         searchCliente(val) {
 
@@ -678,17 +702,20 @@ export default {
         },
         totalCalculado() {
             const sub = this.subtotalCalculado;
-            const logo = parseFloat(this.form.costo_logo || 0);
-            const descuento = parseFloat(this.form.descuento || 0);
-            const promo = parseFloat(this.form.promociones_monto || 0);
-            const envio = parseFloat(this.form.costo_envio || 0);
+            const logo = parseMoney(this.form.costo_logo) ?? 0;
+            const descuento = parseMoney(this.form.descuento) ?? 0;
+            const promo = parseMoney(this.form.promociones_monto) ?? 0;
+            const envio = parseMoney(this.form.costo_envio) ?? 0;
 
             return (sub + logo + envio) - (descuento + promo);
         },
         pendientePagar() {
-            const total = parseFloat(this.totalCalculado || 0);
-            const totalDeposito = parseFloat(this.form.cantidad_deposito || 0);
+            const total = parseMoney(this.totalCalculado) ?? 0;
+            const totalDeposito = parseMoney(this.form.cantidad_deposito) ?? 0;
             return total - totalDeposito;
+        },
+        tieneDeposito() {
+            return (parseMoney(this.form.cantidad_deposito) ?? 0) > 0
         }
     },
 

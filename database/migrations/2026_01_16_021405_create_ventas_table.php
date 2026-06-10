@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('numero');
             $table->unique(['serie', 'numero']);
             $table->date('fecha_entrega');
-            $table->string('tipo_pago');
+            $table->string('tipo_pago')->nullable();
             $table->string('no_deposito')->nullable();
             $table->decimal('cantidad_deposito', 12, 2)->nullable();
             $table->decimal('pendiente_pagar', 12, 2)->nullable();

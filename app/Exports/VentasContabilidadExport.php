@@ -89,6 +89,11 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             . $fecha;
         })->implode("\n");
 
+        $comprobantes = $pagos
+            ->filter(fn($p) => $p->comprobante_path)
+            ->map(fn($p) => route('pagos.comprobante', $p))
+            ->implode("\n");
+
         return [
             // VENTA
             $documento,
@@ -154,6 +159,7 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             $primeraFilaVenta ? $pagos->count() : '',
             $primeraFilaVenta && $pagos->last() && $pagos->last()->created_at ? $pagos->last()->created_at->format('Y-m-d') : '',
             $primeraFilaVenta ? $historialPagos : '',
+            $primeraFilaVenta ? $comprobantes : '',
 
             // INFO PAGO
             $primeraFilaVenta ? $venta->tipo_pago : '',
@@ -191,11 +197,11 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                 ['PRODUCTO'], array_fill(0, 10, ''),
                 ['DETALLE'], array_fill(0, 5, ''),
                 ['TOTALES'], array_fill(0, 3, ''),
-                ['PAGOS'], array_fill(0, 4, ''),
+                ['PAGOS'], array_fill(0, 5, ''),
                 ['PAGO INFO'], [''],
                 ['PROMOCIÓN'], array_fill(0, 2, ''),
             ),
-            ['Número', 'ID', 'Fecha', 'Actualizado', 'Serie', 'Estado', 'Est. Prod.', 'Tipo cliente', 'Origen', 'Entrega', 'Nombre', 'NIT', 'DPI', 'Email', 'Teléfono', 'Género', 'País', 'Estado', 'Ciudad', 'Depto', 'Municipio', 'Dirección', 'Asesor', 'Producto', 'Tipo', 'Categoría', 'Página', 'Alto', 'Ancho', 'Fuelle', 'Papel', 'Agarrador', 'Color', 'Impresión', 'Logo', 'Cant.', 'Precio', 'Subtotal L.', 'Desc. L.', 'Total L.', 'Subtotal V.', 'Desc. V.', 'Envío', 'Total V.', 'Pagado', 'Pendiente', 'Cant. Pagos', 'Últ. Pago', 'Historial', 'Tipo Pago', 'Banco', 'Nombre', 'Tipo', 'Valor']
+            ['Número', 'ID', 'Fecha', 'Actualizado', 'Serie', 'Estado', 'Est. Prod.', 'Tipo cliente', 'Origen', 'Entrega', 'Nombre', 'NIT', 'DPI', 'Email', 'Teléfono', 'Género', 'País', 'Estado', 'Ciudad', 'Depto', 'Municipio', 'Dirección', 'Asesor', 'Producto', 'Tipo', 'Categoría', 'Página', 'Alto', 'Ancho', 'Fuelle', 'Papel', 'Agarrador', 'Color', 'Impresión', 'Logo', 'Cant.', 'Precio', 'Subtotal L.', 'Desc. L.', 'Total L.', 'Subtotal V.', 'Desc. V.', 'Envío', 'Total V.', 'Pagado', 'Pendiente', 'Cant. Pagos', 'Últ. Pago', 'Historial', 'Comprobantes', 'Tipo Pago', 'Banco', 'Nombre', 'Tipo', 'Valor']
         ];
     }
 
@@ -204,10 +210,10 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         // Aplicamos el ajuste de texto específicamente al rango de la columna J
         // desde la fila 2 hasta la última con datos.
         $lastRow = $sheet->getHighestRow();
-        $sheet->getStyle('AW2:AW' . $lastRow)->getAlignment()->setWrapText(true);
+        $sheet->getStyle('AW2:AX' . $lastRow)->getAlignment()->setWrapText(true);
 
         // Alineación vertical arriba para que se vea ordenado
-        $sheet->getStyle('AW2:AW' . $lastRow)->getAlignment()->setVertical('top');
+        $sheet->getStyle('AW2:AX' . $lastRow)->getAlignment()->setVertical('top');
         return [
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -234,9 +240,9 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                 $sheet->mergeCells('X1:AH1');  // Producto
                 $sheet->mergeCells('AI1:AN1'); // Detalle
                 $sheet->mergeCells('AO1:AR1'); // Totales
-                $sheet->mergeCells('AS1:AW1'); // Pagos
-                $sheet->mergeCells('AX1:AY1'); // Pago Info
-                $sheet->mergeCells('AZ1:BB1'); // Promoción
+                $sheet->mergeCells('AS1:AX1'); // Pagos
+                $sheet->mergeCells('AY1:AZ1'); // Pago Info
+                $sheet->mergeCells('BA1:BC1'); // Promoción
                 $sheet->freezePane('B3');
 
                 // Auto-ancho para todas las columnas usadas

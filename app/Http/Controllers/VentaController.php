@@ -156,9 +156,9 @@ class VentaController extends Controller
                 'numero' => $numero,
                 'vendedor_id' => Auth::user()->id,
                 'clientes_id' => $data['clientes_id'],
-                'bancos_id' => $data['bancos_id'],
+                'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
-                'tipo_pago' => $data['tipo_pago'],
+                'tipo_pago' => $data['tipo_pago'] ?? null,
 
                 'no_deposito' => $data['no_deposito'] ?? null,
                 'cantidad_deposito' => $deposito,
@@ -183,10 +183,13 @@ class VentaController extends Controller
                 Pago::create([
                     'ventas_id' => $venta->id,
                     'monto' => $deposito,
-                    'metodo_pago' => $data['tipo_pago'],
+                    'metodo_pago' => $data['tipo_pago'] ?? null,
                     'referencia' => $data['no_deposito'] ?? null,
+                    'comprobante_path' => $request->hasFile('comprobante_pago')
+                        ? $request->file('comprobante_pago')->store('pagos/comprobantes', 's3')
+                        : null,
                     'users_id' => Auth::user()->id,
-                    'bancos_id' => $data['bancos_id'],
+                    'bancos_id' => $data['bancos_id'] ?? null,
                 ]);
             }
 
@@ -503,7 +506,8 @@ class VentaController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'bancos_id' => 'required',
+            'bancos_id' => 'nullable|exists:bancos,id',
+            'comprobante_pago' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -514,6 +518,15 @@ class VentaController extends Controller
             ])->findOrFail($id);
 
             $data = $request->all();
+            $deposito = (float) ($data['cantidad_deposito'] ?? 0);
+
+            if ($deposito > 0 && empty($data['tipo_pago'])) {
+                return response()->json([
+                    'errors' => [
+                        'tipo_pago' => ['Selecciona el tipo de pago cuando hay depósito.'],
+                    ],
+                ], 422);
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -581,9 +594,9 @@ class VentaController extends Controller
             $venta->update([
 
                 'clientes_id' => $data['clientes_id'],
-                'bancos_id' => $data['bancos_id'],
+                'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
-                'tipo_pago' => $data['tipo_pago'],
+                'tipo_pago' => $data['tipo_pago'] ?? null,
                 'no_deposito' => $data['no_deposito'] ?? null,
                 'cantidad_deposito' => $deposito,
                 'pendiente_pagar' => $pendiente,
@@ -603,21 +616,39 @@ class VentaController extends Controller
             */
             $pago = $venta->pagos()->oldest()->first();
             if ($deposito > 0 && $pago) {
+                $comprobantePath = $pago->comprobante_path;
+
+                if ($request->hasFile('comprobante_pago')) {
+                    if ($comprobantePath) {
+                        Storage::disk('s3')->delete($comprobantePath);
+                    }
+
+                    $comprobantePath = $request->file('comprobante_pago')->store('pagos/comprobantes', 's3');
+                }
+
                 $pago->update([
                     'monto' => $deposito,
-                    'metodo_pago' => $data['tipo_pago'],
+                    'metodo_pago' => $data['tipo_pago'] ?? null,
                     'referencia' => $data['no_deposito'] ?? null,
-                    'bancos_id' => $data['bancos_id'],
+                    'comprobante_path' => $comprobantePath,
+                    'bancos_id' => $data['bancos_id'] ?? null,
                 ]);
             } elseif ($deposito > 0) {
                 $venta->pagos()->create([
                     'monto' => $deposito,
-                    'metodo_pago' => $data['tipo_pago'],
+                    'metodo_pago' => $data['tipo_pago'] ?? null,
                     'referencia' => $data['no_deposito'] ?? null,
+                    'comprobante_path' => $request->hasFile('comprobante_pago')
+                        ? $request->file('comprobante_pago')->store('pagos/comprobantes', 's3')
+                        : null,
                     'users_id' => Auth::id(),
-                    'bancos_id' => $data['bancos_id'],
+                    'bancos_id' => $data['bancos_id'] ?? null,
                 ]);
             } elseif ($pago) {
+                if ($pago->comprobante_path) {
+                    Storage::disk('s3')->delete($pago->comprobante_path);
+                }
+
                 $pago->delete();
             }
 

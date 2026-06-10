@@ -18,6 +18,12 @@
                         <v-list-item-subtitle>
                             {{ pago.banco?.nombre }}
                         </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="pago.comprobante_path" class="mt-1">
+                            <v-btn :href="`/pagos/${pago.id}/comprobante`" target="_blank" rel="noopener"
+                                size="x-small" color="primary" variant="tonal" prepend-icon="mdi-file-eye-outline">
+                                Ver comprobante
+                            </v-btn>
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle>
                             {{ formatDate(pago.created_at) }}
                         </v-list-item-subtitle>
@@ -53,6 +59,10 @@
 
                 <v-text-field v-model="form.referencia" label="No depósito" variant="outlined" density="compact"
                     :error-messages="errores.referencia" />
+
+                <v-file-input v-model="form.comprobante" label="Comprobante de pago"
+                    accept="image/*,.pdf" prepend-icon="mdi-paperclip" variant="outlined" density="compact"
+                    :error-messages="errores.comprobante" />
 
             </v-card-text>
 
@@ -121,6 +131,7 @@ export default {
                 metodo_pago: '',
                 banco_id: '',
                 referencia: '',
+                comprobante: null,
             },
             tipoPago: [
                 { nombre: 'Efectivo' },
@@ -148,6 +159,8 @@ export default {
                 monto: '',
                 metodo_pago: '',
                 referencia: '',
+                banco_id: '',
+                comprobante: null,
             }
 
             this.errores = {}
@@ -162,13 +175,22 @@ export default {
             this.saving = true
 
             try {
-                await axios.post('/pagos', {
-                    ventas_id: this.venta.id,
-                    monto: this.form.monto,
-                    metodo_pago: this.form.metodo_pago,
-                    referencia: this.form.referencia,
-                    banco_id: this.form.banco_id
-                })
+                const formData = new FormData()
+                formData.append('ventas_id', this.venta.id)
+                formData.append('monto', this.form.monto)
+                formData.append('metodo_pago', this.form.metodo_pago || '')
+                formData.append('referencia', this.form.referencia || '')
+                formData.append('banco_id', this.form.banco_id || '')
+
+                const comprobante = Array.isArray(this.form.comprobante)
+                    ? this.form.comprobante[0]
+                    : this.form.comprobante
+
+                if (comprobante) {
+                    formData.append('comprobante', comprobante)
+                }
+
+                await axios.post('/pagos', formData)
 
                 this.close()
                 this.$emit('saved', false)

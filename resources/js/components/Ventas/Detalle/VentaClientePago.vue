@@ -117,6 +117,12 @@
                         <v-list-item-subtitle>
                             {{ p.banco?.nombre }}
                         </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="p.comprobante_path" class="mt-1">
+                            <v-btn :href="`/pagos/${p.id}/comprobante`" target="_blank" rel="noopener"
+                                size="x-small" color="primary" variant="tonal" prepend-icon="mdi-file-eye-outline">
+                                Ver comprobante
+                            </v-btn>
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle>
                             {{ formatDate(p.created_at) }}
                         </v-list-item-subtitle>

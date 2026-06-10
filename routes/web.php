@@ -208,6 +208,9 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
     Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:menu.contabilidad');
     Route::get('/ventas/contabilidad', [VentaController::class, 'contabilidad'])->middleware('permission:menu.contabilidad');
+    Route::get('/pagos/{pago}/comprobante', [PagoController::class, 'comprobante'])
+        ->middleware('permission:venta.ver|pago.ver|menu.contabilidad')
+        ->name('pagos.comprobante');
 });
 
 /* RUTAS DE TRACKING DE PRODUCCIÓN */

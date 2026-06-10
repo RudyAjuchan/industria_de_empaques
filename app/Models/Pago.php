@@ -11,6 +11,7 @@ class Pago extends Model
         'monto',
         'metodo_pago',
         'referencia',
+        'comprobante_path',
         'users_id',
         'bancos_id',
     ];

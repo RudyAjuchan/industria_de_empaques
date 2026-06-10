@@ -18,9 +18,10 @@ class StoreVentaRequest extends FormRequest
             'clientes_id' => ['required', 'exists:clientes,id'],
             'bancos_id' => ['nullable', 'exists:bancos,id'],
             'fecha_entrega' => ['required', 'date'],
-            'tipo_pago' => ['required', 'string'],
+            'tipo_pago' => ['nullable', 'string'],
 
             'cantidad_deposito' => ['nullable', 'numeric'],
+            'comprobante_pago' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,webp', 'max:5120'],
             'costo_logo' => ['nullable', 'numeric'],
             'descuento' => ['nullable', 'numeric'],
             'promociones' => ['nullable', 'array'],
@@ -52,6 +53,11 @@ class StoreVentaRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            $deposito = (float) ($this->input('cantidad_deposito') ?? 0);
+
+            if ($deposito > 0 && empty($this->input('tipo_pago'))) {
+                $validator->errors()->add('tipo_pago', 'Selecciona el tipo de pago cuando hay depósito.');
+            }
 
             foreach ($this->detalle as $index => $item) {
 

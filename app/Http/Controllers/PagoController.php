@@ -7,6 +7,7 @@ use App\Models\Pago;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -28,6 +29,7 @@ class PagoController extends Controller
             'metodo_pago' => 'required|string',
             'referencia' => 'nullable|string',
             'banco_id' => 'nullable|exists:bancos,id',
+            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
         ]);
 
         $venta = Venta::findOrFail($request->ventas_id);
@@ -40,11 +42,16 @@ class PagoController extends Controller
             ], 422);
         }
 
+        $comprobantePath = $request->hasFile('comprobante')
+            ? $request->file('comprobante')->store('pagos/comprobantes', 's3')
+            : null;
+
         Pago::create([
             'ventas_id' => $venta->id,
             'monto' => $request->monto,
             'metodo_pago' => $request->metodo_pago,
             'referencia' => $request->referencia,
+            'comprobante_path' => $comprobantePath,
             'users_id' => Auth::user()->id,
             'bancos_id' => $request->banco_id
         ]);
@@ -113,8 +120,24 @@ class PagoController extends Controller
             ], 422);
         }
 
+        if ($pago->comprobante_path) {
+            Storage::disk('s3')->delete($pago->comprobante_path);
+        }
+
         $pago->delete();
 
         return response()->json(['message' => 'Pago eliminado correctamente']);
+    }
+
+    public function comprobante(Pago $pago)
+    {
+        abort_if(!$pago->comprobante_path, 404);
+
+        $url = Storage::disk('s3')->temporaryUrl(
+            $pago->comprobante_path,
+            now()->addMinutes(10)
+        );
+
+        return redirect()->away($url);
     }
 }

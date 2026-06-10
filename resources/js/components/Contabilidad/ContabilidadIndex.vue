@@ -81,9 +81,18 @@ export default {
 
         exportarExcel() {
 
-            const params = new URLSearchParams(this.filtros).toString()
+            const params = new URLSearchParams()
 
-            const url = `/ventas/export/contabilidad?${params}`
+            Object.entries(this.filtros).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    params.append(key, value)
+                }
+            })
+
+            const queryString = params.toString()
+            const url = queryString
+                ? `/ventas/export/contabilidad?${queryString}`
+                : '/ventas/export/contabilidad'
 
             window.open(url, '_blank')
         }

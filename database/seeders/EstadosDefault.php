@@ -28,32 +28,32 @@ class EstadosDefault extends Seeder
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de corte',
-            'users_id' => 3,
+            'users_id' => 5,
             'orden' => 3,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de troquelado',
-            'users_id' => 3,
+            'users_id' => 6,
             'orden' => 4,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de producción',
-            'users_id' => 5,
+            'users_id' => 7,
             'orden' => 5,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de colocación de cinta',
-            'users_id' => 6,
+            'users_id' => 8,
             'orden' => 6,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de revisión y calidad',
-            'users_id' => 7,
+            'users_id' => 9,
             'orden' => 7,
         ]);
         EstadoProduccion::create([
             'nombre' => 'Área de empaque',
-            'users_id' => 7,
+            'users_id' => 10,
             'orden' => 8,
         ]);
 

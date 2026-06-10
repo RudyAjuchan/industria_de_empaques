@@ -17,7 +17,7 @@
 
         <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <div class="logo" aria-hidden="true"><span>R</span></div>
+                <div class="logo" aria-hidden="true"><span>{{ mb_strtoupper(mb_substr(trim(auth()->user()->name ?? 'U'), 0, 1)) }}</span></div>
 
                 <div class="brand-text">
                     <div class="t1">{{ auth()->user()->name }}</div>

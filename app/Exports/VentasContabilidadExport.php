@@ -21,8 +21,8 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
 
     public function __construct($fechaInicio = null, $fechaFin = null)
     {
-        $this->fechaInicio = $fechaInicio;
-        $this->fechaFin = $fechaFin;
+        $this->fechaInicio = $this->normalizarFecha($fechaInicio);
+        $this->fechaFin = $this->normalizarFecha($fechaFin);
     }
 
     public function collection()
@@ -44,6 +44,15 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             if ($this->fechaFin) $q->whereDate('created_at', '<=', $this->fechaFin);
         })
         ->get();
+    }
+
+    private function normalizarFecha($fecha): ?string
+    {
+        if (!$fecha || in_array($fecha, ['null', 'undefined'], true)) {
+            return null;
+        }
+
+        return $fecha;
     }
 
     /**

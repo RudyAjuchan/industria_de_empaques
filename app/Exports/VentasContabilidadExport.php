@@ -18,6 +18,7 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
 {
     protected $fechaInicio;
     protected $fechaFin;
+    protected array $ventasMostradas = [];
 
     public function __construct($fechaInicio = null, $fechaFin = null)
     {
@@ -43,6 +44,8 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             if ($this->fechaInicio) $q->whereDate('created_at', '>=', $this->fechaInicio);
             if ($this->fechaFin) $q->whereDate('created_at', '<=', $this->fechaFin);
         })
+        ->orderBy('ventas_id')
+        ->orderBy('id')
         ->get();
     }
 
@@ -64,12 +67,18 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         $cliente = $venta->cliente ?? null;
         $producto = $d->producto ?? null;
         $pagos = $venta->pagos ?? collect();
+        $primeraFilaVenta = !isset($this->ventasMostradas[$venta->id]);
+        $this->ventasMostradas[$venta->id] = true;
 
         $documento = $venta->serie . '-' . str_pad($venta->numero, 6, '0', STR_PAD_LEFT);
 
         // PAGOS - Manejo seguro de nulos
         $totalPagado = $pagos->sum('monto');
         $saldoPendiente = ($venta->total ?? 0) - $totalPagado;
+        $subtotalLinea = (float) $d->precio * (float) $d->cantidad;
+        $totalLinea = (float) $d->total;
+        $descuentoLinea = max(0, $subtotalLinea - $totalLinea);
+        $descuentoVenta = (float) ($venta->descuento ?? 0) + $this->promocionCarritoMonto($venta);
 
         $historialPagos = $pagos->map(function ($p) {
             $fecha = $p->created_at ? $p->created_at->format('d/m/Y') : 'N/A';
@@ -82,11 +91,11 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
 
         return [
             // VENTA
+            $documento,
             $venta->id,
             $venta->created_at ? $venta->created_at->format('Y-m-d') : '',
             $venta->updated_at ? $venta->updated_at->format('Y-m-d') : '',
             $venta->serie,
-            $documento,
             $venta->estado,
             $venta->estado_produccion,
             $venta->es_cliente_nuevo ? 'Nuevo' : 'Existente',
@@ -129,24 +138,26 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             //$d->archivo_diseno_path ? basename($d->archivo_diseno_path) : '',
             $d->cantidad,
             $d->precio,
-            $d->total,
+            $subtotalLinea,
+            $descuentoLinea,
+            $totalLinea,
 
             // TOTALES VENTA
-            $venta->subtotal,
-            $venta->descuento,
-            $venta->costo_envio,
-            $venta->total,
+            $primeraFilaVenta ? $venta->subtotal : '',
+            $primeraFilaVenta ? $descuentoVenta : '',
+            $primeraFilaVenta ? $venta->costo_envio : '',
+            $primeraFilaVenta ? $venta->total : '',
 
             // PAGOS
-            $totalPagado,
-            $saldoPendiente,
-            $pagos->count(),
-            ($pagos->last() && $pagos->last()->created_at) ? $pagos->last()->created_at->format('Y-m-d') : '',
-            $historialPagos,
+            $primeraFilaVenta ? $totalPagado : '',
+            $primeraFilaVenta ? $saldoPendiente : '',
+            $primeraFilaVenta ? $pagos->count() : '',
+            $primeraFilaVenta && $pagos->last() && $pagos->last()->created_at ? $pagos->last()->created_at->format('Y-m-d') : '',
+            $primeraFilaVenta ? $historialPagos : '',
 
             // INFO PAGO
-            $venta->tipo_pago,
-            $venta->banco->nombre ?? 'N/A',
+            $primeraFilaVenta ? $venta->tipo_pago : '',
+            $primeraFilaVenta ? $venta->banco->nombre ?? 'N/A' : '',
 
             // PROMOCIÓN
             $d->promocion_aplicada['nombre'] ?? '',
@@ -155,11 +166,36 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         ];
     }
 
+    private function promocionCarritoMonto($venta): float
+    {
+        $promocion = $venta->promociones;
+
+        if (!$promocion) {
+            return 0;
+        }
+
+        if (($promocion['tipo'] ?? null) === 'porcentaje') {
+            return (float) $venta->subtotal * ((float) ($promocion['valor'] ?? 0) / 100);
+        }
+
+        return (float) ($promocion['valor'] ?? 0);
+    }
+
     public function headings(): array
     {
         return [
-            ['VENTA', '', '', '', '', '', '', '', '', '', 'CLIENTE', '', '', '', '', '', '', '', '', '', '', '', 'ASESOR', 'PRODUCTO', '', '', '', '', '', '', '', '', '', '', 'DETALLE', '', '', '', '', '', 'TOTALES', '', '', '', 'PAGOS', '', '', '', '', 'PAGO INFO', '', 'PROMOCIÓN', '', ''],
-            ['ID', 'Fecha', 'Actualizado', 'Serie', 'Número', 'Estado', 'Est. Prod.', 'Tipo cliente', 'Origen', 'Entrega', 'Nombre', 'NIT', 'DPI', 'Email', 'Teléfono', 'Género', 'País', 'Estado', 'Ciudad', 'Depto', 'Municipio', 'Dirección', 'Asesor', 'Producto', 'Tipo', 'Categoría', 'Página', 'Alto', 'Ancho', 'Fuelle', 'Papel', 'Agarrador', 'Color', 'Impresión', 'Logo', 'Cant.', 'Precio', 'Subtotal L.', 'Subtotal V.', 'Desc.', 'Envío', 'Total V.', 'Pagado', 'Pendiente', 'Cant. Pagos', 'Últ. Pago', 'Historial', 'Tipo Pago', 'Banco', 'Nombre', 'Tipo', 'Valor']
+            array_merge(
+                ['VENTA'], array_fill(0, 9, ''),
+                ['CLIENTE'], array_fill(0, 11, ''),
+                ['ASESOR'],
+                ['PRODUCTO'], array_fill(0, 10, ''),
+                ['DETALLE'], array_fill(0, 5, ''),
+                ['TOTALES'], array_fill(0, 3, ''),
+                ['PAGOS'], array_fill(0, 4, ''),
+                ['PAGO INFO'], [''],
+                ['PROMOCIÓN'], array_fill(0, 2, ''),
+            ),
+            ['Número', 'ID', 'Fecha', 'Actualizado', 'Serie', 'Estado', 'Est. Prod.', 'Tipo cliente', 'Origen', 'Entrega', 'Nombre', 'NIT', 'DPI', 'Email', 'Teléfono', 'Género', 'País', 'Estado', 'Ciudad', 'Depto', 'Municipio', 'Dirección', 'Asesor', 'Producto', 'Tipo', 'Categoría', 'Página', 'Alto', 'Ancho', 'Fuelle', 'Papel', 'Agarrador', 'Color', 'Impresión', 'Logo', 'Cant.', 'Precio', 'Subtotal L.', 'Desc. L.', 'Total L.', 'Subtotal V.', 'Desc. V.', 'Envío', 'Total V.', 'Pagado', 'Pendiente', 'Cant. Pagos', 'Últ. Pago', 'Historial', 'Tipo Pago', 'Banco', 'Nombre', 'Tipo', 'Valor']
         ];
     }
 
@@ -168,10 +204,10 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
         // Aplicamos el ajuste de texto específicamente al rango de la columna J
         // desde la fila 2 hasta la última con datos.
         $lastRow = $sheet->getHighestRow();
-        $sheet->getStyle('AU2:AU' . $lastRow)->getAlignment()->setWrapText(true);
+        $sheet->getStyle('AW2:AW' . $lastRow)->getAlignment()->setWrapText(true);
 
         // Alineación vertical arriba para que se vea ordenado
-        $sheet->getStyle('AU2:AU' . $lastRow)->getAlignment()->setVertical('top');
+        $sheet->getStyle('AW2:AW' . $lastRow)->getAlignment()->setVertical('top');
         return [
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -196,11 +232,12 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                 $sheet->mergeCells('A1:J1');   // Venta
                 $sheet->mergeCells('K1:V1');   // Cliente
                 $sheet->mergeCells('X1:AH1');  // Producto
-                $sheet->mergeCells('AI1:AL1'); // Detalle
-                $sheet->mergeCells('AM1:AP1'); // Totales
-                $sheet->mergeCells('AQ1:AU1'); // Pagos
-                $sheet->mergeCells('AV1:AW1'); // Pago Info
-                $sheet->mergeCells('AX1:AZ1'); // Promoción
+                $sheet->mergeCells('AI1:AN1'); // Detalle
+                $sheet->mergeCells('AO1:AR1'); // Totales
+                $sheet->mergeCells('AS1:AW1'); // Pagos
+                $sheet->mergeCells('AX1:AY1'); // Pago Info
+                $sheet->mergeCells('AZ1:BB1'); // Promoción
+                $sheet->freezePane('B3');
 
                 // Auto-ancho para todas las columnas usadas
                 foreach (range('A', 'Z') as $col) {
@@ -215,6 +252,27 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
                 // Bordes
                 $highestRow = $sheet->getHighestRow();
                 $highestCol = $sheet->getHighestColumn();
+
+                $ventaActual = null;
+                $colorIndex = 0;
+                $coloresVenta = ['FFFFFF', 'E8F1FB'];
+
+                for ($row = 3; $row <= $highestRow; $row++) {
+                    $numeroVenta = $sheet->getCell("A{$row}")->getValue();
+
+                    if ($numeroVenta !== $ventaActual) {
+                        $ventaActual = $numeroVenta;
+                        $colorIndex++;
+                    }
+
+                    $sheet->getStyle("A{$row}:{$highestCol}{$row}")->applyFromArray([
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => $coloresVenta[$colorIndex % 2]],
+                        ],
+                    ]);
+                }
+
                 $sheet->getStyle("A1:{$highestCol}{$highestRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
@@ -239,6 +297,8 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             'AP' => '"Q" #,##0.00',
             'AQ' => '"Q" #,##0.00',
             'AR' => '"Q" #,##0.00',
+            'AS' => '"Q" #,##0.00',
+            'AT' => '"Q" #,##0.00',
         ];
     }
 }

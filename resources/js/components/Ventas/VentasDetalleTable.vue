@@ -28,7 +28,7 @@
                     <th style="min-width: 100px">Precio</th>
                     <th style="min-width: 75px">Cantidad</th>
                     <th style="min-width: 120px">Total</th>
-                    <th style="min-width: 200px">Logo</th>
+                    <th style="min-width: 200px">Montaje</th>
                     <th style="min-width: 100px">Archivo</th>
                     <th>Eliminar</th>
                 </tr>

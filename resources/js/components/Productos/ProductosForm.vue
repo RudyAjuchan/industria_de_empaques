@@ -21,17 +21,17 @@
 
                 <template v-if="form.tipo_producto === 'personalizado'">
                     <v-col cols="12" md="4">
-                        <v-text-field v-model="form.alto" variant="outlined" density="compact" label="Alto" type="number"
+                        <v-text-field v-model="form.alto" variant="outlined" density="compact" label="Alto cm" type="number"
                             :error-messages="errors.alto" />
                     </v-col>
     
                     <v-col cols="12" md="4">
-                        <v-text-field v-model="form.ancho" variant="outlined" density="compact" label="Ancho" type="number"
+                        <v-text-field v-model="form.ancho" variant="outlined" density="compact" label="Ancho cm" type="number"
                             :error-messages="errors.ancho" />
                     </v-col>
     
                     <v-col cols="12" md="4">
-                        <v-text-field v-model="form.fuelle" variant="outlined" density="compact" label="Fuelle"
+                        <v-text-field v-model="form.fuelle" variant="outlined" density="compact" label="Fuelle cm"
                             type="number" :error-messages="errors.fuelle" />
                     </v-col>
                 </template>

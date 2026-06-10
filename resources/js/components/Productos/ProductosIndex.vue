@@ -74,6 +74,15 @@
             <template v-slot:[`item.precio_base`]="{ item }">
                 {{ formatQuetzales(item.precio_base) }}
             </template>
+            <template v-slot:[`item.alto`]="{ item }">
+                {{ item.alto ? `${item.alto} cm` : '' }}
+            </template>
+            <template v-slot:[`item.ancho`]="{ item }">
+                {{ item.ancho ? `${item.ancho} cm` : '' }}
+            </template>
+            <template v-slot:[`item.fuelle`]="{ item }">
+                {{ item.fuelle ? `${item.fuelle} cm` : '' }}
+            </template>
         </v-data-table-server>
 
 

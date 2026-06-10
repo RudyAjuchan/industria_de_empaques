@@ -80,7 +80,7 @@ class EstadisticasProduccionController extends Controller
             'producto.estadosProduccion'
         ]);
 
-        $this->aplicarFiltroFecha($ventasQuery, $filtros);
+        $this->aplicarFiltroVentaConfirmadaEnDetalle($ventasQuery, $filtros);
 
         $ventas = $ventasQuery->get();
 
@@ -314,6 +314,7 @@ class EstadisticasProduccionController extends Controller
         $query = Venta::with([
             'detalles.producto.paginas'
         ]);
+        $query->where('estado', '<>', 'pendiente');
 
         /*
         |--------------------------------------------------------------------------
@@ -421,7 +422,7 @@ class EstadisticasProduccionController extends Controller
         | FILTROS (igual que todo tu sistema)
         |--------------------------------------------------------------------------
         */
-        $this->aplicarFiltroFecha($query, $filtros);
+        $this->aplicarFiltroVentaConfirmadaEnDetalle($query, $filtros);
 
         $detalles = $query->get();
 
@@ -502,5 +503,13 @@ class EstadisticasProduccionController extends Controller
         if ($filtros['periodo'] === 'anio') {
             $query->whereYear('created_at', $filtros['year']);
         }
+    }
+
+    private function aplicarFiltroVentaConfirmadaEnDetalle($query, array $filtros): void
+    {
+        $query->whereHas('venta', function ($ventaQuery) use ($filtros) {
+            $ventaQuery->where('estado', '<>', 'pendiente');
+            $this->aplicarFiltroFecha($ventaQuery, $filtros);
+        });
     }
 }

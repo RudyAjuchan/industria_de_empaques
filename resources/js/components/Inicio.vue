@@ -283,7 +283,9 @@
                         Gráfica de ventas por página
                     </div>
 
-                    <canvas id="graficaVentas"></canvas>
+                    <div class="ventas-chart-wrap">
+                        <canvas id="graficaVentas"></canvas>
+                    </div>
                 </v-card>
             </v-col>
 
@@ -675,7 +677,7 @@ export default {
 
             const ctx = document.getElementById('graficaVentas')
 
-            const labels = this.ventasPorPagina.map(v => v.nombre)
+            const labels = this.ventasPorPagina.map(v => this.chartLabel(v.nombre))
             const data = this.ventasPorPagina.map(v => v.total)
 
             this.chartVentas = new Chart(ctx, {
@@ -684,7 +686,7 @@ export default {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Total ventas',
+                            label: 'Total por página',
                             data: data,
                             backgroundColor: colores,
                             borderColor: colores.map(c => c.replace('0.8', '1')),
@@ -695,6 +697,11 @@ export default {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            bottom: 34
+                        }
+                    },
                     plugins: {
                         datalabels: {
                             anchor: 'end',
@@ -708,6 +715,10 @@ export default {
                         },
                         tooltip: {
                             callbacks: {
+                                title: (items) => {
+                                    const label = items[0]?.label
+                                    return Array.isArray(label) ? label.join(' ') : label
+                                },
                                 label: (context) => {
                                     return 'Q' + Number(context.raw).toLocaleString('es-GT')
                                 }
@@ -715,6 +726,22 @@ export default {
                         }
                     },
                     scales: {
+                        x: {
+                            ticks: {
+                                display: true,
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                padding: 10,
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                }
+                            },
+                            grid: {
+                                offset: true
+                            }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
@@ -724,6 +751,16 @@ export default {
                     }
                 }
             })
+        },
+
+        chartLabel(label) {
+            const words = String(label || 'Sin página').split(' ')
+
+            if (words.length === 1) {
+                return words[0]
+            }
+
+            return words
         },
 
         renderChartTipos() {
@@ -833,3 +870,11 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.ventas-chart-wrap {
+    position: relative;
+    height: 300px;
+    min-height: 300px;
+}
+</style>

@@ -17,7 +17,6 @@ class Producto extends Model
         'fuelle',
         'tipo',
         'tipo_productos_id',
-        'paginas_id',
         'estado',
         'tipo_producto',
         'precio_base',
@@ -43,11 +42,6 @@ class Producto extends Model
         return $this->imagenPrincipal
             ? Storage::disk('s3')->url($this->imagenPrincipal->path)
             : null;
-    }
-
-    public function paginas()
-    {
-        return $this->belongsTo(Pagina::class, 'paginas_id');
     }
 
     public function tipoCatalogo()

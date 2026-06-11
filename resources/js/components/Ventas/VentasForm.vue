@@ -1,18 +1,29 @@
 <template>
     <v-card-text>
         <v-row>
-            <v-col cols="4">
+            <v-col cols="3">
                 <v-text-field variant="outlined" density="compact" label="Fecha emisión" v-model="fecha" disabled
                     hide-details="auto"></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col cols="3">
                 <v-text-field variant="outlined" density="compact" label="Hora" v-model="hora" disabled
                     hide-details="auto"></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col cols="3">
                 <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega"
                     v-model="form.fecha_entrega" hide-details="auto"
                     :error-messages="errors.fecha_entrega"></v-text-field>
+            </v-col>
+            <v-col cols="3">
+                <v-autocomplete v-model="form.paginas_id" :items="paginas" item-title="nombre" item-value="id"
+                    label="Página" variant="outlined" density="compact" :error-messages="errors.paginas_id">
+                    <template #append-inner>
+                        <v-btn icon size="small" variant="text" @click.stop="paginaDialog = true">
+                            <v-icon size="18">mdi-plus</v-icon>
+                        </v-btn>
+                    </template>
+                </v-autocomplete>
+                <PaginaDialog v-model="paginaDialog" @saved="onPaginaSaved" />
             </v-col>
         </v-row>
         <v-row class="justify-center bg-teal-lighten-5">
@@ -165,12 +176,13 @@ import axios from 'axios'
 import VentasDetalleTable from './VentasDetalleTable.vue'
 import BancoDialog from '../Bancos/BancoDialog.vue';
 import ClientesDialog from '../Clientes/ClientesDialog.vue';
+import PaginaDialog from '../Paginas/PaginaDialog.vue';
 import MoneyInput from '../common/MoneyInput.vue'
 import { formatQuetzales, parseMoney } from '../../utils/money'
 import { toast } from 'vue3-toastify'
 
 export default {
-    components: { VentasDetalleTable, BancoDialog, ClientesDialog, MoneyInput },
+    components: { VentasDetalleTable, BancoDialog, ClientesDialog, PaginaDialog, MoneyInput },
     emits: ['saved', 'cancel'],
     data() {
         return {
@@ -189,6 +201,8 @@ export default {
             },
             clienteDialog: false,
             productos: [],
+            paginas: [],
+            paginaDialog: false,
             bancos: [],
             bancoDialog: false,
             tiposAgarrador: [],
@@ -206,6 +220,7 @@ export default {
                 vendedor_id: AUTH_USER.id,
                 nombre_vendedor: AUTH_USER.name,
                 clientes_id: null,
+                paginas_id: null,
                 bancos_id: null,
                 fecha_entrega: null,
                 serie: '',
@@ -240,6 +255,7 @@ export default {
         async loadCatalogos() {
             //this.clientes = (await axios.get('/cliente')).data
             this.bancos = (await axios.get('/banco')).data
+            this.paginas = (await axios.get('/listar/paginas')).data
             this.tiposAgarrador = (await axios.get('/agarrador')).data
             this.tiposPapel = (await axios.get('/tipo-papel')).data
             await this.buscarProductos('')
@@ -458,6 +474,11 @@ export default {
             this.bancos.push(banco)
             this.form.bancos_id = banco.id
             toast.success('Banco guardado')
+        },
+        onPaginaSaved(pagina) {
+            this.paginas.push(pagina)
+            this.form.paginas_id = pagina.id
+            toast.success('Página guardada')
         },
         onClienteSaved(cliente) {
             if (!this.clientes.find(c => c.id === cliente.id)) {

@@ -13,13 +13,9 @@ class ProductoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Producto::with(['imagenes', 'paginas'])
+        $query = Producto::with(['imagenes'])
             ->where('estado', 1)
             ->where('ecommerce', 1);
-
-        if ($request->paginas_id) {
-            $query->where('paginas_id', $request->paginas_id);
-        }
 
         if ($request->tipo) {
             $query->where('tipo', $request->tipo);
@@ -69,7 +65,7 @@ class ProductoController extends Controller
 
     public function show($id)
     {
-        $producto = Producto::with(['imagenes', 'paginas'])->findOrFail($id);
+        $producto = Producto::with(['imagenes'])->findOrFail($id);
 
         if ($producto->estado != 1 || $producto->ecommerce != 1) {
             return response()->json([

@@ -16,6 +16,7 @@ class StoreVentaRequest extends FormRequest
     {
         return [
             'clientes_id' => ['required', 'exists:clientes,id'],
+            'paginas_id' => ['required', 'exists:paginas,id'],
             'bancos_id' => ['nullable', 'exists:bancos,id'],
             'fecha_entrega' => ['required', 'date'],
             'tipo_pago' => ['nullable', 'string'],

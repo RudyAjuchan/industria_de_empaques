@@ -203,7 +203,6 @@ class PromocionController extends Controller
             ->where('ecommerce', 1)
             ->with([
                 'imagenPrincipal',
-                'paginas'
             ])
             ->paginate(12);
 
@@ -233,7 +232,6 @@ class PromocionController extends Controller
                 'precio_base' => $precioOriginal,
                 'precio_final' => round($precioFinal, 2),
                 'imagen' => $producto->imagen_principal_url,
-                'pagina' => $producto->paginas?->nombre,
 
                 /**
                  * PROMO
@@ -267,7 +265,6 @@ class PromocionController extends Controller
             })
             ->with([
                 'imagenPrincipal',
-                'paginas',
                 /**
                  * SOLO PROMO VIGENTE
                  */
@@ -316,7 +313,6 @@ class PromocionController extends Controller
                 'precio_base' => $precioOriginal,
                 'precio_final' => round($precioFinal, 2),
                 'imagen' => $producto->imagen_principal_url,
-                'pagina' => $producto->paginas?->nombre,
                 /**
                  * PROMO
                  */

@@ -178,7 +178,6 @@ class BannerController extends Controller
         $search = $request->search;
 
         $productos = Producto::query()
-            ->leftJoin('paginas', 'paginas.id', '=', 'productos.paginas_id')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('productos.id', 'LIKE', "%{$search}%")
@@ -186,7 +185,7 @@ class BannerController extends Controller
                         ->orWhere('productos.nombre', 'LIKE', "%{$search}%");
                 });
             })
-            ->selectRaw(" productos.id, CONCAT(COALESCE(productos.sku, productos.id), ' - ', productos.nombre, ' / ', productos.tipo, ' / ', paginas.nombre) as nombre, productos.tipo")
+            ->selectRaw("productos.id, CONCAT(COALESCE(productos.sku, productos.id), ' - ', productos.nombre, ' / ', productos.tipo) as nombre, productos.tipo")
             ->orderBy('productos.nombre')
             ->limit(20)
             ->get();

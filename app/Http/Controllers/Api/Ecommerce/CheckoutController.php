@@ -28,6 +28,7 @@ class CheckoutController extends Controller
             }
 
             $data = $request->validate([
+                'paginas_id' => ['nullable', 'integer', 'exists:paginas,id'],
                 'detalle' => ['required', 'array', 'min:1'],
                 'detalle.*.productos_id' => ['required', 'integer', 'exists:productos,id'],
                 'detalle.*.cantidad' => ['required', 'integer', 'gt:0'],
@@ -54,6 +55,7 @@ class CheckoutController extends Controller
                 'numero' => $numero,
                 'vendedor_id' => 1,
                 'clientes_id' => $cliente->id,
+                'paginas_id' => $data['paginas_id'] ?? null,
                 'fecha_entrega' => now()->addDays(5),
                 'tipo_pago' => 'cotizacion',
                 'subtotal' => 0,
@@ -135,6 +137,14 @@ class CheckoutController extends Controller
 
                 $detalle = $venta->detalles()->create([
                     'productos_id' => $item['productos_id'],
+                    'producto_sku' => $producto->sku,
+                    'producto_nombre' => $producto->nombre,
+                    'producto_tipo' => $producto->tipo,
+                    'producto_tipo_producto' => $producto->tipo_producto,
+                    'producto_alto' => $producto->alto,
+                    'producto_ancho' => $producto->ancho,
+                    'producto_fuelle' => $producto->fuelle,
+                    'producto_descripcion' => $producto->descripcion,
 
                     'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
                     'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],

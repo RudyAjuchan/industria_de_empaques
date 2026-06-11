@@ -390,7 +390,6 @@ export default {
                 producto.nombre,
                 producto.tipo,
                 producto.tipo_catalogo?.nombre,
-                producto.paginas?.nombre,
             ].filter(Boolean).join(' - ')
         },
 

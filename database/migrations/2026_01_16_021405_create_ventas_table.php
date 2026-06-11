@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendedor_id')->constrained('users');
             $table->foreignId('clientes_id')->constrained('clientes');
+            $table->foreignId('paginas_id')->nullable()->constrained('paginas');
             $table->foreignId('bancos_id')->nullable()->constrained('bancos');
             $table->string('serie', 10);
             $table->unsignedBigInteger('numero');

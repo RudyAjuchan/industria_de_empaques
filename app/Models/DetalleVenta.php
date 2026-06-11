@@ -14,7 +14,6 @@ class DetalleVenta extends Model
         'producto_sku',
         'producto_nombre',
         'producto_tipo',
-        'producto_pagina',
         'producto_tipo_producto',
         'producto_alto',
         'producto_ancho',

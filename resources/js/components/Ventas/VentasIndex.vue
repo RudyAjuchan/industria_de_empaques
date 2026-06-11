@@ -114,6 +114,7 @@ export default {
             headers: [
                 { title: 'Número', key: 'numero_completo' },
                 { title: 'Cliente', key: 'cliente.nombre' },
+                { title: 'Página', key: 'pagina.nombre' },
                 { title: 'Total', key: 'total' },
                 { title: 'Vendedor', key: 'vendedor.name' },
                 { title: 'Estado', key: 'estado' },

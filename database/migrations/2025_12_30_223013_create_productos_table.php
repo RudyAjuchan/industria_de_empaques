@@ -18,7 +18,6 @@ return new class extends Migration
             $table->float('ancho')->nullable();
             $table->float('fuelle')->nullable();
             $table->string('tipo')->nullable();
-            $table->foreignId('paginas_id')->constrained('paginas');
             // tipo de producto
             $table->enum('tipo_producto', ['personalizado', 'simple'])->default('personalizado');
             // precio base para productos simples

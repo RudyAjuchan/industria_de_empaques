@@ -148,7 +148,6 @@ export default {
                 { title: 'Fuelle', key: 'fuelle' },
                 { title: 'Ecommerce', key: 'ecommerce' },
                 { title: 'Tipo', key: 'tipo' },
-                { title: 'Página', key: 'paginas.nombre' },
                 { title: 'Tipo producto', key: 'tipo_producto' },
                 { title: 'Precio', key: 'precio_base' },
                 { title: 'Creado', key: 'created_at' },

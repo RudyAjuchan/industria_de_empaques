@@ -35,7 +35,7 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             'venta.vendedor',
             'venta.pagos.banco',
             'venta.banco',
-            'producto.paginas',
+            'venta.pagina',
             'tipoPapel',
             'tipoAgarrador'
         ])
@@ -128,7 +128,7 @@ class VentasContabilidadExport implements FromCollection, WithHeadings, WithStyl
             $d->producto_nombre ?? $producto->nombre ?? 'Desconocido',
             $d->producto_tipo ?? $producto->tipo ?? '',
             $d->producto_tipo_producto ?? $producto->tipo_producto ?? '',
-            $d->producto_pagina ?? $producto->paginas->nombre ?? '',
+            $venta->pagina->nombre ?? '',
             $d->producto_alto ?? $producto->alto ?? 0,
             $d->producto_ancho ?? $producto->ancho ?? 0,
             $d->producto_fuelle ?? $producto->fuelle ?? 0,

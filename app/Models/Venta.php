@@ -11,6 +11,7 @@ class Venta extends Model
     protected $fillable = [
         'vendedor_id',
         'clientes_id',
+        'paginas_id',
         'bancos_id',
         'es_cliente_nuevo',
         'serie',
@@ -67,6 +68,11 @@ class Venta extends Model
     public function banco()
     {
         return $this->belongsTo(Banco::class, 'bancos_id');
+    }
+
+    public function pagina()
+    {
+        return $this->belongsTo(Pagina::class, 'paginas_id');
     }
 
     // Proceso de producción asignado

@@ -77,11 +77,7 @@
                             <v-text-field v-model="productoSearch" label="Buscar producto" density="compact"
                                 variant="outlined" prepend-inner-icon="mdi-magnify" hide-details />
                         </v-col>
-                        <v-col cols="12" md="3">
-                            <v-select v-model="paginaFiltro" :items="paginaOptions" label="Página" density="compact"
-                                variant="outlined" hide-details clearable />
-                        </v-col>
-                        <v-col cols="12" md="3">
+                        <v-col cols="12" md="6">
                             <v-select v-model="tipoFiltro" :items="tipoOptions" label="Tipo" density="compact"
                                 variant="outlined" hide-details clearable />
                         </v-col>
@@ -93,10 +89,6 @@
                         <template v-slot:[`item.selected`]="{ item }">
                             <v-checkbox-btn :model-value="productoSeleccionado(item.id)"
                                 @update:model-value="toggleProducto(item.id, $event)" />
-                        </template>
-
-                        <template v-slot:[`item.paginas.nombre`]="{ item }">
-                            {{ item.paginas?.nombre || '-' }}
                         </template>
 
                         <template v-slot:[`item.ecommerce`]="{ item }">
@@ -172,7 +164,6 @@ export default {
             productos: [],
             loadingProductos: false,
             productoSearch: '',
-            paginaFiltro: null,
             tipoFiltro: null,
             productoPage: 1,
             productosPorPagina: 10,
@@ -181,7 +172,6 @@ export default {
                 { title: 'ID', key: 'id', width: 80 },
                 { title: 'Producto', key: 'nombre' },
                 { title: 'Tipo', key: 'tipo' },
-                { title: 'Página', key: 'paginas.nombre' },
                 { title: 'Ecommerce', key: 'ecommerce', width: 110 },
             ],
             errors: {},
@@ -211,16 +201,12 @@ export default {
                     producto.nombre?.toLowerCase().includes(search) ||
                     String(producto.id).includes(search) ||
                     producto.tipo?.toLowerCase().includes(search) ||
-                    producto.tipo_producto?.toLowerCase().includes(search) ||
-                    producto.paginas?.nombre?.toLowerCase().includes(search)
-
-                const matchesPagina = !this.paginaFiltro ||
-                    producto.paginas_id === this.paginaFiltro
+                    producto.tipo_producto?.toLowerCase().includes(search)
 
                 const matchesTipo = !this.tipoFiltro ||
                     producto.tipo === this.tipoFiltro
 
-                return matchesSearch && matchesPagina && matchesTipo
+                return matchesSearch && matchesTipo
             })
         },
 
@@ -232,19 +218,6 @@ export default {
         productosSeleccionados() {
             const seleccionados = new Set(this.form.productos)
             return this.productos.filter(producto => seleccionados.has(producto.id))
-        },
-
-        paginaOptions() {
-            const paginas = new Map()
-
-            this.productos.forEach(producto => {
-                if (producto.paginas_id && producto.paginas?.nombre) {
-                    paginas.set(producto.paginas_id, producto.paginas.nombre)
-                }
-            })
-
-            return Array.from(paginas, ([value, title]) => ({ title, value }))
-                .sort((a, b) => a.title.localeCompare(b.title))
         },
 
         tipoOptions() {
@@ -284,10 +257,6 @@ export default {
         },
 
         productoSearch() {
-            this.productoPage = 1
-        },
-
-        paginaFiltro() {
             this.productoPage = 1
         },
 
@@ -333,7 +302,6 @@ export default {
             }
 
             this.productoSearch = ''
-            this.paginaFiltro = null
             this.tipoFiltro = null
             this.productoPage = 1
             this.normalizarProductosSeleccionados()
@@ -346,7 +314,6 @@ export default {
                 this.productos = res.data.map(producto => ({
                     ...producto,
                     id: Number(producto.id),
-                    paginas_id: producto.paginas_id ? Number(producto.paginas_id) : null,
                 }))
                 this.normalizarProductosSeleccionados()
             } catch (err) {

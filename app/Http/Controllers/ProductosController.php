@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\ProductosExport;
 use App\Models\EstadoProduccion;
-use App\Models\Pagina;
 use App\Models\Producto;
 use App\Models\ProductoImagen;
 use App\Models\TipoProducto;
@@ -25,17 +24,13 @@ class ProductosController extends Controller
         $sortBy = $request->input('sort_by', 'id');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Producto::with(['paginas', 'tipoCatalogo'])->where('estado', 1);
+        $query = Producto::with(['tipoCatalogo'])->where('estado', 1);
 
         if ($search) {
             $query->where(function ($sub) use ($search) {
                 $sub->where('nombre', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhere('tipo', 'like', "%{$search}%")
-                    ->orWhereHas('paginas', function ($q) use ($search) {
-                        $q->where('nombre', 'like', "%{$search}%")
-                            ->orWhere('codigo', 'like', "%{$search}%");
-                    })
                     ->orWhereHas('tipoCatalogo', function ($q) use ($search) {
                         $q->where('nombre', 'like', "%{$search}%")
                             ->orWhere('codigo', 'like', "%{$search}%");
@@ -55,7 +50,7 @@ class ProductosController extends Controller
 
     public function productosProm(Request $request)
     {
-        $productos = Producto::with('paginas:id,nombre', 'tipoCatalogo:id,nombre,codigo')
+        $productos = Producto::with('tipoCatalogo:id,nombre,codigo')
             ->where('estado', 1)
             ->orderBy('nombre')
             ->get([
@@ -65,18 +60,10 @@ class ProductosController extends Controller
                 'tipo',
                 'tipo_productos_id',
                 'tipo_producto',
-                'paginas_id',
                 'ecommerce',
             ]);
 
         return $productos;
-    }
-
-    public function getPaginas()
-    {
-        return Pagina::where('estado', 1)
-            ->orderBy('nombre')
-            ->get();
     }
 
     public function getTipos()
@@ -103,8 +90,6 @@ class ProductosController extends Controller
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
             'tipo_productos_id' => 'required|exists:tipo_productos,id',
-            'paginas_id' => 'required|exists:paginas,id',
-
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
             'descripcion' => 'nullable|string',
@@ -122,7 +107,7 @@ class ProductosController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $request->only(['nombre', 'sku', 'alto', 'ancho', 'fuelle', 'tipo_productos_id', 'paginas_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
+            $data = $request->only(['nombre', 'sku', 'alto', 'ancho', 'fuelle', 'tipo_productos_id', 'tipo_producto', 'precio_base', 'descripcion', 'ecommerce']);
 
             $tipoProducto = TipoProducto::findOrFail($data['tipo_productos_id']);
 
@@ -204,7 +189,6 @@ class ProductosController extends Controller
             'ancho' => 'nullable|numeric',
             'fuelle' => 'nullable|numeric',
             'tipo_productos_id' => 'required|exists:tipo_productos,id',
-            'paginas_id' => 'required|exists:paginas,id',
             'tipo_producto' => 'required|in:personalizado,simple',
             'precio_base' => 'nullable|numeric',
             'descripcion' => 'nullable|string',
@@ -229,7 +213,6 @@ class ProductosController extends Controller
                 'ancho',
                 'fuelle',
                 'tipo_productos_id',
-                'paginas_id',
                 'tipo_producto',
                 'precio_base',
                 'descripcion',
@@ -348,7 +331,7 @@ class ProductosController extends Controller
         $productos = Producto::query()
             ->with(['imagenes' => function ($q) {
                 $q->where('is_main', true);
-            }, 'paginas', 'tipoCatalogo'])
+            }, 'tipoCatalogo'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($sub) use ($search) {
                     $sub->where('nombre', 'like', '%' . $search . '%')
@@ -380,12 +363,8 @@ class ProductosController extends Controller
 
     public function search(Request $request)
     {
-        $query = Producto::with(['paginas', 'tipoCatalogo'])
+        $query = Producto::with(['tipoCatalogo'])
             ->where('estado', 1);
-
-        if ($request->filled('id')) {
-            $query->where('paginas_id', $request->id);
-        }
 
         if ($request->filled('q')) {
             $search = trim($request->q);
@@ -395,10 +374,6 @@ class ProductosController extends Controller
                     ->orWhere('nombre', 'like', "%{$search}%")
                     ->orWhere('tipo', 'like', "%{$search}%")
                     ->orWhere('tipo_producto', 'like', "%{$search}%")
-                    ->orWhereHas('paginas', function ($q) use ($search) {
-                        $q->where('nombre', 'like', "%{$search}%")
-                            ->orWhere('codigo', 'like', "%{$search}%");
-                    })
                     ->orWhereHas('tipoCatalogo', function ($q) use ($search) {
                         $q->where('nombre', 'like', "%{$search}%")
                             ->orWhere('codigo', 'like', "%{$search}%");

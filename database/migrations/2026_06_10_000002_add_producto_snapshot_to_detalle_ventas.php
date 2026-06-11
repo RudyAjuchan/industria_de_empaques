@@ -13,8 +13,7 @@ return new class extends Migration
             $table->string('producto_sku', 50)->nullable()->after('productos_id');
             $table->string('producto_nombre')->nullable()->after('producto_sku');
             $table->string('producto_tipo')->nullable()->after('producto_nombre');
-            $table->string('producto_pagina')->nullable()->after('producto_tipo');
-            $table->string('producto_tipo_producto')->nullable()->after('producto_pagina');
+            $table->string('producto_tipo_producto')->nullable()->after('producto_tipo');
             $table->decimal('producto_alto', 10, 2)->nullable()->after('producto_tipo_producto');
             $table->decimal('producto_ancho', 10, 2)->nullable()->after('producto_alto');
             $table->decimal('producto_fuelle', 10, 2)->nullable()->after('producto_ancho');
@@ -23,13 +22,11 @@ return new class extends Migration
 
         DB::table('detalle_ventas as dv')
             ->join('productos as p', 'p.id', '=', 'dv.productos_id')
-            ->leftJoin('paginas as pg', 'pg.id', '=', 'p.paginas_id')
             ->select([
                 'dv.id',
                 'p.sku as producto_sku',
                 'p.nombre as producto_nombre',
                 'p.tipo as producto_tipo',
-                'pg.nombre as producto_pagina',
                 'p.tipo_producto as producto_tipo_producto',
                 'p.alto as producto_alto',
                 'p.ancho as producto_ancho',
@@ -45,7 +42,6 @@ return new class extends Migration
                             'producto_sku' => $detalle->producto_sku,
                             'producto_nombre' => $detalle->producto_nombre,
                             'producto_tipo' => $detalle->producto_tipo,
-                            'producto_pagina' => $detalle->producto_pagina,
                             'producto_tipo_producto' => $detalle->producto_tipo_producto,
                             'producto_alto' => $detalle->producto_alto,
                             'producto_ancho' => $detalle->producto_ancho,
@@ -63,7 +59,6 @@ return new class extends Migration
                 'producto_sku',
                 'producto_nombre',
                 'producto_tipo',
-                'producto_pagina',
                 'producto_tipo_producto',
                 'producto_alto',
                 'producto_ancho',

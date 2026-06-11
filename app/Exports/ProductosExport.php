@@ -27,7 +27,6 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
     public function collection(): Collection
     {
         return Producto::query()
-            ->with('paginas')
             ->when($this->search, function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('nombre', 'like', "%{$this->search}%")
@@ -50,7 +49,6 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
             'Ancho',
             'Fuelle',
             'Tipo',
-            'Página',
             'Creado',
             'Actualizado',
         ];
@@ -66,7 +64,6 @@ class ProductosExport implements FromCollection, WithHeadings, WithMapping, With
             $producto->ancho,
             $producto->fuelle,
             $producto->tipo,
-            optional($producto->paginas)->nombre,
             $producto->created_at?->format('d/m/Y H:i'),
             $producto->updated_at?->format('d/m/Y H:i'),
         ];

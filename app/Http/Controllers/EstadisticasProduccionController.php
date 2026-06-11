@@ -324,7 +324,8 @@ class EstadisticasProduccionController extends Controller
     {
         $filtros = $this->validarFiltros($request);
         $query = Venta::with([
-            'detalles.producto.paginas'
+            'pagina',
+            'detalles.producto'
         ]);
         $query->where('estado', '<>', 'pendiente');
 
@@ -340,42 +341,26 @@ class EstadisticasProduccionController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | AGRUPAR POR PÁGINA (CORRECTO)
+        | AGRUPAR POR PÁGINA DE LA VENTA
         |--------------------------------------------------------------------------
         */
         $agrupado = [];
 
         foreach ($ventas as $venta) {
-            $paginasVenta = $venta->detalles
-                ->map(fn($detalle) => $detalle->producto->paginas->nombre ?? 'Sin página')
-                ->unique()
-                ->values();
+            $pagina = $venta->pagina?->nombre ?? 'Sin página';
 
-            $envioPorPagina = $paginasVenta->isNotEmpty()
-                ? ($venta->costo_envio ?? 0) / $paginasVenta->count()
-                : 0;
-
-            foreach ($venta->detalles as $detalle) {
-
-                $pagina = $detalle->producto->paginas->nombre ?? 'Sin página';
-
-                if (!isset($agrupado[$pagina])) {
-                    $agrupado[$pagina] = [
-                        'venta' => 0,
-                        'envio' => 0,
-                    ];
-                }
-
-                // Venta sin envío
-                $agrupado[$pagina]['venta'] +=
-                    ($detalle->cantidad ?? 0) * ($detalle->precio ?? 0);
-
-                // Envío distribuido una sola vez por venta entre sus páginas.
-                if ($paginasVenta->contains($pagina)) {
-                    $agrupado[$pagina]['envio'] += $envioPorPagina;
-                    $paginasVenta = $paginasVenta->reject(fn($item) => $item === $pagina)->values();
-                }
+            if (!isset($agrupado[$pagina])) {
+                $agrupado[$pagina] = [
+                    'venta' => 0,
+                    'envio' => 0,
+                ];
             }
+
+            $agrupado[$pagina]['venta'] += (float) ($venta->subtotal ?? 0)
+                - $this->promocionCarritoMonto($venta)
+                - (float) ($venta->descuento ?? 0);
+
+            $agrupado[$pagina]['envio'] += (float) ($venta->costo_envio ?? 0);
         }
 
         /*
@@ -423,6 +408,21 @@ class EstadisticasProduccionController extends Controller
             'ventas_por_pagina' => $resultado,
             'totales' => $totales
         ];
+    }
+
+    private function promocionCarritoMonto(Venta $venta): float
+    {
+        $promocion = $venta->promociones;
+
+        if (!$promocion) {
+            return 0;
+        }
+
+        if (($promocion['tipo'] ?? null) === 'porcentaje') {
+            return (float) $venta->subtotal * ((float) ($promocion['valor'] ?? 0) / 100);
+        }
+
+        return (float) ($promocion['valor'] ?? 0);
     }
 
     private function obtenerTiposProductoData($request)

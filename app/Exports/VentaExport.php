@@ -27,7 +27,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
     public function collection(): Collection
     {
-        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos.banco'])
+        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagos.banco', 'pagina'])
             ->orderBy('id', 'desc');
 
         // 1. Filtro por Fechas
@@ -84,6 +84,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         return [
             'Número',
             'Cliente',
+            'Página',
             'Vendedor',
             'Subtotal',
             'Descuento',
@@ -116,6 +117,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         return [
             $venta->numero_completo,
             $venta->cliente->nombre ?? '-',
+            $venta->pagina->nombre ?? '-',
             $venta->vendedor->name ?? '-',
 
             $venta->subtotal,
@@ -137,7 +139,7 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('J')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('K')->getAlignment()->setWrapText(true);
         $sheet->getDefaultRowDimension()->setRowHeight(-1);
         return [
             1 => [
@@ -156,12 +158,12 @@ class VentaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function columnFormats(): array
     {
         return [
-            'D' => '"Q" #,##0.00',
             'E' => '"Q" #,##0.00',
             'F' => '"Q" #,##0.00',
             'G' => '"Q" #,##0.00',
             'H' => '"Q" #,##0.00',
             'I' => '"Q" #,##0.00',
+            'J' => '"Q" #,##0.00',
         ];
     }
 }

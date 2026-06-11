@@ -162,7 +162,6 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     // 1. RUTAS ESTÁTICAS (ORDENADAS PRIMERO)
     Route::get('/producto', [ProductosController::class, 'index'])->middleware('permission:producto.ver|venta.crear');
     Route::get('/productoPromocion', [ProductosController::class, 'productosProm'])->middleware('permission:promocion.crear|promocion.editar|promocion.ver');
-    Route::get('/producto/paginas', [ProductosController::class, 'getPaginas'])->middleware('permission:producto.crear|producto.editar|venta.crear');
     Route::get('/producto/tipos', [ProductosController::class, 'getTipos'])->middleware('permission:producto.crear|producto.editar|venta.crear');
     Route::post('/producto/tipos', [TipoProductoController::class, 'store'])->middleware('permission:producto.crear|producto.editar');
     Route::put('/producto/tipos/{tipoProducto}', [TipoProductoController::class, 'update'])->middleware('permission:producto.editar');
@@ -200,7 +199,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/venta/export/excel', [VentaController::class, 'exportExcel'])->middleware('permission:venta.reporte');
 
     //RUTAS COMPLEMENTARIAS PARA VENTAS
-    Route::get('/listar/paginas', [VentaController::class, 'getPaginas'])->middleware('permission:venta.crear');
+    Route::get('/listar/paginas', [VentaController::class, 'getPaginas'])->middleware('permission:venta.crear|ecommerce.editar');
     Route::get('/client/search', [ClienteController::class, 'search'])
         ->middleware('permission:venta.crear');
     Route::post('/product/search', [ProductosController::class, 'search'])

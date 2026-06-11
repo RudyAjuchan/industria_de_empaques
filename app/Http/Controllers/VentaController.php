@@ -34,7 +34,7 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         // Comenzamos la consulta con las relaciones necesarias
-        $query = Venta::with(['cliente', 'vendedor', 'banco'])
+        $query = Venta::with(['cliente', 'vendedor', 'banco', 'pagina'])
             ->orderBy('id', 'desc');
 
         // Filtro por Rango de Fechas
@@ -66,7 +66,7 @@ class VentaController extends Controller
 
     public function cotizaciones()
     {
-        return Venta::with(['cliente', 'vendedor', 'banco'])
+        return Venta::with(['cliente', 'vendedor', 'banco', 'pagina'])
             ->where('estado', 'pendiente')
             ->orderBy('id', 'desc')
             ->get();
@@ -74,7 +74,7 @@ class VentaController extends Controller
 
     public function ventas_activas()
     {
-        return Venta::with(['cliente', 'vendedor', 'banco'])
+        return Venta::with(['cliente', 'vendedor', 'banco', 'pagina'])
             ->where('estado_produccion', '<>', 'finalizada')
             ->where('estado', '<>', 'pendiente')
             ->where('estado', '<>', 'anulada')
@@ -156,6 +156,7 @@ class VentaController extends Controller
                 'numero' => $numero,
                 'vendedor_id' => Auth::user()->id,
                 'clientes_id' => $data['clientes_id'],
+                'paginas_id' => $data['paginas_id'] ?? null,
                 'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
                 'tipo_pago' => $data['tipo_pago'] ?? null,
@@ -198,7 +199,7 @@ class VentaController extends Controller
             // =========================
             foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::with(['estadosProduccion', 'paginas'])
+                $producto = Producto::with(['estadosProduccion'])
                     ->find($item['productos_id']);
 
                 $precio = $producto->tipo_producto === 'simple'
@@ -319,22 +320,14 @@ class VentaController extends Controller
             'cliente.municipio.departamento',
             'banco',
             'pagos.banco',
-            'detalles.producto.paginas',
+            'pagina',
+            'detalles.producto',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
             'vendedor',
             'detalles.imagenes'
         ]);
-        $nombresPaginas = $venta->detalles
-            ->map(function ($detalle) {
-                return $detalle->producto_pagina
-                    ?? $detalle->producto->paginas->nombre
-                    ?? null;
-            })
-            ->filter()
-            ->unique();
-
-        $venta->nombres_paginas_productos = $nombresPaginas->implode(' / ');
+        $venta->nombres_paginas_productos = $venta->pagina?->nombre ?? '';
 
         return response()->json($venta);
     }
@@ -438,22 +431,14 @@ class VentaController extends Controller
             'cliente.emails',
             'cliente.municipio.departamento',
             'banco',
-            'detalles.producto.paginas',
+            'pagina',
+            'detalles.producto',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
             'vendedor',
             'pagos'
         ]);
-        $nombresPaginas = $venta->detalles
-            ->map(function ($detalle) {
-                return $detalle->producto_pagina
-                    ?? $detalle->producto->paginas->nombre
-                    ?? null;
-            })
-            ->filter()
-            ->unique();
-
-        $venta->nombres_paginas_productos = $nombresPaginas->implode(' / ');
+        $venta->nombres_paginas_productos = $venta->pagina?->nombre ?? '';
 
         $pdf = Pdf::loadView('pdf.venta.venta', compact('venta'))
             ->setPaper('letter', 'portrait');
@@ -468,7 +453,8 @@ class VentaController extends Controller
             'cliente.telefonos',
             'vendedor',
             'banco',
-            'detalles.producto.paginas',
+            'pagina',
+            'detalles.producto',
             'detalles.producto.tipoCatalogo',
             'detalles.tipoAgarrador',
             'detalles.tipoPapel',
@@ -506,6 +492,7 @@ class VentaController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'paginas_id' => 'required|exists:paginas,id',
             'bancos_id' => 'nullable|exists:bancos,id',
             'comprobante_pago' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
         ]);
@@ -594,6 +581,7 @@ class VentaController extends Controller
             $venta->update([
 
                 'clientes_id' => $data['clientes_id'],
+                'paginas_id' => $data['paginas_id'],
                 'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
                 'tipo_pago' => $data['tipo_pago'] ?? null,
@@ -688,7 +676,7 @@ class VentaController extends Controller
             */
             foreach ($data['detalle'] as $index => $item) {
 
-                $producto = Producto::with(['estadosProduccion', 'paginas'])->find($item['productos_id']);
+                $producto = Producto::with(['estadosProduccion'])->find($item['productos_id']);
                 $precio = $producto->tipo_producto === 'simple' ? $producto->precio_base : $item['precio'];
                 $totalItem =
                     $precio * $item['cantidad'];
@@ -860,7 +848,6 @@ class VentaController extends Controller
             'producto_sku' => $producto->sku,
             'producto_nombre' => $producto->nombre,
             'producto_tipo' => $producto->tipo,
-            'producto_pagina' => $producto->paginas?->nombre,
             'producto_tipo_producto' => $producto->tipo_producto,
             'producto_alto' => $producto->alto,
             'producto_ancho' => $producto->ancho,

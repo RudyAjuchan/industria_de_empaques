@@ -71,18 +71,6 @@
                 </v-col>
 
                 <v-col cols="12">
-                    <v-autocomplete v-model="form.paginas_id" variant="outlined" label="Página" density="compact"
-                        :items="paginas" item-title="nombre" item-value="id" :error-messages="errors.paginas_id">
-                        <template #append-inner>
-                            <v-btn icon size="small" variant="text" @click.stop="dialogPagina = true">
-                                <v-icon size="18">mdi-plus</v-icon>
-                            </v-btn>
-                        </template>
-                    </v-autocomplete>
-                    <DialogPagina v-model="dialogPagina" @saved="onPaginaSave"></DialogPagina>
-                </v-col>
-
-                <v-col cols="12">
                     <div class="text-subtitle-2 mb-2">
                         Estados de producción
                     </div>
@@ -168,7 +156,6 @@
 import axios from 'axios'
 import { FilePond } from '../../plugins/filepond'
 import draggable from 'vuedraggable'
-import DialogPagina from '../Paginas/PaginaDialog.vue'
 import TipoProductoDialog from './TipoProductoDialog.vue'
 import MoneyInput from '../common/MoneyInput.vue'
 import { toast } from 'vue3-toastify'
@@ -179,7 +166,6 @@ export default {
     components: {
         FilePond,
         draggable,
-        DialogPagina,
         TipoProductoDialog,
         MoneyInput,
     },
@@ -204,7 +190,6 @@ export default {
                 ancho: '',
                 fuelle: '',
                 tipo_productos_id: null,
-                paginas_id: null,
                 // NUEVOS
                 tipo_producto: 'personalizado',
                 precio_base: null,
@@ -213,7 +198,6 @@ export default {
                 estados_produccion: [],
             },
             errors: {},
-            paginas: [],
             tiposProducto: [],
             estadosProduccionDisponibles: [],
             mainIndex: 0,
@@ -234,13 +218,11 @@ export default {
                         })
                 }
             },
-            dialogPagina: false,
             dialogTipoProducto: false,
         }
     },
 
     mounted() {
-        this.fetchPaginas();
         this.fetchTiposProducto();
         this.fetchEstadosProduccion();
     },
@@ -319,11 +301,6 @@ export default {
             }
         },
 
-        async fetchPaginas() {
-            const { data } = await axios.get(`/producto/paginas/`)
-            this.paginas = data
-        },
-
         async fetchTiposProducto() {
             const { data } = await axios.get('/producto/tipos')
             this.tiposProducto = data
@@ -347,12 +324,6 @@ export default {
 
         setMain(index) {
             this.mainIndex = index
-        },
-
-        onPaginaSave(pagina) {
-            this.paginas.push(pagina)
-            this.form.paginas_id = pagina.id
-            toast.success('Página guardada')
         },
 
         onTipoProductoSave(tipoProducto) {
@@ -410,7 +381,6 @@ export default {
                         ancho: '',
                         fuelle: '',
                         tipo_productos_id: null,
-                        paginas_id: null,
                         tipo_producto: 'personalizado',
                         precio_base: null,
                         descripcion: '',
@@ -430,7 +400,6 @@ export default {
                     ancho: producto.ancho,
                     fuelle: producto.fuelle,
                     tipo_productos_id: producto.tipo_productos_id,
-                    paginas_id: producto.paginas_id,
 
                     tipo_producto: producto.tipo_producto || 'personalizado',
                     precio_base: producto.precio_base,

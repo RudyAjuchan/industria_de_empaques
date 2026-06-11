@@ -165,28 +165,28 @@
                                     <td style="padding: 0 10px;">
                                         <a href="https://www.facebook.com/jeple.guatemala" target="_blank"
                                             style="text-decoration: none;">
-                                            <img src="{{ config('app.url') }}/img/icons/facebook.png" width="30"
+                                            <img src="{{ config('app.url') }}/img/facebook.png" width="30"
                                                 height="30" alt="Facebook" style="display:block;">
                                         </a>
                                     </td>
                                     <td style="padding: 0 10px;">
                                         <a href="https://www.instagram.com/jeple.embalajes" target="_blank"
                                             style="text-decoration: none;">
-                                            <img src="{{ config('app.url') }}/img/icons/instagram.png" width="30"
+                                            <img src="{{ config('app.url') }}/img/instagram.png" width="30"
                                                 height="30" alt="Instagram" style="display:block;">
                                         </a>
                                     </td>
                                     <td style="padding: 0 10px;">
                                         <a href="https://wa.me/50232500812" target="_blank"
                                             style="text-decoration: none;">
-                                            <img src="{{ config('app.url') }}/img/icons/whatsapp.png" width="30"
+                                            <img src="{{ config('app.url') }}/img/whatsapp.png" width="30"
                                                 height="30" alt="WhatsApp" style="display:block;">
                                         </a>
                                     </td>
                                     <td style="padding: 0 10px;">
                                         <a href="https://www.tiktok.com/@jeple.embalajes" target="_blank"
                                             style="text-decoration: none;">
-                                            <img src="{{ config('app.url') }}/img/icons/tiktok.png" width="30"
+                                            <img src="{{ config('app.url') }}/img/tiktok.png" width="30"
                                                 height="30" alt="Tiktok" style="display:block;">
                                         </a>
                                     </td>

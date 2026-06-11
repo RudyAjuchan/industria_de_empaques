@@ -52,6 +52,8 @@ class VentaController extends Controller
             $query->where('estado', 'emitida');
         } elseif ($estado === 'Anuladas') {
             $query->where('estado', 'anulada');
+        } elseif ($estado === 'Rechazadas') {
+            $query->where('estado', 'rechazada');
         } elseif ($estado === 'En Produccion') {
             $query->where('estado_produccion', 'en_produccion');
         } elseif ($estado === 'Sin Iniciar') {
@@ -78,6 +80,7 @@ class VentaController extends Controller
             ->where('estado_produccion', '<>', 'finalizada')
             ->where('estado', '<>', 'pendiente')
             ->where('estado', '<>', 'anulada')
+            ->where('estado', '<>', 'rechazada')
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -156,7 +159,7 @@ class VentaController extends Controller
                 'numero' => $numero,
                 'vendedor_id' => Auth::user()->id,
                 'clientes_id' => $data['clientes_id'],
-                'paginas_id' => $data['paginas_id'] ?? null,
+                'paginas_id' => $data['paginas_id'],
                 'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
                 'tipo_pago' => $data['tipo_pago'] ?? null,
@@ -219,9 +222,9 @@ class VentaController extends Controller
                     'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
 
                     'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ($item['color_agarrador'] ?? ''),
-                    'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ($item['detalle_impresion'] ?? ''),
+                    'detalle_impresion' => $item['detalle_impresion'] ?? null,
                     'observaciones' => $item['observaciones'] ?? null,
-                    'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
+                    'nombre_logo' => $item['nombre_logo'] ?? null,
 
                     'logo_path' => $item['logo_path'] ?? null,
                     'promocion_aplicada' => $promocionAplicada,
@@ -372,6 +375,8 @@ class VentaController extends Controller
             $query->where('estado', 'emitida');
         } elseif ($estado === 'Anuladas') {
             $query->where('estado', 'anulada');
+        } elseif ($estado === 'Rechazadas') {
+            $query->where('estado', 'rechazada');
         } elseif ($estado === 'En Produccion') {
             $query->where('estado_produccion', 'en_produccion');
         } elseif ($estado === 'Sin Iniciar') {
@@ -491,7 +496,7 @@ class VentaController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'paginas_id' => 'required|exists:paginas,id',
             'bancos_id' => 'nullable|exists:bancos,id',
             'comprobante_pago' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
@@ -581,7 +586,7 @@ class VentaController extends Controller
             $venta->update([
 
                 'clientes_id' => $data['clientes_id'],
-                'paginas_id' => $data['paginas_id'],
+                'paginas_id' => $validated['paginas_id'],
                 'bancos_id' => $data['bancos_id'] ?? null,
                 'fecha_entrega' => $data['fecha_entrega'],
                 'tipo_pago' => $data['tipo_pago'] ?? null,
@@ -696,9 +701,10 @@ class VentaController extends Controller
                         'tipo_agarradors_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_agarradors_id'],
                         'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
                         'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ( $item['color_agarrador'] ?? '' ),
-                        'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ( $item['detalle_impresion'] ?? '' ),
+                        'detalle_impresion' => $item['detalle_impresion'] ?? null,
                         'observaciones' => $item['observaciones'] ?? null,
-                        'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ( $item['nombre_logo'] ?? ''),
+                        'nombre_logo' => $item['nombre_logo'] ?? null,
+                        'logo_path' => $item['logo_path'] ?? null,
                         'archivo_diseno_path' => $item['archivo_diseno_path'] ?? null,
                         'promocion_aplicada' => $promocionAplicada,
                         'precio' => $precio,

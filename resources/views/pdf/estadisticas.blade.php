@@ -77,6 +77,23 @@
             object-fit: contain;
             margin: 8px 0 12px;
         }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .section-note {
+            margin-top: -4px;
+            margin-bottom: 12px;
+            color: #666;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .page-heading {
+            background: #f2f7f6;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -301,6 +318,52 @@
             @endforeach
         </tbody>
     </table>
+</div>
+
+<div class="section page-break">
+    <h3>CONTROL DE VENTAS - INDUSTRIA DE EMPAQUES S.A.</h3>
+    <div class="section-note">
+        Detalle de unidades y montos por producto según la página asignada a la venta.
+    </div>
+
+    @foreach (($productosPorPagina ?? []) as $pagina)
+        <table>
+            <thead>
+                <tr class="page-heading">
+                    <th colspan="6">{{ $pagina['nombre'] }}</th>
+                </tr>
+                <tr>
+                    <th>Producto</th>
+                    <th>Tipo</th>
+                    <th>Unidades</th>
+                    <th>Ventas</th>
+                    <th>Total producto</th>
+                    <th>Total página</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (($pagina['productos'] ?? []) as $producto)
+                    <tr>
+                        <td>{{ $producto['nombre'] }}</td>
+                        <td>{{ $producto['tipo'] }}</td>
+                        <td>{{ number_format($producto['unidades']) }}</td>
+                        <td>{{ number_format($producto['ventas']) }}</td>
+                        <td class="right">Q{{ number_format($producto['total'], 2) }}</td>
+                        <td class="right">{{ $loop->first ? 'Q' . number_format($pagina['total'], 2) : '' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="bold" colspan="2">TOTAL {{ $pagina['nombre'] }}</td>
+                    <td class="bold">{{ number_format($pagina['unidades']) }}</td>
+                    <td class="bold">{{ number_format($pagina['ventas']) }}</td>
+                    <td></td>
+                    <td class="right bold">Q{{ number_format($pagina['total'], 2) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    @endforeach
 </div>
 
 </body>

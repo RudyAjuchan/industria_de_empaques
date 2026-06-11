@@ -37,6 +37,7 @@ class CheckoutController extends Controller
                 'detalle.*.color_agarrador' => ['nullable', 'string', 'max:255'],
                 'detalle.*.detalle_impresion' => ['nullable', 'string'],
                 'detalle.*.nombre_logo' => ['nullable', 'string', 'max:255'],
+                'detalle.*.logo_path' => ['nullable', 'string', 'max:2048'],
                 'detalle.*.imagenes' => ['nullable', 'array'],
                 'detalle.*.imagenes.*' => ['string', 'max:2048'],
             ]);
@@ -150,8 +151,9 @@ class CheckoutController extends Controller
                     'tipo_papels_id' => $producto->tipo_producto === 'simple' ? null : $item['tipo_papels_id'],
 
                     'color_agarrador' => $producto->tipo_producto === 'simple' ? null : ($item['color_agarrador'] ?? ''),
-                    'detalle_impresion' => $producto->tipo_producto === 'simple' ? null : ($item['detalle_impresion'] ?? ''),
-                    'nombre_logo' => $producto->tipo_producto === 'simple' ? null : ($item['nombre_logo'] ?? ''),
+                    'detalle_impresion' => $item['detalle_impresion'] ?? null,
+                    'nombre_logo' => $item['nombre_logo'] ?? null,
+                    'logo_path' => $item['logo_path'] ?? null,
 
                     'promocion_aplicada' => $promocionAplicada,
 

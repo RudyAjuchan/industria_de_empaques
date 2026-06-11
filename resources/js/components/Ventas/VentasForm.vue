@@ -1,20 +1,26 @@
 <template>
     <v-card-text>
         <v-row>
-            <v-col cols="3">
+            <v-col cols="4">
                 <v-text-field variant="outlined" density="compact" label="Fecha emisión" v-model="fecha" disabled
                     hide-details="auto"></v-text-field>
             </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
                 <v-text-field variant="outlined" density="compact" label="Hora" v-model="hora" disabled
                     hide-details="auto"></v-text-field>
             </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
                 <v-text-field type="date" variant="outlined" density="compact" label="Fecha de entrega"
                     v-model="form.fecha_entrega" hide-details="auto"
                     :error-messages="errors.fecha_entrega"></v-text-field>
             </v-col>
-            <v-col cols="3">
+        </v-row>
+        <v-row class="justify-center bg-teal-lighten-5">
+            <v-col cols="4">
+                <v-text-field label="Vendedor" v-model="form.nombre_vendedor" variant="outlined" density="compact"
+                    disabled hide-details="auto"></v-text-field>
+            </v-col>
+            <v-col cols="4">
                 <v-autocomplete v-model="form.paginas_id" :items="paginas" item-title="nombre" item-value="id"
                     label="Página" variant="outlined" density="compact" :error-messages="errors.paginas_id">
                     <template #append-inner>
@@ -24,12 +30,6 @@
                     </template>
                 </v-autocomplete>
                 <PaginaDialog v-model="paginaDialog" @saved="onPaginaSaved" />
-            </v-col>
-        </v-row>
-        <v-row class="justify-center bg-teal-lighten-5">
-            <v-col cols="4">
-                <v-text-field label="Vendedor" v-model="form.nombre_vendedor" variant="outlined" density="compact"
-                    disabled hide-details="auto"></v-text-field>
             </v-col>
         </v-row>
 

@@ -274,6 +274,8 @@ Route::middleware(['auth', 'force.password'])->group(function () {
         ->middleware('permission:dashboard.corporativo.ver');
     Route::get('/estadisticas-comerciales', [EstadisticasProduccionController::class, 'estadisticasComerciales'])
         ->middleware('permission:dashboard.corporativo.ver');
+    Route::get('/estadisticas-productos-por-pagina', [EstadisticasProduccionController::class, 'productosPorPagina'])
+        ->middleware('permission:dashboard.corporativo.ver');
     Route::get('/filtros-produccion', [EstadisticasProduccionController::class, 'filtrosProduccion'])
         ->middleware('permission:dashboard.general.ver|dashboard.corporativo.ver');
     Route::get('/export/pdf', [EstadisticasProduccionController::class, 'exportPDF'])

@@ -46,8 +46,8 @@
             </template>
 
             <template v-slot:[`item.estado`]="{ item }">
-                <v-chip :color="item.estado === 'anulada' ? 'red' : 'green'" dark>
-                    {{ item.estado }}
+                <v-chip :color="estadoColor(item.estado)" dark>
+                    {{ format_estado(item.estado) }}
                 </v-chip>
             </template>
 
@@ -164,10 +164,21 @@ export default {
         },
 
         format_estado(estado){
+            if (!estado) return ''
             return estado.replace('_', ' ')
                 .split(' ')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
+        },
+
+        estadoColor(estado) {
+            return {
+                emitida: 'green',
+                pendiente: 'orange',
+                anulada: 'red',
+                rechazada: 'red',
+                error: 'red',
+            }[estado] || 'grey'
         },
 
         aprobarCotizacion(venta){

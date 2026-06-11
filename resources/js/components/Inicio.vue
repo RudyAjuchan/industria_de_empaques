@@ -1,5 +1,5 @@
 <template>
-    <div class="pa-10">
+    <div class="dashboard-page pa-6 pa-md-8">
         <LoginWelcome />
 
         <v-card v-if="puedeVerGeneral || puedeVerCorporativo" class="dashboard-filter-card mb-8 elevation-1">
@@ -75,8 +75,16 @@
             </v-row>
         </v-card>
 
+        <v-card v-if="puedeVerGeneral || puedeVerCorporativo" class="dashboard-nav-card mb-8 elevation-0">
+            <v-tabs v-model="activeDashboardTab" color="primary" density="comfortable" show-arrows>
+                <v-tab v-for="tab in dashboardTabs" :key="tab.value" :value="tab.value">
+                    {{ tab.title }}
+                </v-tab>
+            </v-tabs>
+        </v-card>
+
         <!-- ESTADISTICAS GENERALES (unidades) -->
-        <div v-if="puedeVerGeneral" class="dashboard-section">
+        <div v-if="puedeVerGeneral && activeDashboardTab === 'operativo'" class="dashboard-section">
             <div class="section-heading">
                 <div>
                     <h2>Dashboard general</h2>
@@ -268,12 +276,15 @@
         </v-row>
         </div>
 
-        <div v-if="puedeVerCorporativo" class="dashboard-section dashboard-section-corporate mt-8">
+        <div v-if="puedeVerCorporativo && ['ventas', 'comercial'].includes(activeDashboardTab)" class="dashboard-section dashboard-section-corporate mt-8">
             <div class="section-heading">
                 <div>
-                    <h2>Dashboard corporativo</h2>
+                    <h2>{{ activeDashboardTab === 'comercial' ? 'Análisis comercial' : 'Dashboard corporativo' }}</h2>
                     <div class="text-caption text-grey-darken-1">
-                        Indicadores comerciales filtrados por periodo y tipo de cliente
+                        {{ activeDashboardTab === 'comercial'
+                            ? 'Lecturas comerciales filtradas por periodo y tipo de cliente'
+                            : 'Indicadores comerciales filtrados por periodo y tipo de cliente'
+                        }}
                     </div>
                 </div>
                 <div class="section-filter-chips">
@@ -282,7 +293,7 @@
                 </div>
             </div>
 
-        <v-row class="mt-5">
+        <v-row v-if="activeDashboardTab === 'ventas'" class="mt-5">
 
             <!-- TABLA -->
             <v-col cols="12" md="6">
@@ -348,7 +359,72 @@
 
         </v-row>
 
-        <v-row class="mt-6">
+        <v-row v-if="activeDashboardTab === 'ventas'" class="mt-6">
+            <v-col cols="12">
+                <v-card class="pa-4 elevation-2">
+                    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-3">
+                        <div>
+                            <v-card-title class="pa-0">CONTROL DE VENTAS - INDUSTRIA DE EMPAQUES S.A.</v-card-title>
+                            <div class="text-caption text-grey">
+                                Detalle de unidades y montos por producto según la página asignada a la venta
+                            </div>
+                        </div>
+                        <v-chip size="small" color="teal" variant="tonal">
+                            {{ productosPorPagina.length }} páginas
+                        </v-chip>
+                    </div>
+
+                    <v-expansion-panels v-if="productosPorPagina.length" variant="accordion">
+                        <v-expansion-panel v-for="pagina in productosPorPagina" :key="pagina.id || pagina.nombre">
+                            <v-expansion-panel-title>
+                                <div class="page-product-summary">
+                                    <div class="page-product-name">{{ pagina.nombre }}</div>
+                                    <div class="page-product-meta">
+                                        {{ formatNumber(pagina.unidades) }} unidades ·
+                                        {{ formatNumber(pagina.ventas) }} ventas ·
+                                        {{ formatQuetzales(pagina.total) }} ·
+                                        {{ formatNumber(pagina.productos_distintos) }} productos
+                                    </div>
+                                </div>
+                            </v-expansion-panel-title>
+
+                            <v-expansion-panel-text>
+                                <v-table density="compact">
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Producto</th>
+                                            <th>Tipo</th>
+                                            <th class="text-right">Unidades</th>
+                                            <th class="text-right">Ventas</th>
+                                            <th class="text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="producto in pagina.productos" :key="`${pagina.id || pagina.nombre}-${producto.id || producto.nombre}`">
+                                            <td>{{ producto.no }}</td>
+                                            <td class="font-weight-medium">{{ producto.nombre }}</td>
+                                            <td>{{ producto.tipo }}</td>
+                                            <td class="text-right">{{ formatNumber(producto.unidades) }}</td>
+                                            <td class="text-right">{{ formatNumber(producto.ventas) }}</td>
+                                            <td class="text-right font-weight-bold">
+                                                {{ formatQuetzales(producto.total) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                            </v-expansion-panel-text>
+                        </v-expansion-panel>
+                    </v-expansion-panels>
+
+                    <v-alert v-else type="info" variant="tonal" density="compact">
+                        No hay productos vendidos para los filtros seleccionados.
+                    </v-alert>
+                </v-card>
+            </v-col>
+        </v-row>
+
+        <v-row v-if="activeDashboardTab === 'ventas'" class="mt-6">
 
             <!-- TABLA -->
             <v-col cols="12" md="5">
@@ -397,7 +473,7 @@
 
         </v-row>
 
-        <v-row class="mt-6">
+        <v-row v-if="activeDashboardTab === 'comercial'" class="mt-5">
             <v-col cols="12">
                 <div class="subsection-title">Análisis comercial</div>
                 <div class="text-caption text-grey mb-4">
@@ -507,6 +583,7 @@ import DashboardSinAsignar from './DashboardSinAsignar.vue';
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { toast } from 'vue3-toastify'
 import { formatQuetzales } from '../utils/money'
+import { markRaw, toRaw } from 'vue'
 
 const centerTextPlugin = {
     id: 'centerText',
@@ -573,6 +650,8 @@ export default {
     data() {
         return {
             loading: false,
+            activeDashboardTab: 'operativo',
+            capturandoGraficas: false,
             estadisticas: {
                 pedido: 0,
                 finalizadas: 0,
@@ -655,6 +734,7 @@ export default {
             ],
 
             tiposProducto: [],
+            productosPorPagina: [],
             totalesTipos: {
                 unidades: 0,
                 ventas: 0
@@ -703,6 +783,10 @@ export default {
                         params: this.filtros
                     })
 
+                    const response5 = await axios.get('/estadisticas-productos-por-pagina', {
+                        params: this.filtros
+                    })
+
                     this.ventasPorPagina = response2.data.ventas_por_pagina || []
                     this.totalesVentaPagina = response2.data.totales || {
                         venta: 0,
@@ -711,6 +795,7 @@ export default {
                     }
 
                     this.tiposProducto = response3.data.tipos_producto || []
+                    this.productosPorPagina = response5.data || []
                     this.totalesTipos = response3.data.totales || {
                         unidades: 0,
                         ventas: 0
@@ -745,7 +830,7 @@ export default {
 
             // destruir charts anteriores
             if (this.chart.length) {
-                this.chart.forEach(c => c.destroy())
+                this.chart.forEach(c => toRaw(c)?.destroy?.())
             }
 
             this.chart = []
@@ -756,7 +841,7 @@ export default {
 
                 if (!ctx) return
 
-                const chartInstance = new Chart(ctx, {
+                const chartInstance = markRaw(new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: ['Producción', 'Pendiente'],
@@ -775,10 +860,11 @@ export default {
                         ]
                     },
                     options: {
-                        responsive: true,
-                        cutout: '65%',
-                        maintainAspectRatio: false,
-                        layout: {
+                    responsive: true,
+                    cutout: '65%',
+                    maintainAspectRatio: false,
+                    animation: false,
+                    layout: {
                             padding: {
                                 bottom: 20
                             }
@@ -810,7 +896,7 @@ export default {
                             }
                         }
                     }
-                })
+                }))
 
                 this.chart.push(chartInstance)
             })
@@ -856,9 +942,11 @@ export default {
 
         async exportPDF() {
             try {
+                const charts = await this.captureDashboardCharts()
+
                 const response = await axios.post('/export/pdf', {
                     ...this.filtros,
-                    charts: this.getChartImages(),
+                    charts,
                 }, {
                     responseType: 'blob',
                 })
@@ -872,6 +960,86 @@ export default {
             }
         },
 
+        waitForRender() {
+            return new Promise(resolve => {
+                requestAnimationFrame(() => {
+                    setTimeout(resolve, 250)
+                })
+            })
+        },
+
+        async waitForCanvas(canvasId, attempts = 20) {
+            for (let index = 0; index < attempts; index++) {
+                await this.$nextTick()
+                const canvas = document.getElementById(canvasId)
+
+                if (canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                    return canvas
+                }
+
+                await this.waitForRender()
+            }
+
+            return null
+        },
+
+        async waitForChartImage(chart, canvasId) {
+            await this.waitForCanvas(canvasId)
+            await this.waitForRender()
+            toRaw(chart)?.update?.('none')
+            await this.waitForRender()
+
+            return this.chartToImage(chart)
+        },
+
+        async captureDashboardCharts() {
+            const currentTab = this.activeDashboardTab
+            const charts = {}
+
+            if (!this.puedeVerCorporativo) {
+                return charts
+            }
+
+            this.capturandoGraficas = true
+
+            try {
+                this.activeDashboardTab = 'ventas'
+                await this.$nextTick()
+                this.renderChartVentas()
+                this.renderChartTipos()
+                await this.waitForRender()
+                charts.ventasPorPagina = await this.waitForChartImage(this.chartVentas, 'graficaVentas')
+                charts.tiposProducto = await this.waitForChartImage(this.chartTipos, 'graficaTipos')
+
+                this.activeDashboardTab = 'comercial'
+                await this.$nextTick()
+                this.renderChartsComerciales()
+                await this.waitForRender()
+                charts.tamanos = await this.waitForChartImage(this.chartTamanos, 'graficaTamanos')
+                charts.generos = await this.waitForChartImage(this.chartGeneros, 'graficaGeneros')
+                charts.departamentos = await this.waitForChartImage(this.chartDepartamentos, 'graficaDepartamentos')
+            } finally {
+                this.activeDashboardTab = currentTab
+                await this.$nextTick()
+                this.capturandoGraficas = false
+
+                if (currentTab === 'operativo') {
+                    this.renderChart()
+                }
+
+                if (currentTab === 'ventas') {
+                    this.renderChartVentas()
+                    this.renderChartTipos()
+                }
+
+                if (currentTab === 'comercial') {
+                    this.renderChartsComerciales()
+                }
+            }
+
+            return charts
+        },
+
         exportExcel() {
             const params = new URLSearchParams(this.filtros).toString()
             window.open(`/export/excel?${params}`, '_blank')
@@ -880,7 +1048,7 @@ export default {
         renderChartVentas() {
 
             if (this.chartVentas) {
-                this.chartVentas.destroy()
+                toRaw(this.chartVentas)?.destroy?.()
             }
             const colores = this.ventasPorPagina.map((_, index) => {
                 return this.coloresBase[index % this.coloresBase.length]
@@ -888,10 +1056,12 @@ export default {
 
             const ctx = document.getElementById('graficaVentas')
 
+            if (!ctx) return
+
             const labels = this.ventasPorPagina.map(v => this.chartLabel(v.nombre))
             const data = this.ventasPorPagina.map(v => v.total)
 
-            this.chartVentas = new Chart(ctx, {
+            this.chartVentas = markRaw(new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -908,6 +1078,7 @@ export default {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     layout: {
                         padding: {
                             bottom: 34
@@ -961,7 +1132,7 @@ export default {
                         }
                     }
                 }
-            })
+            }))
         },
 
         chartLabel(label) {
@@ -977,10 +1148,12 @@ export default {
         renderChartTipos() {
 
             if (this.chartTipos) {
-                this.chartTipos.destroy()
+                toRaw(this.chartTipos)?.destroy?.()
             }
 
             const ctx = document.getElementById('graficaTipos')
+
+            if (!ctx) return
 
             const labels = this.tiposProducto.map(t => t.tipo)
             const data = this.tiposProducto.map(t => t.unidades)
@@ -989,7 +1162,7 @@ export default {
                 return this.coloresBase[index % this.coloresBase.length]
             })
 
-            this.chartTipos = new Chart(ctx, {
+            this.chartTipos = markRaw(new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -1007,6 +1180,7 @@ export default {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     layout: {
                         padding: {
                             top: 20,
@@ -1066,7 +1240,7 @@ export default {
                         }
                     }
                 }
-            })
+            }))
         },
 
         renderChartsComerciales() {
@@ -1100,7 +1274,7 @@ export default {
 
         renderBarChart({ chart, canvasId, labels, data, label, money }) {
             if (chart) {
-                chart.destroy()
+                toRaw(chart)?.destroy?.()
             }
 
             const ctx = document.getElementById(canvasId)
@@ -1111,7 +1285,7 @@ export default {
                 return this.coloresBase[index % this.coloresBase.length]
             })
 
-            return new Chart(ctx, {
+            return markRaw(new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels.map(item => this.chartLabel(item)),
@@ -1129,6 +1303,7 @@ export default {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     layout: {
                         padding: {
                             top: 20,
@@ -1195,17 +1370,26 @@ export default {
                         }
                     }
                 }
-            })
+            }))
         },
 
         getChartImages() {
             return {
-                ventasPorPagina: this.chartVentas?.toBase64Image() || null,
-                tiposProducto: this.chartTipos?.toBase64Image() || null,
-                tamanos: this.chartTamanos?.toBase64Image() || null,
-                generos: this.chartGeneros?.toBase64Image() || null,
-                departamentos: this.chartDepartamentos?.toBase64Image() || null,
+                ventasPorPagina: this.chartToImage(this.chartVentas),
+                tiposProducto: this.chartToImage(this.chartTipos),
+                tamanos: this.chartToImage(this.chartTamanos),
+                generos: this.chartToImage(this.chartGeneros),
+                departamentos: this.chartToImage(this.chartDepartamentos),
             }
+        },
+
+        chartToImage(chart) {
+            const rawChart = toRaw(chart)
+            const image = rawChart?.toBase64Image?.()
+
+            return typeof image === 'string' && image.startsWith('data:image/')
+                ? image
+                : null
         }
     },
     computed: {
@@ -1216,15 +1400,52 @@ export default {
         puedeVerCorporativo() {
             return this.corporativo && this.can('dashboard.corporativo.ver')
         },
+
+        dashboardTabs() {
+            const tabs = []
+
+            if (this.puedeVerGeneral) {
+                tabs.push({ title: 'Operativo', value: 'operativo' })
+            }
+
+            if (this.puedeVerCorporativo) {
+                tabs.push({ title: 'Ventas', value: 'ventas' })
+                tabs.push({ title: 'Análisis comercial', value: 'comercial' })
+            }
+
+            return tabs
+        },
     },
     async mounted() {
         await this.cargarFiltros()
+        this.activeDashboardTab = this.dashboardTabs[0]?.value || 'operativo'
         await this.cargarEstadisticas()
     },
 
     watch: {
         'filtros.year'(val) {
             this.actualizarMeses()
+        },
+
+        activeDashboardTab() {
+            if (this.capturandoGraficas) {
+                return
+            }
+
+            this.$nextTick(() => {
+                if (this.activeDashboardTab === 'operativo') {
+                    this.renderChart()
+                }
+
+                if (this.activeDashboardTab === 'ventas') {
+                    this.renderChartVentas()
+                    this.renderChartTipos()
+                }
+
+                if (this.activeDashboardTab === 'comercial') {
+                    this.renderChartsComerciales()
+                }
+            })
         }
     }
 }
@@ -1232,9 +1453,22 @@ export default {
 
 <style scoped>
 .dashboard-filter-card {
-    padding: 20px;
+    padding: 18px;
     border-radius: 8px;
     border: 1px solid #e6e8eb;
+}
+
+.dashboard-page {
+    background: #f7f9fb;
+}
+
+.dashboard-nav-card {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    border: 1px solid #e6e8eb;
+    border-radius: 8px;
+    background: #ffffff;
 }
 
 .filter-card-header {
@@ -1276,7 +1510,10 @@ export default {
 }
 
 .dashboard-section {
-    padding-top: 4px;
+    padding: 20px;
+    border: 1px solid #e6e8eb;
+    border-radius: 8px;
+    background: #ffffff;
 }
 
 .section-heading {
@@ -1297,8 +1534,7 @@ export default {
 }
 
 .dashboard-section-corporate {
-    padding-top: 24px;
-    border-top: 2px solid #d9efec;
+    border-top: 4px solid #d9efec;
 }
 
 .subsection-title {
@@ -1313,6 +1549,7 @@ export default {
     border-radius: 8px;
     border: 1px solid #e6e8eb;
     border-left-width: 4px;
+    box-shadow: none;
 }
 
 .metric-primary {
@@ -1340,6 +1577,7 @@ export default {
     padding: 16px;
     border-radius: 8px;
     border: 1px solid #e6e8eb;
+    box-shadow: none;
 }
 
 .ventas-chart-wrap {
@@ -1349,14 +1587,33 @@ export default {
 }
 
 .commercial-card {
-    min-height: 620px;
+    min-height: 480px;
 }
 
 .commercial-chart-wrap {
     position: relative;
-    height: 280px;
-    min-height: 280px;
-    margin-top: 20px;
+    height: 220px;
+    min-height: 220px;
+    margin-top: 16px;
+}
+
+.page-product-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+}
+
+.page-product-name {
+    font-weight: 700;
+    color: #27323c;
+}
+
+.page-product-meta {
+    color: #667085;
+    font-size: 0.85rem;
+    text-align: right;
 }
 
 @media (max-width: 960px) {
@@ -1369,6 +1626,16 @@ export default {
     .filter-actions,
     .section-filter-chips {
         justify-content: flex-start;
+    }
+
+    .page-product-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .page-product-meta {
+        text-align: left;
     }
 }
 </style>

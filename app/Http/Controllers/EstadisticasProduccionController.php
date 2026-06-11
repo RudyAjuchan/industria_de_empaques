@@ -50,6 +50,7 @@ class EstadisticasProduccionController extends Controller
         $data2 = $this->obtenerVentasPorPaginaData($request);
         $data3 = $this->obtenerTiposProductoData($request);
         $data4 = $this->obtenerEstadisticasComercialesData($request);
+        $data5 = $this->obtenerProductosPorPaginaData($request);
 
         $pdf = Pdf::loadView('pdf.estadisticas', [
             'totales' => $data['totales'],
@@ -62,12 +63,20 @@ class EstadisticasProduccionController extends Controller
             'totalesPorTipo' => $data3['totales'],
 
             'comercial' => $data4,
-            'charts' => $request->input('charts', []),
+            'productosPorPagina' => $data5,
+            'charts' => $this->normalizarGraficasPdf($request->input('charts', [])),
 
             'filtros' => $request->all()
         ]);
 
         return $pdf->stream('reporte-produccion.pdf');
+    }
+
+    private function normalizarGraficasPdf(array $charts): array
+    {
+        return collect($charts)
+            ->filter(fn ($chart) => is_string($chart) && str_starts_with($chart, 'data:image/'))
+            ->all();
     }
 
     private function obtenerDatos($request)
@@ -291,9 +300,10 @@ class EstadisticasProduccionController extends Controller
         $data2 = $this->obtenerVentasPorPaginaData($request);
         $data3 = $this->obtenerTiposProductoData($request);
         $data4 = $this->obtenerEstadisticasComercialesData($request);
+        $data5 = $this->obtenerProductosPorPaginaData($request);
 
         return Excel::download(
-            new EstadisticasProduccionExport($data, $data2, $data3, $data4),
+            new EstadisticasProduccionExport($data, $data2, $data3, $data4, $data5),
             'reporte-produccion.xlsx'
         );
     }
@@ -320,6 +330,13 @@ class EstadisticasProduccionController extends Controller
         );
     }
 
+    public function productosPorPagina(Request $request)
+    {
+        return response()->json(
+            $this->obtenerProductosPorPaginaData($request)
+        );
+    }
+
     private function obtenerVentasPorPaginaData($request)
     {
         $filtros = $this->validarFiltros($request);
@@ -327,7 +344,7 @@ class EstadisticasProduccionController extends Controller
             'pagina',
             'detalles.producto'
         ]);
-        $query->where('estado', '<>', 'pendiente');
+        $query->where('estado', 'emitida');
 
         /*
         |--------------------------------------------------------------------------
@@ -423,6 +440,105 @@ class EstadisticasProduccionController extends Controller
         }
 
         return (float) ($promocion['valor'] ?? 0);
+    }
+
+    private function obtenerProductosPorPaginaData($request): array
+    {
+        $filtros = $this->validarFiltros($request);
+        $query = Venta::with([
+            'pagina',
+            'detalles.producto.tipoCatalogo',
+        ])->where('estado', 'emitida');
+
+        $this->aplicarFiltroFecha($query, $filtros);
+        $this->aplicarFiltroTipoCliente($query, $filtros);
+
+        $ventas = $query->get();
+        $paginas = [];
+
+        foreach ($ventas as $venta) {
+            $paginaKey = $venta->paginas_id ?? 'sin-pagina';
+            $paginaNombre = $venta->pagina?->nombre ?? 'Sin página';
+
+            if (!isset($paginas[$paginaKey])) {
+                $paginas[$paginaKey] = [
+                    'id' => $venta->paginas_id,
+                    'nombre' => $paginaNombre,
+                    'unidades' => 0,
+                    'ventas' => 0,
+                    'total' => 0,
+                    'productos_distintos' => 0,
+                    'productos' => [],
+                    'ventas_ids' => [],
+                ];
+            }
+
+            $paginas[$paginaKey]['ventas_ids'][$venta->id] = true;
+            $paginas[$paginaKey]['total'] += (float) ($venta->total ?? 0);
+
+            foreach ($venta->detalles as $detalle) {
+                $productoKey = $detalle->productos_id
+                    ?: mb_strtolower($detalle->producto_nombre ?? 'producto');
+
+                if (!isset($paginas[$paginaKey]['productos'][$productoKey])) {
+                    $paginas[$paginaKey]['productos'][$productoKey] = [
+                        'id' => $detalle->productos_id,
+                        'nombre' => $detalle->producto_nombre
+                            ?? $detalle->producto?->nombre
+                            ?? 'Producto',
+                        'tipo' => $detalle->producto_tipo
+                            ?? $detalle->producto?->tipoCatalogo?->nombre
+                            ?? $detalle->producto?->tipo
+                            ?? 'Sin tipo',
+                        'unidades' => 0,
+                        'ventas' => 0,
+                        'total' => 0,
+                        'ventas_ids' => [],
+                    ];
+                }
+
+                $cantidad = (int) ($detalle->cantidad ?? 0);
+                $total = (float) ($detalle->total ?? 0);
+
+                $paginas[$paginaKey]['unidades'] += $cantidad;
+                $paginas[$paginaKey]['productos'][$productoKey]['unidades'] += $cantidad;
+                $paginas[$paginaKey]['productos'][$productoKey]['total'] += $total;
+                $paginas[$paginaKey]['productos'][$productoKey]['ventas_ids'][$venta->id] = true;
+            }
+        }
+
+        return collect($paginas)
+            ->map(function ($pagina) {
+                $productos = collect($pagina['productos'])
+                    ->map(function ($producto) {
+                        $producto['ventas'] = count($producto['ventas_ids']);
+                        unset($producto['ventas_ids']);
+                        $producto['total'] = round((float) $producto['total'], 2);
+                        return $producto;
+                    })
+                    ->sortByDesc('unidades')
+                    ->values()
+                    ->map(function ($producto, $index) {
+                        $producto['no'] = $index + 1;
+                        return $producto;
+                    })
+                    ->all();
+
+                $pagina['ventas'] = count($pagina['ventas_ids']);
+                $pagina['productos_distintos'] = count($productos);
+                $pagina['total'] = round((float) $pagina['total'], 2);
+                $pagina['productos'] = $productos;
+                unset($pagina['ventas_ids']);
+
+                return $pagina;
+            })
+            ->sortByDesc('total')
+            ->values()
+            ->map(function ($pagina, $index) {
+                $pagina['no'] = $index + 1;
+                return $pagina;
+            })
+            ->all();
     }
 
     private function obtenerTiposProductoData($request)
@@ -537,7 +653,7 @@ class EstadisticasProduccionController extends Controller
     private function aplicarFiltroVentaConfirmadaEnDetalle($query, array $filtros, bool $filtrarTipoCliente = false): void
     {
         $query->whereHas('venta', function ($ventaQuery) use ($filtros, $filtrarTipoCliente) {
-            $ventaQuery->where('estado', '<>', 'pendiente');
+            $ventaQuery->where('estado', 'emitida');
             $this->aplicarFiltroFecha($ventaQuery, $filtros);
 
             if ($filtrarTipoCliente) {
@@ -553,7 +669,7 @@ class EstadisticasProduccionController extends Controller
         $ventasQuery = Venta::with([
             'cliente.municipio.departamento',
             'detalles.producto',
-        ])->where('estado', '<>', 'pendiente');
+        ])->where('estado', 'emitida');
 
         $this->aplicarFiltroFecha($ventasQuery, $filtros);
         $this->aplicarFiltroTipoCliente($ventasQuery, $filtros);

@@ -2,7 +2,7 @@
     <v-dialog v-model="open" max-width="500">
         <v-card>
             <v-card-title>
-                Nuevo pago
+                Registrar pago / subir boleta
             </v-card-title>
 
             <v-card-text>
@@ -12,7 +12,8 @@
                 <v-list density="compact" v-if="venta.pagos?.length">
                     <v-list-item v-for="(pago, index) in venta.pagos" :key="pago.id">
                         <v-list-item-title>
-                            {{ formatQuetzales(pago.monto) }} - {{ pago.metodo_pago }} <v-btn v-if="index > 0 && can('pago.borrar')" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
+                            {{ formatQuetzales(pago.monto) }} - {{ pago.metodo_pago }}
+                            <v-btn v-if="can('pago.borrar')" @click="deleteDialog = true, idEliminar = pago.id" color="error" density="compact" icon="mdi-delete"></v-btn>
                         </v-list-item-title>
 
                         <v-list-item-subtitle>
@@ -26,6 +27,9 @@
                         </v-list-item-subtitle>
                         <v-list-item-subtitle>
                             {{ formatDate(pago.created_at) }}
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="pago.nota" class="text-medium-emphasis">
+                            Nota: {{ pago.nota }}
                         </v-list-item-subtitle>
                     </v-list-item>
                 </v-list>
@@ -48,7 +52,7 @@
                     Pendiente: {{ formatQuetzales(saldoPendiente) }}
                 </div>
 
-                <div class="text-subtitle-2 mb-2">Datos para el nuevo pago</div>
+                <div class="text-subtitle-2 mb-2">Datos del pago / boleta</div>
                 <MoneyInput v-model="form.monto" label="Monto" variant="outlined" density="compact"
                     :error-messages="errores.monto" />
 
@@ -63,6 +67,11 @@
                 <v-file-input v-model="form.comprobante" label="Comprobante de pago"
                     accept="image/*,.pdf" prepend-icon="mdi-paperclip" variant="outlined" density="compact"
                     :error-messages="errores.comprobante" />
+
+                <v-textarea v-model="form.nota" label="Nota u observación"
+                    placeholder="Ej. boleta corregida, aclaración de asesor, referencia contable..."
+                    rows="2" auto-grow variant="outlined" density="compact"
+                    :error-messages="errores.nota" />
 
             </v-card-text>
 
@@ -87,7 +96,7 @@
             </v-card-title>
 
             <v-card-text class="text-body-2 text-medium-emphasis">
-                ¿Seguro que quieres eliminar? Esta acción no se puede deshacer.
+                ¿Seguro que quieres eliminar este pago? También se eliminará el comprobante asociado si existe.
             </v-card-text>
 
             <v-card-actions class="px-4 pb-4">
@@ -132,6 +141,7 @@ export default {
                 banco_id: '',
                 referencia: '',
                 comprobante: null,
+                nota: '',
             },
             tipoPago: [
                 { nombre: 'Efectivo' },
@@ -161,6 +171,7 @@ export default {
                 referencia: '',
                 banco_id: '',
                 comprobante: null,
+                nota: '',
             }
 
             this.errores = {}
@@ -181,6 +192,7 @@ export default {
                 formData.append('metodo_pago', this.form.metodo_pago || '')
                 formData.append('referencia', this.form.referencia || '')
                 formData.append('banco_id', this.form.banco_id || '')
+                formData.append('nota', this.form.nota || '')
 
                 const comprobante = Array.isArray(this.form.comprobante)
                     ? this.form.comprobante[0]

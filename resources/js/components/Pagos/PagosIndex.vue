@@ -1,13 +1,22 @@
 <template>
     <v-container>
-        <div class="d-flex align-center justify-space-between mb-4">
-            <v-row>
-                <v-col cols="6">
-                    <div class="text-body-2 text-medium-emphasis">Gestiona los pagos</div>
+        <div class="mb-4">
+            <v-row class="align-center">
+                <v-col cols="12" md="4">
+                    <div class="text-h6 font-weight-bold">Créditos vigentes</div>
+                    <div class="text-body-2 text-medium-emphasis">
+                        Ventas emitidas con saldo pendiente para asesor, administración y contabilidad.
+                    </div>
                 </v-col>
-                <v-col cols="6" class="d-flex ga-2 align-center justify-end">
+                <v-col cols="12" md="8" class="d-flex ga-2 align-center justify-end flex-wrap">
                     <v-text-field v-model="search" density="compact" hide-details variant="outlined" label="Buscar..."
                         prepend-inner-icon="mdi-magnify" style="max-width: 280px" />
+                    <v-text-field v-model="filtros.desde" density="compact" hide-details variant="outlined" label="Desde reporte"
+                        type="date" style="max-width: 170px" />
+                    <v-text-field v-model="filtros.hasta" density="compact" hide-details variant="outlined" label="Hasta reporte"
+                        type="date" style="max-width: 170px" />
+                    <v-select v-model="filtros.estado_credito" :items="estadosCredito" density="compact" hide-details
+                        variant="outlined" label="Estado reporte" style="max-width: 210px" />
                     <v-menu v-if="can('pago.reporte')">
                         <template #activator="{ props }">
                             <v-btn v-bind="props" variant="tonal" prepend-icon="mdi-export" color="teal">
@@ -44,9 +53,13 @@
                 </v-chip>
             </template>
             <template v-slot:[`item.actions`]="{ item }">
-                <v-btn icon color="success" variant="tonal" density="compact" @click="abrirPago(item)" v-if="can('pago.crear')">
+                <v-btn icon color="success" variant="tonal" density="compact" title="Registrar pago / subir boleta" @click="abrirPago(item)" v-if="can('pago.crear')">
                     <v-icon>mdi-cash-plus</v-icon>
                 </v-btn>
+            </template>
+
+            <template v-slot:[`item.ultima_nota`]="{ item }">
+                {{ ultimaNota(item) }}
             </template>
 
             <template v-slot:[`item.created_at`]="{ item }">
@@ -93,17 +106,31 @@ export default {
             loading: false,
 
             headers: [
-                { title: 'Número', key: 'numero_completo' },
-                { title: 'Cliente', key: 'cliente.nombre' },
-                { title: 'Total Venta', key: 'total' },
-                { title: 'Pago pendiente', key: 'saldo_pendiente' },
-                { title: 'Vendedor', key: 'vendedor.name' },
+                { title: 'No. informe', key: 'numero_completo' },
+                { title: 'Cliente / negocio', key: 'cliente.nombre' },
+                { title: 'Negocio / logotipo', key: 'negocio_logotipo' },
+                { title: 'Página', key: 'pagina.nombre' },
+                { title: 'Asesor', key: 'vendedor.name' },
+                { title: 'Crédito pendiente', key: 'saldo_pendiente' },
+                { title: 'Total venta', key: 'total' },
+                { title: 'Última nota', key: 'ultima_nota', sortable: false },
                 { title: 'Estado', key: 'estado' },
                 { title: 'Estado Producción', key: 'estado_produccion' },
                 { title: 'Fecha emitida', key: 'created_at' },
-                { title: 'Acciones', key: 'actions', sortable: false },
+                { title: 'Subir boleta', key: 'actions', sortable: false },
             ],
             search: null,
+            filtros: {
+                desde: '',
+                hasta: '',
+                estado_credito: 'vigentes',
+            },
+            estadosCredito: [
+                { title: 'Vigentes', value: 'vigentes' },
+                { title: 'Generados', value: 'generados' },
+                { title: 'Pagados', value: 'pagados' },
+                { title: 'Todos', value: 'todos' },
+            ],
             dialog: false,
             ventaSeleccionada: null,
             bancos: [],
@@ -119,7 +146,11 @@ export default {
         async fetchPagos() {
             this.loading = true
             try {
-                const { data } = await axios.get('/pagos')
+                const { data } = await axios.get('/pagos', {
+                    params: {
+                        search: this.search || '',
+                    }
+                })
                 this.pagos = data
             } catch (error) {
                 toast.error('No se pudieron cargar los pagos')
@@ -141,18 +172,23 @@ export default {
         },
 
         exportExcel() {
-            const params = new URLSearchParams({
-                search: this.search
-            })
+            const params = new URLSearchParams(this.exportParams())
 
             window.location.href = `/pagos/export/excel?${params.toString()}`
         },
 
         exportPdf() {
-            const params = new URLSearchParams({
-                search: this.search
-            })
+            const params = new URLSearchParams(this.exportParams())
             window.open(`/pagos/export/pdf?${params.toString()}`, '_blank')
+        },
+
+        exportParams() {
+            return {
+                search: this.search || '',
+                desde: this.filtros.desde || '',
+                hasta: this.filtros.hasta || '',
+                estado_credito: this.filtros.estado_credito || 'vigentes',
+            }
         },
 
         onSaved() {
@@ -192,6 +228,14 @@ export default {
         abrirPago(venta) {
             this.ventaSeleccionada = venta
             this.dialog = true
+        },
+
+        ultimaNota(venta) {
+            const notas = venta.pagos
+                ?.map(pago => pago.nota)
+                .filter(Boolean)
+
+            return notas?.length ? notas[notas.length - 1] : '-'
         },
 
         formatQuetzales,

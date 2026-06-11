@@ -13,13 +13,75 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PagoController extends Controller
 {
-    public function index(){
-        return Venta::with('pagos.banco', 'vendedor', 'cliente')
+    public function index(Request $request)
+    {
+        return $this->creditosQuery($request, aplicarRango: false)
+            ->get()
+            ->filter(fn ($v) => $this->filtrarPorEstadoCredito($v, 'vigentes'))
+            ->values()
+            ->map(function ($venta) {
+                $venta->setAttribute('negocio_logotipo', $this->negocioLogotipo($venta));
+                return $venta;
+            });
+    }
+
+    private function creditosQuery(Request $request, bool $aplicarRango = true)
+    {
+        $search = $request->input('search');
+        $search = ($search === 'null') ? null : $search;
+
+        return Venta::with('pagos.banco', 'vendedor', 'cliente', 'pagina', 'detalles')
             ->withSum('pagos as total_pagado', 'monto')
             ->where('estado', 'emitida')
-            ->get()
-            ->filter(fn ($v) => $v->saldo_pendiente > 0)
+            ->when($aplicarRango && $request->input('desde'), function ($query, $desde) {
+                $query->whereDate('created_at', '>=', $desde);
+            })
+            ->when($aplicarRango && $request->input('hasta'), function ($query, $hasta) {
+                $query->whereDate('created_at', '<=', $hasta);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('numero', 'like', "%{$search}%")
+                        ->orWhereHas('cliente', fn ($cliente) => $cliente->where('nombre', 'like', "%{$search}%"))
+                        ->orWhereHas('vendedor', fn ($vendedor) => $vendedor->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('pagina', fn ($pagina) => $pagina->where('nombre', 'like', "%{$search}%"))
+                        ->orWhereHas('detalles', fn ($detalle) => $detalle->where('nombre_logo', 'like', "%{$search}%"));
+                });
+            });
+    }
+
+    private function filtrarPorEstadoCredito(Venta $venta, string $estadoCredito): bool
+    {
+        $saldoPendiente = (float) $venta->saldo_pendiente;
+        $creditoInicial = (float) ($venta->pendiente_pagar ?? 0);
+
+        return match ($estadoCredito) {
+            'generados' => $creditoInicial > 0,
+            'pagados' => $creditoInicial > 0 && $saldoPendiente <= 0,
+            'todos' => $creditoInicial > 0 || $saldoPendiente > 0,
+            default => $saldoPendiente > 0,
+        };
+    }
+
+    private function negocioLogotipo(Venta $venta): string
+    {
+        $logos = $venta->detalles
+            ->pluck('nombre_logo')
+            ->filter()
+            ->map(fn ($logo) => trim($logo))
+            ->filter()
+            ->unique()
             ->values();
+
+        if ($logos->isEmpty()) {
+            return '-';
+        }
+
+        if ($logos->count() <= 2) {
+            return $logos->implode(', ');
+        }
+
+        return $logos->take(2)->implode(', ') . ' (+' . ($logos->count() - 2) . ')';
     }
     public function store(Request $request)
     {
@@ -30,6 +92,7 @@ class PagoController extends Controller
             'referencia' => 'nullable|string',
             'banco_id' => 'nullable|exists:bancos,id',
             'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'nota' => 'nullable|string|max:1000',
         ]);
 
         $venta = Venta::findOrFail($request->ventas_id);
@@ -52,6 +115,7 @@ class PagoController extends Controller
             'metodo_pago' => $request->metodo_pago,
             'referencia' => $request->referencia,
             'comprobante_path' => $comprobantePath,
+            'nota' => $request->nota,
             'users_id' => Auth::user()->id,
             'bancos_id' => $request->banco_id
         ]);
@@ -74,22 +138,25 @@ class PagoController extends Controller
     {
         $search = $request->input('search');
         $search = ($search === "null") ? null : $search;
+        $estadoCredito = $request->input('estado_credito', 'vigentes');
 
-        $query = Venta::with(['pagos.banco', 'vendedor', 'cliente'])
-            ->where('estado', 'emitida');
-
-        if ($search) {
-            $query->whereHas('cliente', function ($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%");
+        $ventas = $this->creditosQuery($request)
+            ->get()
+            ->filter(fn($v) => $this->filtrarPorEstadoCredito($v, $estadoCredito))
+            ->values()
+            ->map(function ($venta) {
+                $venta->setAttribute('negocio_logotipo', $this->negocioLogotipo($venta));
+                return $venta;
             });
-        }
+        $filtros = [
+            'desde' => $request->input('desde'),
+            'hasta' => $request->input('hasta'),
+            'estado_credito' => $estadoCredito,
+        ];
 
-        $ventas = $query->get()
-            ->filter(fn($v) => $v->saldo_pendiente > 0)
-            ->values();
-        return Pdf::loadView('pdf.pagos_pendientes', compact('ventas', 'search'))
+        return Pdf::loadView('pdf.pagos_pendientes', compact('ventas', 'search', 'filtros'))
             ->setPaper('letter', 'landscape')
-            ->stream('pagos_pendientes.pdf');
+            ->stream('creditos_vigentes.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -97,8 +164,13 @@ class PagoController extends Controller
         $search = $request->query('search');
 
         return Excel::download(
-            new PagosPendientesExport($search),
-            'pagos_pendientes.xlsx'
+            new PagosPendientesExport(
+                $search,
+                $request->query('desde'),
+                $request->query('hasta'),
+                $request->query('estado_credito', 'vigentes')
+            ),
+            'creditos_vigentes.xlsx'
         );
     }
 
@@ -109,17 +181,6 @@ class PagoController extends Controller
         ]);
 
         $pago = Pago::findOrFail($request->id);
-        $primerPagoId = Pago::where('ventas_id', $pago->ventas_id)
-            ->oldest()
-            ->oldest('id')
-            ->value('id');
-
-        if ($pago->id === $primerPagoId) {
-            return response()->json([
-                'message' => 'No se puede eliminar el pago inicial de la venta'
-            ], 422);
-        }
-
         if ($pago->comprobante_path) {
             Storage::disk('s3')->delete($pago->comprobante_path);
         }

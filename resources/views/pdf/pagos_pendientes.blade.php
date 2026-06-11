@@ -50,7 +50,7 @@
 
 <body>
 
-    <h1>Listado de Ventas con pago pendiente</h1>
+    <h1>Créditos vigentes</h1>
 
     @if (!empty($search))
         <div class="filter">
@@ -58,12 +58,25 @@
         </div>
     @endif
 
+    <div class="filter">
+        Tipo: <strong>{{ ucfirst($filtros['estado_credito'] ?? 'vigentes') }}</strong>
+        @if (!empty($filtros['desde']) || !empty($filtros['hasta']))
+            |
+            Rango:
+            <strong>{{ $filtros['desde'] ?? 'inicio' }}</strong>
+            a
+            <strong>{{ $filtros['hasta'] ?? 'hoy' }}</strong>
+        @endif
+    </div>
+
     <table>
         <thead>
             <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Vendedor</th>
+                <th>No. informe</th>
+                <th>Cliente / negocio</th>
+                <th>Negocio / logotipo</th>
+                <th>Página</th>
+                <th>Asesor</th>
                 <th class="right">Subtotal</th>
                 <th class="right">Descuento</th>
                 <th class="right">Envío</th>
@@ -73,7 +86,8 @@
                 <th>Fecha emisión</th>
                 <th>Fecha entrega</th>
                 <th>Pagos</th>
-                <th class="right">Pendiente</th>
+                <th>Nota</th>
+                <th class="right">Crédito pendiente</th>
             </tr>
         </thead>
         <tbody>
@@ -81,6 +95,8 @@
                 <tr>
                     <td>{{ $v->numero_completo }}</td>
                     <td>{{ $v->cliente->nombre ?? '-' }}</td>
+                    <td>{{ $v->negocio_logotipo ?? '-' }}</td>
+                    <td>{{ $v->pagina->nombre ?? '-' }}</td>
                     <td>{{ $v->vendedor->name ?? '-' }}</td>
 
                     <td class="right">Q {{ number_format($v->subtotal, 2) }}</td>
@@ -107,6 +123,18 @@
                             -
                         @endif
                     </td>
+                    <td>
+                        @php
+                            $notas = $v->pagos->pluck('nota')->filter();
+                        @endphp
+                        @if ($notas->count())
+                            @foreach ($notas as $nota)
+                                <div>{{ $nota }}</div>
+                            @endforeach
+                        @else
+                            -
+                        @endif
+                    </td>
                     <td class="right" style="white-space: nowrap">
                         @php
                             $pagado = $v->pagos->sum('monto');
@@ -118,7 +146,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" style="text-align:center; padding:10px;">
+                    <td colspan="16" style="text-align:center; padding:10px;">
                         No se encontraron registros
                     </td>
                 </tr>

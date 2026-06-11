@@ -39,8 +39,6 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
         return Venta::with(['pagos.banco', 'cliente', 'vendedor', 'pagina', 'detalles'])
             ->withSum('pagos as total_pagado', 'monto')
             ->where('estado', 'emitida')
-            ->when($this->desde, fn ($q) => $q->whereDate('created_at', '>=', $this->desde))
-            ->when($this->hasta, fn ($q) => $q->whereDate('created_at', '<=', $this->hasta))
             ->when($this->search, function ($q) {
                 $q->where(function ($q2) {
                     $q2->where('numero', 'like', "%{$this->search}%")
@@ -68,13 +66,36 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
             })
             ->get()
             ->filter(function ($v) {
+                return $this->filtrarPorRangoFecha($v);
+            })
+            ->filter(function ($v) {
                 return $this->filtrarPorEstadoCredito($v);
             })
             ->values();
     }
 
+    private function filtrarPorRangoFecha($venta): bool
+    {
+        $fecha = optional($venta->created_at)->toDateString();
+
+        if (!$fecha) {
+            return false;
+        }
+
+        if ($this->desde && $fecha < $this->desde) {
+            return false;
+        }
+
+        if ($this->hasta && $fecha > $this->hasta) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function filtrarPorEstadoCredito($venta): bool
     {
+        $this->estadoCredito = strtolower($this->estadoCredito);
         $saldoPendiente = (float) $venta->saldo_pendiente;
         $creditoInicial = (float) ($venta->pendiente_pagar ?? 0);
 
@@ -113,6 +134,8 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
             'Total Pagado',
             'Pendiente',
             'Historial de Pagos',
+            'No. depósito',
+            'Comprobantes',
             'Notas',
             'Estado',
             'Estado Producción',
@@ -138,6 +161,16 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
             ->filter()
             ->implode("\n");
 
+        $depositos = $venta->pagos
+            ->pluck('referencia')
+            ->filter()
+            ->implode("\n");
+
+        $comprobantes = $venta->pagos
+            ->filter(fn ($pago) => $pago->comprobante_path)
+            ->map(fn ($pago) => route('pagos.comprobante', $pago))
+            ->implode("\n");
+
         return [
             $venta->numero_completo,
             $venta->cliente->nombre ?? '-',
@@ -153,6 +186,8 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
             $pagado,
             $pendiente,
             $historial,
+            $depositos,
+            $comprobantes,
             $notas,
 
             ucfirst($venta->estado),
@@ -165,7 +200,7 @@ class PagosPendientesExport implements FromCollection, WithHeadings, WithMapping
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('C:L')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('C:N')->getAlignment()->setWrapText(true);
         $sheet->getDefaultRowDimension()->setRowHeight(-1);
         return [
             1 => [

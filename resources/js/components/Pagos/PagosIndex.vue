@@ -127,7 +127,7 @@ export default {
             },
             estadosCredito: [
                 { title: 'Vigentes', value: 'vigentes' },
-                { title: 'Generados', value: 'generados' },
+                { title: 'Créditos otorgados', value: 'generados' },
                 { title: 'Pagados', value: 'pagados' },
                 { title: 'Todos', value: 'todos' },
             ],

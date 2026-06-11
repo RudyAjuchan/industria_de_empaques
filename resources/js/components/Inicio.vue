@@ -5,9 +5,9 @@
         <v-card v-if="puedeVerGeneral || puedeVerCorporativo" class="dashboard-filter-card mb-8 elevation-1">
             <div class="filter-card-header">
                 <div>
-                    <div class="text-h6 font-weight-bold">Filtros del dashboard</div>
+                    <div class="text-h6 font-weight-bold">Dashboard general</div>
                     <div class="text-caption text-grey-darken-1">
-                        Periodo afecta todo. Tipo de cliente solo afecta indicadores corporativos.
+                        Indicadores operativos y comerciales filtrados por periodo.
                     </div>
                 </div>
 
@@ -30,11 +30,13 @@
 
             <v-row class="mt-1">
                 <v-col cols="12" md="7">
-                    <div class="filter-group">
+                    <div class="filter-group filter-group-period">
                         <div class="filter-group-title">
                             <span>Periodo operativo y corporativo</span>
-                            <v-chip size="x-small" color="primary" variant="tonal">Producción</v-chip>
-                            <v-chip size="x-small" color="primary" variant="tonal">Ventas</v-chip>
+                            <div class="filter-scope-pills">
+                                <v-chip size="x-small" color="success" variant="flat">Producción</v-chip>
+                                <v-chip size="x-small" color="grey" variant="tonal">Ventas</v-chip>
+                            </div>
                         </div>
 
                         <v-row>
@@ -103,46 +105,86 @@
             </v-col>
             <v-col cols="12" sm="6" md="2">
                 <v-card class="metric-card metric-primary">
-                    <div class="text-caption text-grey">Pedido</div>
-                    <div class="text-h5 font-weight-bold text-primary">
-                        {{ formatNumber(estadisticas.pedido) }}
+                    <div class="metric-card-content">
+                        <v-avatar class="metric-icon metric-icon-primary" rounded="lg">
+                            <v-icon icon="mdi-package-variant-closed" />
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey-darken-1">Pedido</div>
+                            <div class="text-h5 font-weight-bold">
+                                {{ formatNumber(estadisticas.pedido) }}
+                            </div>
+                        </div>
                     </div>
+                    <v-progress-linear class="metric-progress" :model-value="100" color="primary" height="5" rounded />
                 </v-card>
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
                 <v-card class="metric-card metric-success">
-                    <div class="text-caption text-grey">Producción</div>
-                    <div class="text-h5 font-weight-bold text-green">
-                        {{ formatNumber(estadisticas.finalizadas) }}
+                    <div class="metric-card-content">
+                        <v-avatar class="metric-icon metric-icon-success" rounded="lg">
+                            <v-icon icon="mdi-factory" />
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey-darken-1">Producción</div>
+                            <div class="text-h5 font-weight-bold">
+                                {{ formatNumber(estadisticas.finalizadas) }}
+                            </div>
+                        </div>
                     </div>
+                    <v-progress-linear class="metric-progress" :model-value="metricProgress(estadisticas.finalizadas, estadisticas.pedido)" color="success" height="5" rounded />
                 </v-card>
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
                 <v-card class="metric-card metric-purple">
-                    <div class="text-caption text-grey">Extras</div>
-                    <div class="text-h5 font-weight-bold text-purple">
-                        +{{ formatNumber(estadisticas.extras) }}
+                    <div class="metric-card-content">
+                        <v-avatar class="metric-icon metric-icon-purple" rounded="lg">
+                            <v-icon icon="mdi-star-outline" />
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey-darken-1">Extras</div>
+                            <div class="text-h5 font-weight-bold">
+                                +{{ formatNumber(estadisticas.extras) }}
+                            </div>
+                        </div>
                     </div>
+                    <v-progress-linear class="metric-progress" :model-value="metricProgress(estadisticas.extras, estadisticas.pedido)" color="purple" height="5" rounded />
                 </v-card>
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
                 <v-card class="metric-card metric-danger">
-                    <div class="text-caption text-grey">Desechadas</div>
-                    <div class="text-h5 font-weight-bold text-red">
-                        {{ formatNumber(estadisticas.desechadas) }}
+                    <div class="metric-card-content">
+                        <v-avatar class="metric-icon metric-icon-danger" rounded="lg">
+                            <v-icon icon="mdi-delete-outline" />
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey-darken-1">Desechadas</div>
+                            <div class="text-h5 font-weight-bold">
+                                {{ formatNumber(estadisticas.desechadas) }}
+                            </div>
+                        </div>
                     </div>
+                    <v-progress-linear class="metric-progress" :model-value="metricProgress(estadisticas.desechadas, estadisticas.pedido)" color="error" height="5" rounded />
                 </v-card>
             </v-col>
 
             <v-col cols="12" sm="6" md="2">
                 <v-card class="metric-card metric-muted">
-                    <div class="text-caption text-grey">Pendiente de pedidos</div>
-                    <div class="text-h5 font-weight-bold text-grey-darken-1">
-                        {{ formatNumber(estadisticas.pendiente) }}
+                    <div class="metric-card-content">
+                        <v-avatar class="metric-icon metric-icon-muted" rounded="lg">
+                            <v-icon icon="mdi-timer-sand" />
+                        </v-avatar>
+                        <div>
+                            <div class="text-caption text-grey-darken-1">Pendiente</div>
+                            <div class="text-h5 font-weight-bold">
+                                {{ formatNumber(estadisticas.pendiente) }}
+                            </div>
+                        </div>
                     </div>
+                    <v-progress-linear class="metric-progress" :model-value="metricProgress(estadisticas.pendiente, estadisticas.pedido)" color="grey" height="5" rounded />
                 </v-card>
             </v-col>
         </v-row>
@@ -159,8 +201,13 @@
                 <v-card class="area-card">
 
                     <!-- TÍTULO -->
-                    <div class="text-subtitle-1 font-weight-bold mb-3">
-                        {{ estado.estado }}
+                    <div class="area-card-header">
+                        <v-avatar class="area-icon" size="32" rounded="lg">
+                            <v-icon icon="mdi-cube-outline" size="18" />
+                        </v-avatar>
+                        <div class="text-subtitle-2 font-weight-bold">
+                            {{ estado.estado }}
+                        </div>
                     </div>
 
                     <!-- PEDIDO -->
@@ -203,6 +250,16 @@
                         </span>
                     </div>
 
+                    <div class="area-progress-row">
+                        <v-progress-linear
+                            :model-value="metricProgress(estado.finalizadas, estado.pedido)"
+                            color="success"
+                            height="5"
+                            rounded
+                        />
+                        <span>{{ metricProgress(estado.finalizadas, estado.pedido) }}%</span>
+                    </div>
+
                 </v-card>
             </v-col>
 
@@ -211,12 +268,12 @@
         <!-- GRÁFICA POR ESTADOS -->
         <v-row>
             <v-col cols="12">
-                <v-card class="pa-4 elevation-2">
-                    <div class="text-h6 mb-3">Producción por estado</div>
+                <v-card class="dashboard-panel pa-4 elevation-0">
+                    <div class="panel-title">Producción por estado</div>
                     <v-row>
                         <v-col v-for="(estado, index) in porEstado" :key="'chart-' + index" cols="12" sm="6" md="4"
                             lg="3">
-                            <v-card class="pa-3" style="position: relative; height: 250px;">
+                            <v-card class="donut-card pa-3 elevation-0">
                                 <div class="text-subtitle-2 font-weight-bold mb-2">
                                     {{ estado.estado }}
                                 </div>
@@ -231,7 +288,7 @@
 
         <v-row>
             <v-col cols="12">
-                <v-card class="mt-5 elevation-2">
+                <v-card class="dashboard-panel mt-5 elevation-0">
                     <v-card-title>
                         Detalle por estado
                     </v-card-title>
@@ -297,10 +354,13 @@
 
             <!-- TABLA -->
             <v-col cols="12" md="6">
-                <v-card class="pa-4 elevation-2">
-                    <v-card-title>
-                        Venta por página
-                    </v-card-title>
+                <v-card class="corporate-card pa-4 elevation-0">
+                    <div class="corporate-card-title">
+                        <v-avatar class="corporate-icon" rounded="lg">
+                            <v-icon icon="mdi-file-document-outline" />
+                        </v-avatar>
+                        <div>Venta por página</div>
+                    </div>
 
                     <v-table density="compact">
                         <thead>
@@ -327,7 +387,7 @@
 
                         <!-- TOTALES -->
                         <tfoot>
-                            <tr class="bg-grey-lighten-3 font-weight-bold">
+                            <tr class="corporate-total-row font-weight-bold">
                                 <td colspan="2">TOTAL</td>
                                 <td class="text-right">
                                     {{ formatQuetzales(totalesVentaPagina.venta) }}
@@ -346,9 +406,12 @@
 
             <!-- GRÁFICA -->
             <v-col cols="12" md="6">
-                <v-card class="pa-4 elevation-2" style="height: 400px;">
-                    <div class="text-h6 mb-3 text-center">
-                        Gráfica de ventas por página
+                <v-card class="corporate-card pa-4 elevation-0">
+                    <div class="corporate-card-title">
+                        <v-avatar class="corporate-icon" rounded="lg">
+                            <v-icon icon="mdi-chart-line" />
+                        </v-avatar>
+                        <div>Gráfica de ventas por página</div>
                     </div>
 
                     <div class="ventas-chart-wrap">
@@ -361,12 +424,17 @@
 
         <v-row v-if="activeDashboardTab === 'ventas'" class="mt-6">
             <v-col cols="12">
-                <v-card class="pa-4 elevation-2">
+                <v-card class="corporate-card pa-4 elevation-0">
                     <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-3">
-                        <div>
-                            <v-card-title class="pa-0">CONTROL DE VENTAS - INDUSTRIA DE EMPAQUES S.A.</v-card-title>
-                            <div class="text-caption text-grey">
-                                Detalle de unidades y montos por producto según la página asignada a la venta
+                        <div class="corporate-card-title mb-0">
+                            <v-avatar class="corporate-icon" rounded="lg">
+                                <v-icon icon="mdi-tag-outline" />
+                            </v-avatar>
+                            <div>
+                                <div>CONTROL DE VENTAS - INDUSTRIA DE EMPAQUES S.A.</div>
+                                <div class="text-caption text-grey">
+                                    Detalle de unidades y montos por producto según la página asignada a la venta
+                                </div>
                             </div>
                         </div>
                         <v-chip size="small" color="teal" variant="tonal">
@@ -428,8 +496,13 @@
 
             <!-- TABLA -->
             <v-col cols="12" md="5">
-                <v-card class="pa-4 elevation-2">
-                    <v-card-title>Tipo de producto</v-card-title>
+                <v-card class="corporate-card pa-4 elevation-0">
+                    <div class="corporate-card-title">
+                        <v-avatar class="corporate-icon" rounded="lg">
+                            <v-icon icon="mdi-cube-outline" />
+                        </v-avatar>
+                        <div>Tipo de producto</div>
+                    </div>
 
                     <v-table density="compact">
                         <thead>
@@ -451,7 +524,7 @@
                         </tbody>
 
                         <tfoot>
-                            <tr class="bg-grey-lighten-3 font-weight-bold">
+                            <tr class="corporate-total-row font-weight-bold">
                                 <td colspan="2">TOTAL</td>
                                 <td class="text-right">{{ formatNumber(totalesTipos.unidades) }}</td>
                                 <td class="text-right">{{ totalesTipos.ventas }}</td>
@@ -463,11 +536,16 @@
 
             <!-- GRÁFICA -->
             <v-col cols="12" md="7">
-                <v-card class="pa-4 elevation-2" style="height: 350px;">
-                    <div class="text-subtitle-1 font-weight-bold mb-2 text-center">
-                        Unidades por tipo
+                <v-card class="corporate-card pa-4 elevation-0">
+                    <div class="corporate-card-title">
+                        <v-avatar class="corporate-icon" rounded="lg">
+                            <v-icon icon="mdi-chart-pie" />
+                        </v-avatar>
+                        <div>Unidades por tipo</div>
                     </div>
-                    <canvas id="graficaTipos"></canvas>
+                    <div class="tipo-chart-wrap">
+                        <canvas id="graficaTipos"></canvas>
+                    </div>
                 </v-card>
             </v-col>
 
@@ -482,8 +560,13 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card class="pa-4 elevation-2 commercial-card">
-                    <v-card-title>Tamaños más comercializados</v-card-title>
+                <v-card class="commercial-card pa-4 elevation-0">
+                    <div class="commercial-card-title">
+                        <v-avatar class="commercial-icon commercial-icon-green" rounded="lg">
+                            <v-icon icon="mdi-vector-triangle" />
+                        </v-avatar>
+                        <div>Tamaños más comercializados</div>
+                    </div>
 
                     <v-table density="compact">
                         <thead>
@@ -511,8 +594,13 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card class="pa-4 elevation-2 commercial-card">
-                    <v-card-title>Compras por género</v-card-title>
+                <v-card class="commercial-card pa-4 elevation-0">
+                    <div class="commercial-card-title">
+                        <v-avatar class="commercial-icon commercial-icon-purple" rounded="lg">
+                            <v-icon icon="mdi-account-heart-outline" />
+                        </v-avatar>
+                        <div>Compras por género</div>
+                    </div>
 
                     <v-table density="compact">
                         <thead>
@@ -540,8 +628,13 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card class="pa-4 elevation-2 commercial-card">
-                    <v-card-title>Ventas por departamento</v-card-title>
+                <v-card class="commercial-card commercial-card-wide pa-4 elevation-0">
+                    <div class="commercial-card-title">
+                        <v-avatar class="commercial-icon commercial-icon-blue" rounded="lg">
+                            <v-icon icon="mdi-map-marker-radius-outline" />
+                        </v-avatar>
+                        <div>Ventas por departamento</div>
+                    </div>
 
                     <v-table density="compact">
                         <thead>
@@ -907,6 +1000,14 @@ export default {
             return Number(value).toLocaleString('es-GT')
         },
 
+        metricProgress(value, total) {
+            const numericTotal = Number(total || 0)
+
+            if (!numericTotal) return 0
+
+            return Math.min(100, Math.round((Number(value || 0) / numericTotal) * 100))
+        },
+
         formatQuetzales,
 
         async cargarFiltros() {
@@ -1071,7 +1172,11 @@ export default {
                             data: data,
                             backgroundColor: colores,
                             borderColor: colores.map(c => c.replace('0.8', '1')),
-                            borderWidth: 1
+                            borderWidth: 1,
+                            borderRadius: 3,
+                            maxBarThickness: 120,
+                            categoryPercentage: 0.55,
+                            barPercentage: 0.8,
                         }
                     ]
                 },
@@ -1173,7 +1278,10 @@ export default {
                             backgroundColor: colores,
                             borderColor: colores.map(c => c.replace('0.8', '1')),
                             borderWidth: 1,
-                            borderRadius: 6
+                            borderRadius: 3,
+                            maxBarThickness: 120,
+                            categoryPercentage: 0.55,
+                            barPercentage: 0.8,
                         }
                     ]
                 },
@@ -1251,6 +1359,7 @@ export default {
                 data: this.comerciales.tamanos.map(item => item.unidades),
                 label: 'Unidades vendidas',
                 money: false,
+                maxBarThickness: 92,
             })
 
             this.chartGeneros = this.renderBarChart({
@@ -1260,6 +1369,7 @@ export default {
                 data: this.comerciales.generos.map(item => item.total),
                 label: 'Monto vendido',
                 money: true,
+                maxBarThickness: 92,
             })
 
             this.chartDepartamentos = this.renderBarChart({
@@ -1269,10 +1379,11 @@ export default {
                 data: this.comerciales.departamentos.slice(0, 10).map(item => item.total),
                 label: 'Monto vendido',
                 money: true,
+                maxBarThickness: 110,
             })
         },
 
-        renderBarChart({ chart, canvasId, labels, data, label, money }) {
+        renderBarChart({ chart, canvasId, labels, data, label, money, maxBarThickness = 120 }) {
             if (chart) {
                 toRaw(chart)?.destroy?.()
             }
@@ -1296,7 +1407,10 @@ export default {
                             backgroundColor: colores,
                             borderColor: colores.map(c => c.replace('0.8', '1')),
                             borderWidth: 1,
-                            borderRadius: 6,
+                            borderRadius: 3,
+                            maxBarThickness,
+                            categoryPercentage: 0.55,
+                            barPercentage: 0.8,
                         }
                     ]
                 },
@@ -1453,13 +1567,18 @@ export default {
 
 <style scoped>
 .dashboard-filter-card {
-    padding: 18px;
-    border-radius: 8px;
+    padding: 22px;
+    border-radius: 12px;
     border: 1px solid #e6e8eb;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(20, 35, 50, 0.06) !important;
 }
 
 .dashboard-page {
-    background: #f7f9fb;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at top left, rgba(0, 91, 131, 0.06), transparent 28rem),
+        #f7f9fb;
 }
 
 .dashboard-nav-card {
@@ -1487,10 +1606,15 @@ export default {
 
 .filter-group {
     height: 100%;
-    padding: 14px;
+    padding: 16px;
     border: 1px solid #e6e8eb;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #fbfcfd;
+}
+
+.filter-group-period {
+    border-color: #dfe7ee;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbfd 100%);
 }
 
 .filter-group-corporate {
@@ -1509,11 +1633,18 @@ export default {
     color: #2f3a45;
 }
 
+.filter-scope-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .dashboard-section {
-    padding: 20px;
+    padding: 22px;
     border: 1px solid #e6e8eb;
-    border-radius: 8px;
+    border-radius: 12px;
     background: #ffffff;
+    box-shadow: 0 12px 30px rgba(20, 35, 50, 0.045);
 }
 
 .section-heading {
@@ -1544,12 +1675,54 @@ export default {
 }
 
 .metric-card {
-    min-height: 92px;
-    padding: 14px;
-    border-radius: 8px;
+    min-height: 132px;
+    padding: 18px;
+    border-radius: 12px;
     border: 1px solid #e6e8eb;
-    border-left-width: 4px;
+    border-left-width: 0;
     box-shadow: none;
+    background: #ffffff;
+}
+
+.metric-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 58px;
+}
+
+.metric-icon {
+    width: 52px;
+    height: 52px;
+}
+
+.metric-icon-primary {
+    color: #005b83;
+    background: #e8f4fb;
+}
+
+.metric-icon-success {
+    color: #0b7a3b;
+    background: #e7f7ee;
+}
+
+.metric-icon-purple {
+    color: #8e24aa;
+    background: #f4e8fb;
+}
+
+.metric-icon-danger {
+    color: #d32f2f;
+    background: #fdeaea;
+}
+
+.metric-icon-muted {
+    color: #667085;
+    background: #eef0f3;
+}
+
+.metric-progress {
+    margin-top: 18px;
 }
 
 .metric-primary {
@@ -1574,10 +1747,55 @@ export default {
 
 .area-card {
     height: 100%;
-    padding: 16px;
-    border-radius: 8px;
+    padding: 18px;
+    border-radius: 12px;
     border: 1px solid #e6e8eb;
     box-shadow: none;
+    background: #ffffff;
+}
+
+.area-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.area-icon {
+    color: #1b8f4e;
+    background: #e8f8ee;
+}
+
+.area-progress-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    font-size: 0.8rem;
+    color: #667085;
+    font-weight: 700;
+}
+
+.dashboard-panel {
+    border: 1px solid #e6e8eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.panel-title {
+    margin-bottom: 16px;
+    color: #172033;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.donut-card {
+    position: relative;
+    height: 250px;
+    border: 1px solid #e6e8eb;
+    border-radius: 10px;
+    background: #ffffff;
 }
 
 .ventas-chart-wrap {
@@ -1586,15 +1804,123 @@ export default {
     min-height: 300px;
 }
 
+.tipo-chart-wrap {
+    position: relative;
+    height: 280px;
+    min-height: 280px;
+}
+
+.corporate-card {
+    height: 100%;
+    border: 1px solid #e6e8eb;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 26px rgba(20, 35, 50, 0.04) !important;
+}
+
+.corporate-card-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    color: #172033;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.corporate-icon {
+    width: 42px;
+    height: 42px;
+    color: #08754b;
+    background: #e4f5ec;
+}
+
+.corporate-total-row {
+    color: #006b44;
+    background: linear-gradient(90deg, #eef8f2 0%, #f6fbf8 100%);
+}
+
+.corporate-card :deep(table) {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.corporate-card :deep(th) {
+    color: #475467;
+    font-weight: 700;
+}
+
+.corporate-card :deep(td),
+.corporate-card :deep(th) {
+    border-bottom: 1px solid #edf0f3;
+}
+
+.corporate-card :deep(tbody tr:hover) {
+    background: #f8fbfa;
+}
+
 .commercial-card {
-    min-height: 480px;
+    height: 100%;
+    min-height: 430px;
+    border: 1px solid #e6e8eb;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 26px rgba(20, 35, 50, 0.04) !important;
+}
+
+.commercial-card-wide {
+    min-height: 410px;
+}
+
+.commercial-card-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    color: #172033;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.commercial-icon {
+    width: 42px;
+    height: 42px;
+}
+
+.commercial-icon-green {
+    color: #08754b;
+    background: #e4f5ec;
+}
+
+.commercial-icon-purple {
+    color: #7c3aed;
+    background: #f0e9ff;
+}
+
+.commercial-icon-blue {
+    color: #2563eb;
+    background: #e8f0ff;
 }
 
 .commercial-chart-wrap {
     position: relative;
-    height: 220px;
-    min-height: 220px;
-    margin-top: 16px;
+    height: 240px;
+    min-height: 240px;
+    margin-top: 18px;
+}
+
+.commercial-card :deep(th) {
+    color: #475467;
+    font-weight: 700;
+}
+
+.commercial-card :deep(td),
+.commercial-card :deep(th) {
+    border-bottom: 1px solid #edf0f3;
+}
+
+.commercial-card :deep(tbody tr:hover) {
+    background: #f8fbfa;
 }
 
 .page-product-summary {

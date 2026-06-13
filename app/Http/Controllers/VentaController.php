@@ -502,7 +502,7 @@ class VentaController extends Controller
             'comprobante_pago' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
         ]);
 
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id, $validated) {
 
             $venta = Venta::with([
                 'detalles.imagenes',

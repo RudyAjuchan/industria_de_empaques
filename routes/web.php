@@ -95,7 +95,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA TIPO PAPEL */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/tipo-papel', [TipoPapelController::class, 'index'])->middleware('permission:tipo_papel.ver|venta.ver');
+    Route::get('/tipo-papel', [TipoPapelController::class, 'index'])->middleware('permission:tipo_papel.ver|venta.ver|venta.crear|ecommerce.editar');
     Route::post('/tipo-papel', [TipoPapelController::class, 'store'])->middleware('permission:tipo_papel.crear|venta.crear');
     Route::put('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'update'])->middleware('permission:tipo_papel.editar');
     Route::delete('/tipo-papel/{tipoPapel}', [TipoPapelController::class, 'destroy'])->middleware('permission:tipo_papel.borrar');
@@ -107,7 +107,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA TIPO AGARRADOR */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/agarrador', [TipoAgarradorController::class, 'index'])->middleware('permission:agarrador.ver|venta.crear');
+    Route::get('/agarrador', [TipoAgarradorController::class, 'index'])->middleware('permission:agarrador.ver|venta.crear|ecommerce.editar');
     Route::post('/agarrador', [TipoAgarradorController::class, 'store'])->middleware('permission:agarrador.crear|venta.crear');
     Route::put('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'update'])->middleware('permission:agarrador.editar');
     Route::delete('/agarrador/{tipoAgarrador}', [TipoAgarradorController::class, 'destroy'])->middleware('permission:agarrador.borrar');
@@ -131,7 +131,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
 
 /* RUTAS PARA BANCOS */
 Route::middleware(['auth', 'force.password'])->group(function () {
-    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.crear|pago.crear');
+    Route::get('/banco', [BancoController::class, 'index'])->middleware('permission:banco.ver|venta.crear|pago.crear|ecommerce.editar');
     Route::post('/banco', [BancoController::class, 'store'])->middleware('permission:banco.crear|venta.crear');
     Route::put('/banco/{banco}', [BancoController::class, 'update'])->middleware('permission:banco.editar');
     Route::delete('/banco/{banco}', [BancoController::class, 'destroy'])->middleware('permission:banco.borrar');
@@ -201,7 +201,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     //RUTAS COMPLEMENTARIAS PARA VENTAS
     Route::get('/listar/paginas', [VentaController::class, 'getPaginas'])->middleware('permission:venta.crear|ecommerce.editar');
     Route::get('/client/search', [ClienteController::class, 'search'])
-        ->middleware('permission:venta.crear');
+        ->middleware('permission:venta.crear|ecommerce.editar');
     Route::post('/product/search', [ProductosController::class, 'search'])
         ->middleware('permission:venta.crear|ecommerce.editar');
 

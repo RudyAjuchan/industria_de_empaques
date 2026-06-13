@@ -202,7 +202,7 @@ Route::middleware(['auth', 'force.password'])->group(function () {
     Route::get('/listar/paginas', [VentaController::class, 'getPaginas'])->middleware('permission:venta.crear|ecommerce.editar');
     Route::get('/client/search', [ClienteController::class, 'search'])
         ->middleware('permission:venta.crear|ecommerce.editar');
-    Route::post('/product/search', [ProductosController::class, 'search'])
+    Route::get('/product/search', [ProductosController::class, 'search'])
         ->middleware('permission:venta.crear|ecommerce.editar');
 
     Route::get('/ventas/export/contabilidad', [VentaController::class, 'exportContabilidad'])->middleware('permission:menu.contabilidad');

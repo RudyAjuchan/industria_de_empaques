@@ -442,7 +442,9 @@ export default {
                 this.loadingProductos = true
 
                 try {
-                    const { data } = await axios.post('/product/search', { q })
+                    const { data } = await axios.get('/product/search', {
+                        params: { q }
+                    })
                     this.mergeProductos(data)
                 } finally {
                     this.loadingProductos = false
